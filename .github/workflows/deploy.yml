@@ -39,8 +39,8 @@ jobs:
             
             # Pastikan static file ada
             if [ ! -d "dist" ]; then
-              echo "Error: Folder dist tidak ditemukan setelah build!"
-              exit 1
+              echo "Error: Folder dist tidak ditemukan! Mencoba build ulang..."
+              npm run build
             fi
             
             # Setup PM2 & TSX globally jika belum ada
@@ -50,8 +50,8 @@ jobs:
             pm2 delete dev-nurhealth || true
             
             # Jalankan dengan environment production & Port 30002
-            # Kita gunakan npx tsx agar menggunakan file lokal jika memungkinkan
-            NODE_ENV=production PORT=30002 pm2 start "npx tsx server.ts" --name "dev-nurhealth"
+            # Menggunakan tsx untuk menjalankan server.ts secara langsung di server
+            NODE_ENV=production PORT=30002 pm2 start "npx tsx server.ts" --name "dev-nurhealth" --log-date-format "YYYY-MM-DD HH:mm:ss"
             
             # Simpan konfigurasi PM2
             pm2 save
