@@ -22,30 +22,36 @@ jobs:
             # Tentukan path target
             TARGET_DIR="/var/www/dev-nurhealth"
             
-            # Hapus folder lama agar bersih (Krusial agar git clone . tidak gagal)
+            echo "--- Stopping existing app ---"
+            pm2 stop dev-nurhealth || true
+            pm2 delete dev-nurhealth || true
+            
+            echo "--- Cleaning directory ---"
             sudo rm -rf $TARGET_DIR
             sudo mkdir -p $TARGET_DIR
             sudo chown -R $USER:$USER $TARGET_DIR
             cd $TARGET_DIR
             
-            # Clone repo public (tanda titik '.' sangat penting)
+            echo "--- Cloning repository ---"
             git clone https://github.com/dafa21/webb.git .
             
-            # Instalasi dependensi & Build frontend
+            echo "--- Installing dependencies ---"
             npm install
+            
+            echo "--- Building frontend ---"
             npm run build
             
-            # Setup PM2 & TSX globally jika belum ada
+            # Verifikasi build
+            if [ -d "dist" ]; then
+              echo "✅ Build success (dist folder found)"
+            else
+              echo "❌ Build FAILED (dist folder missing)"
+              exit 1
+            fi
+            
+            echo "--- Starting application ---"
             sudo npm install -g pm2 tsx || true
-            
-            # Stop proses lama jika ada agar tidak bentrok
-            pm2 delete dev-nurhealth || true
-            
-            # Jalankan dengan environment production & Port 30002
-            # Kita gunakan npx tsx agar menggunakan server.ts secara langsung
             NODE_ENV=production PORT=30002 pm2 start "npx tsx server.ts" --name "dev-nurhealth" --log-date-format "YYYY-MM-DD HH:mm:ss"
-            
-            # Simpan konfigurasi PM2 agar auto-start saat reboot
             pm2 save
             
-            echo "🚀 Deployment Selesai! Aplikasi berjalan di Port 30002"
+            echo "🚀 Deployment Selesai di Port 30002!"

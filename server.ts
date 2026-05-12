@@ -86,22 +86,31 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     // Production setup
-    const distPath = path.resolve(process.cwd(), "dist");
-    console.log(`Serving static files from: ${distPath}`);
+    const distPath = path.resolve(__dirname, "dist");
+    console.log(`[DEBUG] Attempting to serve static files from: ${distPath}`);
 
     // Verify dist exists at startup
     if (!fs.existsSync(distPath)) {
-      console.error(`CRITICAL: Production dist folder missing at ${distPath}`);
+      console.error(`[ERROR] Production dist folder NOT FOUND at ${distPath}`);
+      console.log("[DEBUG] Current directory contents:", fs.readdirSync(__dirname));
     }
 
     app.use(express.static(distPath));
+
     app.get("*", (req, res) => {
       const indexPath = path.join(distPath, "index.html");
+      
       if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
       } else {
-        console.error(`404: Static file not found. Checked: ${indexPath}`);
-        res.status(500).send(`Internal Server Error: Missing frontend build artifacts at ${distPath}. Please run 'npm run build' on the server.`);
+        console.error(`[ERROR] index.html not found at: ${indexPath}`);
+        res.status(500).send(`
+          <h1>500 Internal Server Error</h1>
+          <p>Aplikasi tidak dapat menemukan file frontend.</p>
+          <hr>
+          <p><b>Path yang dicari:</b> ${indexPath}</p>
+          <p><b>Saran:</b> Coba jalankan <code>npm run build</code> di server secara manual di dalam folder project.</p>
+        `);
       }
     });
   }
