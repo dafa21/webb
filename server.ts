@@ -86,18 +86,19 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     // Production setup
-    const distPath = path.resolve(__dirname, "dist");
+    const distPath = path.resolve(process.cwd(), "dist");
     console.log(`[DEBUG] Attempting to serve static files from: ${distPath}`);
 
     // Verify dist exists at startup
     if (!fs.existsSync(distPath)) {
       console.error(`[ERROR] Production dist folder NOT FOUND at ${distPath}`);
-      console.log("[DEBUG] Current directory contents:", fs.readdirSync(__dirname));
     }
 
     app.use(express.static(distPath));
 
     app.get("*", (req, res) => {
+      // In Express, we should check for API routes first (which we do above)
+      // then serve the SPA index.html for everything else.
       const indexPath = path.join(distPath, "index.html");
       
       if (fs.existsSync(indexPath)) {
@@ -105,11 +106,13 @@ async function startServer() {
       } else {
         console.error(`[ERROR] index.html not found at: ${indexPath}`);
         res.status(500).send(`
-          <h1>500 Internal Server Error</h1>
-          <p>Aplikasi tidak dapat menemukan file frontend.</p>
-          <hr>
-          <p><b>Path yang dicari:</b> ${indexPath}</p>
-          <p><b>Saran:</b> Coba jalankan <code>npm run build</code> di server secara manual di dalam folder project.</p>
+          <div style="font-family: sans-serif; padding: 2rem; max-width: 600px; margin: 0 auto; text-align: center;">
+            <h1 style="color: #e11d48;">500 Internal Server Error</h1>
+            <p style="color: #4b5563;">Aplikasi tidak dapat menemukan file frontend.</p>
+            <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 2rem 0;">
+            <p style="font-size: 0.875rem; color: #6b7280;"><b>Target Path:</b> ${indexPath}</p>
+            <p style="font-size: 0.875rem; color: #6b7280;"><b>Saran:</b> Pastikan <code>npm run build</code> sudah dijalankan dengan sukses di VPS.</p>
+          </div>
         `);
       }
     });
