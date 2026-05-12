@@ -25,7 +25,7 @@ import { AnalyticsDashboard } from './components/AnalyticsDashboard';
 import { ZakatPage } from './components/ZakatPage';
 import { QurbanPage } from './components/QurbanPage';
 import { ProgramDetailPage } from './components/ProgramDetailPage';
-import { DaiInteractive } from './components/DaiInteractive';
+import { InteractiveDonationCarousel } from './components/InteractiveDonationCarousel';
 
 // Types
 export interface Program {
@@ -1993,7 +1993,7 @@ export default function App() {
       {/* Kategori Program Sedekah -> Dai Pengabdian */}
 
       <section id="layanan" className="bg-cream-100 dark:bg-slate-900 pt-32 pb-24 -mt-16 md:mt-0 md:pt-16 relative z-10 transition-colors duration-300">
-        <DaiInteractive onAddToCart={handleAddToCart} />
+        <InteractiveDonationCarousel onAddToCart={handleAddToCart} />
       </section>
 
       {/* Kencleng Masjid Digital */}
