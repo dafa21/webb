@@ -1240,6 +1240,45 @@ export const QurbanPage = ({ onAddToCart }: { onAddToCart?: (p: any, amt: string
                               </motion.div>
                             </div>
 
+                            {/* Badge Indicators - Moved outside puzzle to avoid covering the cow */}
+                            <div className="flex items-center justify-between mb-4 px-1">
+                              <motion.div 
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 2.4 }}
+                                className="bg-slate-100 dark:bg-slate-800/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 flex items-center gap-2 shadow-sm"
+                              >
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                <span className="text-[10px] font-black text-slate-700 dark:text-slate-200 uppercase tracking-widest">{selectedProgram.location}</span>
+                              </motion.div>
+
+                              <div className="flex items-center gap-2">
+                                <AnimatePresence>
+                                  {(selectedProgram.filled % 7 === 0 && selectedProgram.filled > 0) && (
+                                    <motion.div
+                                      initial={{ opacity: 0, scale: 0.8 }}
+                                      animate={{ opacity: 1, scale: 1 }}
+                                      className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2.5 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1.5"
+                                    >
+                                      <CheckCircle2 className="w-3 h-3" />
+                                      <span className="text-[9px] font-black uppercase tracking-tight">Sapi Sempurna!</span>
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+
+                                <motion.div 
+                                  initial={{ opacity: 0, scale: 0.8 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ delay: 2.2 }}
+                                  className="bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-full border border-blue-100 dark:border-blue-800 flex items-center gap-1.5 shadow-sm"
+                                >
+                                  <Users className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                                  <span className="text-xs font-black text-slate-800 dark:text-white leading-none">{(selectedProgram.filled % 7) === 0 && selectedProgram.filled > 0 ? 7 : (selectedProgram.filled % 7)}/7</span>
+                                  <span className="text-[8px] font-black text-blue-500 uppercase tracking-widest leading-none">Sahabat</span>
+                                </motion.div>
+                              </div>
+                            </div>
+
                             {/* Realistic Cow Assembly - High-Fidelity Jigsaw Style */}
                             <div className="relative aspect-[16/9] mb-6 bg-slate-50/50 dark:bg-slate-950/50 rounded-[2.5rem] border border-blue-50/30 dark:border-blue-900/20 flex items-center justify-center overflow-hidden group shadow-inner">
                               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(23,153,220,0.08)_0%,transparent_70%)]" />
@@ -1268,34 +1307,40 @@ export const QurbanPage = ({ onAddToCart }: { onAddToCart?: (p: any, amt: string
                                         <feGaussianBlur stdDeviation="3" result="blur" />
                                         <feComposite in="SourceGraphic" in2="blur" operator="over" />
                                       </filter>
+                                      
+                                      <filter id="grayscale">
+                                        <feColorMatrix type="matrix" values="0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0 0 0 1 0"/>
+                                      </filter>
                                     </defs>
 
-                                    {/* Base Background Shadow */}
-                                    <path 
-                                      d="M80,120 C80,80 120,60 180,60 C240,60 300,40 340,60 C370,80 380,120 380,140 C380,180 340,200 300,200 L280,200 L285,220 L255,220 L250,200 L150,200 L145,220 L115,220 L120,200 C90,200 80,160 80,120 Z" 
-                                      fill="#f1f5f9" 
-                                      className="dark:fill-slate-800"
-                                    />
+                                    {/* Silhouette Background with Grayscale Image */}
+                                    <g filter="url(#grayscale)" opacity="0.15">
+                                      <image 
+                                        href="/sapi.png" 
+                                        x="0" y="0" width="400" height="240"
+                                        preserveAspectRatio="xMidYMid slice"
+                                      />
+                                    </g>
 
                                     {/* Jigsaw Pieces Wrapper */}
                                     <motion.g
                                       animate={{ 
-                                        scale: ((selectedProgram.filled % 7) || 7) === 7 ? [1, 1.02, 1] : 1,
+                                        scale: ((selectedProgram.filled % 7) || 7) === 7 ? [1, 1.01, 1] : 1,
                                       }}
                                       transition={{ 
-                                        duration: 3, 
+                                        duration: 4, 
                                         repeat: ((selectedProgram.filled % 7) || 7) === 7 ? Infinity : 0,
                                         repeatType: "reverse" 
                                       }}
                                     >
                                       {[
-                                        { id: 0, d: "M320,60 L360,70 L385,110 L370,140 L320,130 L310,100 Z", x: 40, y: -30, rot: -15, cx: 350, cy: 100 }, // Head
-                                        { id: 1, d: "M250,55 L320,60 L310,130 L250,150 L230,100 Z", x: 20, y: -40, rot: 10, cx: 285, cy: 100 }, // Neck/Shoulder
-                                        { id: 2, d: "M150,50 L250,55 L240,110 L150,100 Z", x: 0, y: -50, rot: -5, cx: 200, cy: 75 }, // Front Top
-                                        { id: 3, d: "M150,100 L240,110 L250,150 L180,165 L150,150 Z", x: -10, y: 10, rot: 5, cx: 200, cy: 130 }, // Front Bottom
-                                        { id: 4, d: "M60,80 L150,50 L150,100 L60,110 Z", x: -40, y: -20, rot: -10, cx: 105, cy: 80 }, // Rear Top
-                                        { id: 5, d: "M40,130 L60,110 L150,100 L150,150 L120,180 L45,170 Z", x: -50, y: 20, rot: 15, cx: 90, cy: 140 }, // Rump/Tail
-                                        { id: 6, d: "M120,180 L150,150 L250,150 L260,200 L230,225 L100,215 Z", x: 10, y: 50, rot: 0, cx: 180, cy: 190 } // Legs
+                                        { id: 0, d: "M300,90 C330,80 370,90 375,130 C375,170 330,175 300,160 L280,135 Z", x: 40, y: -20, rot: 15, cx: 340, cy: 125 }, // Head
+                                        { id: 1, d: "M240,55 C280,50 300,60 310,90 L280,135 L230,120 Z", x: 20, y: -40, rot: -10, cx: 280, cy: 80 }, // Neck
+                                        { id: 2, d: "M160,55 L240,55 L230,120 L170,135 Z", x: 0, y: -50, rot: 5, cx: 200, cy: 90 }, // Shoulder/Back
+                                        { id: 3, d: "M80,85 L160,55 L170,135 L100,160 Z", x: -20, y: -40, rot: -5, cx: 120, cy: 110 }, // Ribs
+                                        { id: 4, d: "M30,120 C10,120 10,180 30,190 L90,170 L80,85 Z", x: -60, y: -20, rot: -15, cx: 50, cy: 140 }, // Rump/Tail area
+                                        { id: 5, d: "M230,120 L280,135 L300,160 C280,190 260,225 230,230 L225,250 L205,250 L210,230 L220,130 Z", x: 30, y: 40, rot: 10, cx: 240, cy: 180 }, // Front Legs/Belly
+                                        { id: 6, d: "M100,160 L170,135 L160,210 C140,225 110,225 100,210 L95,240 L75,240 L80,210 C60,210 50,190 30,190 L90,170 Z", x: -30, y: 50, rot: -10, cx: 100, cy: 180 } // Rear Legs/Belly
                                       ].map((piece, i) => {
                                         const actualFilled = selectedProgram.filled + qurbanQty;
                                         const progressNumber = (actualFilled % 7) === 0 && actualFilled > 0 ? 7 : (actualFilled % 7);
@@ -1388,51 +1433,7 @@ export const QurbanPage = ({ onAddToCart }: { onAddToCart?: (p: any, amt: string
                                   )}
                                 </AnimatePresence>
 
-                                {/* Full Cow Completion Badge - Minimal & Non-obstructive */}
-                                <AnimatePresence>
-                                  {(selectedProgram.filled % 7 === 0 && selectedProgram.filled > 0) && (
-                                    <motion.div
-                                      initial={{ opacity: 0, scale: 0.5, y: -20 }}
-                                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                                      className="absolute top-4 right-4 z-40"
-                                    >
-                                      <div className="bg-emerald-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full shadow-lg border border-emerald-400/50 flex items-center gap-2">
-                                        <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
-                                          <CheckCircle2 className="w-3.5 h-3.5" />
-                                        </div>
-                                        <span className="text-[10px] font-black uppercase tracking-tight">Sapi Sempurna!</span>
-                                      </div>
-                                    </motion.div>
-                                  )}
-                                </AnimatePresence>
                               </motion.div>
-
-                              {/* Live Progress Info Chip */}
-                              <motion.div 
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 2.2 }}
-                                className="absolute bottom-5 right-5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl px-4 py-3 rounded-2xl border border-blue-100/50 dark:border-blue-900/50 shadow-2xl flex flex-col items-center gap-1 min-w-[70px]"
-                              >
-                                <div className="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                                  <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                </div>
-                                <span className="text-sm font-black text-slate-800 dark:text-white leading-none">{(selectedProgram.filled % 7) === 0 && selectedProgram.filled > 0 ? 7 : (selectedProgram.filled % 7)}/7</span>
-                                <span className="text-[8px] font-black text-blue-500 uppercase tracking-widest">Sahabat</span>
-                              </motion.div>
-
-                              {/* Floating Aura for Location */}
-                              <div className="absolute top-5 left-5">
-                                <motion.div 
-                                  initial={{ opacity: 0, x: -10 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  transition={{ delay: 2.4 }}
-                                  className="bg-slate-950/40 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/20 flex items-center gap-2"
-                                >
-                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                  <span className="text-[9px] font-black text-white uppercase tracking-widest">{selectedProgram.location}</span>
-                                </motion.div>
-                              </div>
                             </div>
 
                             {/* Emotional Text & Prayers - Compact */}

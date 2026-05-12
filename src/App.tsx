@@ -8,7 +8,7 @@ import {
   Heart, Menu, X, ChevronRight, ChevronDown, Users, HandHeart, 
   MapPin, Facebook, Instagram, Youtube, UserCircle,
   TrendingUp, FileText, History as HistoryIcon,
-  Globe, Tent, HandCoins, ShieldCheck, Sun, Moon, CheckCircle2,
+  Globe, Tent, HandCoins, ShieldCheck, Sun, Moon, CheckCircle2, Award, Star, Milestone, Activity,
   ArrowRight, PlayCircle, Phone, Mail, ShoppingBag, Bell, Image as ImageIcon, Search,
   Share2, Download, Sparkles, Calculator, Home, Wallet, Lock, Info, Component, ShoppingCart,
   Loader2, LayoutGrid, BookOpen
@@ -115,6 +115,19 @@ const STORIES = [
   { id: 2, image: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?auto=format&fit=crop&q=80&w=150&h=150" },
   { id: 3, image: "https://images.unsplash.com/photo-1579621970588-a35d0e7ab9b6?auto=format&fit=crop&q=80&w=150&h=150" },
   { id: 4, image: "https://images.unsplash.com/photo-1511553677255-ba939e5537e0?auto=format&fit=crop&q=80&w=150&h=150" },
+];
+
+const MILESTONES = [
+  { id: 1, name: 'Penyemai Kebaikan', amount: 0, icon: Sparkles, color: 'text-blue-500', bg: 'bg-blue-50' },
+  { id: 2, name: 'Pejuang Senyum', amount: 1000000, icon: Heart, color: 'text-rose-500', bg: 'bg-rose-50' },
+  { id: 3, name: 'Pahlawan Pelosok', amount: 5000000, icon: ShieldCheck, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+  { id: 4, name: 'Sahabat Jannah', amount: 10000000, icon: Award, color: 'text-[#f29f05]', bg: 'bg-orange-50' },
+];
+
+const ZAKAT_MILESTONES = [
+  { id: 1, name: 'Muzaki Pemula', amount: 0, icon: HandCoins, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+  { id: 2, name: 'Muzaki Istiqomah', amount: 2000000, icon: Star, color: 'text-yellow-500', bg: 'bg-yellow-50' },
+  { id: 3, name: 'Pilar Keadilan', amount: 10000000, icon: ShieldCheck, color: 'text-blue-500', bg: 'bg-blue-50' },
 ];
 
 const DONATION_HISTORY = [
@@ -2346,6 +2359,124 @@ export default function App() {
               </div>
             </div>
 
+            <div className="mb-10">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#f29f05] to-[#d98f04] flex items-center justify-center text-white shadow-lg shadow-orange-500/20">
+                  <Milestone className="w-6 h-6" />
+                </div>
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">Milestone Kebaikan</h2>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Infak Milestone */}
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#1799dc]/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform"></div>
+                  
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 mb-1">
+                        Progress Infak & Sedekah
+                        <Info className="w-3.5 h-3.5 text-slate-400 cursor-help" />
+                      </h3>
+                      <p className="text-xs text-slate-500 font-medium tracking-wide uppercase">Level Saat Ini</p>
+                    </div>
+                    {(() => {
+                      const totalInfak = DONATION_HISTORY.filter(t => t.status === 'Berhasil' && !t.program.includes('Zakat')).reduce((acc, curr) => acc + curr.amount, 0);
+                      const currentMilestone = MILESTONES.filter(m => totalInfak >= m.amount).pop() || MILESTONES[0];
+                      const nextMilestone = MILESTONES.find(m => totalInfak < m.amount);
+                      const Icon = currentMilestone.icon;
+                      
+                      return (
+                        <div className={`px-4 py-2 rounded-xl ${currentMilestone.bg} ${currentMilestone.color} font-black text-xs flex items-center gap-2 border border-current/10 shadow-sm`}>
+                          <Icon className="w-4 h-4" />
+                          {currentMilestone.name}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {(() => {
+                    const totalInfak = DONATION_HISTORY.filter(t => t.status === 'Berhasil' && !t.program.includes('Zakat')).reduce((acc, curr) => acc + curr.amount, 0);
+                    const currentMilestone = MILESTONES.filter(m => totalInfak >= m.amount).pop() || MILESTONES[0];
+                    const nextMilestone = MILESTONES.find(m => m.amount > currentMilestone.amount) || null;
+                    const progress = nextMilestone ? Math.min(((totalInfak - currentMilestone.amount) / (nextMilestone.amount - currentMilestone.amount)) * 100, 100) : 100;
+                    
+                    return (
+                      <div className="space-y-4">
+                        <div className="relative h-4 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${progress}%` }}
+                            transition={{ duration: 1.5, ease: "easeOut" }}
+                            className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#1799dc] to-[#2db2f5] rounded-full"
+                          />
+                        </div>
+                        <div className="flex justify-between items-center text-[11px] font-bold">
+                          <span className="text-slate-400 uppercase tracking-widest">Terkumpul: <span className="text-slate-700 dark:text-slate-200">{formatCurrency(totalInfak)}</span></span>
+                          {nextMilestone && (
+                            <span className="text-[#1799dc] uppercase tracking-widest">Sisa <span className="text-slate-700 dark:text-slate-200">{formatCurrency(nextMilestone.amount - totalInfak)}</span> lagi ke <span className="text-[#1799dc]">{nextMilestone.name}</span></span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Zakat Milestone */}
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform"></div>
+                  
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 mb-1">
+                        Progress Zakat
+                        <Info className="w-3.5 h-3.5 text-slate-400 cursor-help" />
+                      </h3>
+                      <p className="text-xs text-slate-500 font-medium tracking-wide uppercase">Level Saat Ini</p>
+                    </div>
+                    {(() => {
+                      const totalZakat = DONATION_HISTORY.filter(t => t.status === 'Berhasil' && t.program.includes('Zakat')).reduce((acc, curr) => acc + curr.amount, 0);
+                      const currentMilestone = ZAKAT_MILESTONES.filter(m => totalZakat >= m.amount).pop() || ZAKAT_MILESTONES[0];
+                      const Icon = currentMilestone.icon;
+                      
+                      return (
+                        <div className={`px-4 py-2 rounded-xl ${currentMilestone.bg} ${currentMilestone.color} font-black text-xs flex items-center gap-2 border border-current/10 shadow-sm`}>
+                          <Icon className="w-4 h-4" />
+                          {currentMilestone.name}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {(() => {
+                    const totalZakat = DONATION_HISTORY.filter(t => t.status === 'Berhasil' && t.program.includes('Zakat')).reduce((acc, curr) => acc + curr.amount, 0);
+                    const currentMilestone = ZAKAT_MILESTONES.filter(m => totalZakat >= m.amount).pop() || ZAKAT_MILESTONES[0];
+                    const nextMilestone = ZAKAT_MILESTONES.find(m => m.amount > currentMilestone.amount) || null;
+                    const progress = nextMilestone ? Math.min(((totalZakat - currentMilestone.amount) / (nextMilestone.amount - currentMilestone.amount)) * 100, 100) : 100;
+                    
+                    return (
+                      <div className="space-y-4">
+                        <div className="relative h-4 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${progress}%` }}
+                            transition={{ duration: 1.5, ease: "easeOut" }}
+                            className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full"
+                          />
+                        </div>
+                        <div className="flex justify-between items-center text-[11px] font-bold">
+                          <span className="text-slate-400 uppercase tracking-widest">Terkumpul: <span className="text-slate-700 dark:text-slate-200">{formatCurrency(totalZakat)}</span></span>
+                          {nextMilestone && (
+                            <span className="text-emerald-600 uppercase tracking-widest">Sisa <span className="text-slate-700 dark:text-slate-200">{formatCurrency(nextMilestone.amount - totalZakat)}</span> lagi ke <span className="text-emerald-600">{nextMilestone.name}</span></span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            </div>
+
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 px-1 gap-2">
               <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Riwayat & Dampak Donasi</h2>
               
@@ -2385,6 +2516,22 @@ export default function App() {
                             <td className="p-4 min-w-[200px]">
                                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-0.5">{txn.program}</h3>
                                <p className="text-[11px] text-slate-500 dark:text-slate-400">Via {txn.method}</p>
+                               
+                               {txn.status === 'Berhasil' && (
+                                 <div className="mt-3 space-y-2">
+                                   <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-wider">
+                                      <span className="text-slate-400">Progres Penyaluran</span>
+                                      <span className="text-primary-600 dark:text-primary-400">{txn.program.includes('Gaza') ? '45%' : '100%'}</span>
+                                   </div>
+                                   <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                      <motion.div 
+                                        initial={{ width: 0 }}
+                                        animate={{ width: txn.program.includes('Gaza') ? '45%' : '100%' }}
+                                        className={`h-full rounded-full ${txn.program.includes('Gaza') ? 'bg-primary-500 shadow-[0_0_8px_rgba(23,153,220,0.3)]' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]'}`}
+                                      />
+                                   </div>
+                                 </div>
+                               )}
                                {txn.impact && (
                                  <div className="mt-2 bg-primary-50 dark:bg-primary-900/10 border border-primary-100 dark:border-primary-800/50 rounded-lg p-2 text-xs flex items-start gap-2">
                                      <CheckCircle2 className="w-4 h-4 text-primary-500 shrink-0 mt-0.5" />
@@ -2427,6 +2574,26 @@ export default function App() {
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                           {txn.method} &middot; <span className="font-mono text-[10px]">{txn.id}</span>
                         </p>
+
+                        {txn.status === 'Berhasil' && (
+                           <div className="mt-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700/50">
+                              <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest mb-1.5">
+                                 <span className="text-slate-400 flex items-center gap-1.5">
+                                    <Activity className="w-3 h-3" /> Status Penyaluran
+                                 </span>
+                                 <span className={txn.program.includes('Gaza') ? 'text-primary-600' : 'text-emerald-600'}>
+                                    {txn.program.includes('Gaza') ? '45%' : '100%'}
+                                 </span>
+                              </div>
+                              <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                 <motion.div 
+                                   initial={{ width: 0 }}
+                                   animate={{ width: txn.program.includes('Gaza') ? '45%' : '100%' }}
+                                   className={`h-full rounded-full ${txn.program.includes('Gaza') ? 'bg-primary-500 shadow-[0_0_10px_rgba(23,153,220,0.3)]' : 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]'}`}
+                                 />
+                              </div>
+                           </div>
+                        )}
                       </div>
                     </div>
                     
