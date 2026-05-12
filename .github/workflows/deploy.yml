@@ -19,17 +19,18 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            # Masuk ke direktori aplikasi (pisahkan direktori agar aman)
-            mkdir -p ~/apps/dev-nurhealth
-            cd ~/apps/dev-nurhealth
+            # Pastikan direktori ada dan milik user
+            sudo mkdir -p /var/www/dev-nurhealth
+            sudo chown -R $USER:$USER /var/www/dev-nurhealth
+            cd /var/www/dev-nurhealth
             
-            # Update source code (asumsi Anda sudah git clone di server)
+            # Clone langsung ke folder ini (tanda titik '.' di akhir sangat penting)
             if [ -d ".git" ]; then
               git pull origin main
             else
               git clone https://github.com/${{ github.repository }} .
             fi
             
-            # Restart container
-            docker compose down
+            # Jalankan dengan Docker
+            docker compose down || true
             docker compose up -d --build
