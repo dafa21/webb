@@ -1257,7 +1257,7 @@ export const QurbanPage = ({ onAddToCart }: { onAddToCart?: (p: any, amt: string
                                       {/* Define the main image pattern */}
                                       <pattern id="cowPattern" patternUnits="userSpaceOnUse" width="400" height="240">
                                         <image 
-                                          href="https://images.unsplash.com/photo-1546445317-29f4545e9d53?auto=format&fit=crop&q=80&w=800" 
+                                          href="/sapi.png" 
                                           x="0" y="0" width="400" height="240"
                                           preserveAspectRatio="xMidYMid slice"
                                         />
@@ -1289,13 +1289,13 @@ export const QurbanPage = ({ onAddToCart }: { onAddToCart?: (p: any, amt: string
                                       }}
                                     >
                                       {[
-                                        { id: 0, d: "M80,120 C80,80 120,60 150,60 L200,130 L100,150 Z", x: -60, y: -40, rot: -15, cx: 120, cy: 100 },
-                                        { id: 1, d: "M150,60 C200,60 250,40 280,50 L300,120 L200,130 Z", x: 0, y: -70, rot: 5, cx: 200, cy: 80 },
-                                        { id: 2, d: "M280,50 C310,45 340,60 340,60 L380,140 L300,120 Z", x: 60, y: -30, rot: 20, cx: 320, cy: 90 },
-                                        { id: 3, d: "M100,150 L200,130 L250,200 L120,200 C90,200 80,180 100,150 Z", x: -40, y: 50, rot: -5, cx: 150, cy: 170 }, 
-                                        { id: 4, d: "M200,130 L300,120 L280,200 L250,200 Z", x: 0, y: 0, rot: 0, cx: 250, cy: 150 }, 
-                                        { id: 5, d: "M300,120 L380,140 C380,180 340,200 300,200 L280,200 Z", x: 50, y: 60, rot: 15, cx: 330, cy: 160 },
-                                        { id: 6, d: "M145,220 L115,220 L120,200 L150,200 Z M285,220 L255,220 L250,200 L280,200 Z", x: 0, y: 40, rot: 0, cx: 200, cy: 210 }
+                                        { id: 0, d: "M320,60 L360,70 L385,110 L370,140 L320,130 L310,100 Z", x: 40, y: -30, rot: -15, cx: 350, cy: 100 }, // Head
+                                        { id: 1, d: "M250,55 L320,60 L310,130 L250,150 L230,100 Z", x: 20, y: -40, rot: 10, cx: 285, cy: 100 }, // Neck/Shoulder
+                                        { id: 2, d: "M150,50 L250,55 L240,110 L150,100 Z", x: 0, y: -50, rot: -5, cx: 200, cy: 75 }, // Front Top
+                                        { id: 3, d: "M150,100 L240,110 L250,150 L180,165 L150,150 Z", x: -10, y: 10, rot: 5, cx: 200, cy: 130 }, // Front Bottom
+                                        { id: 4, d: "M60,80 L150,50 L150,100 L60,110 Z", x: -40, y: -20, rot: -10, cx: 105, cy: 80 }, // Rear Top
+                                        { id: 5, d: "M40,130 L60,110 L150,100 L150,150 L120,180 L45,170 Z", x: -50, y: 20, rot: 15, cx: 90, cy: 140 }, // Rump/Tail
+                                        { id: 6, d: "M120,180 L150,150 L250,150 L260,200 L230,225 L100,215 Z", x: 10, y: 50, rot: 0, cx: 180, cy: 190 } // Legs
                                       ].map((piece, i) => {
                                         const actualFilled = selectedProgram.filled + qurbanQty;
                                         const progressNumber = (actualFilled % 7) === 0 && actualFilled > 0 ? 7 : (actualFilled % 7);
