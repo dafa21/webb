@@ -1,0 +1,9 @@
+services:
+  app:
+    build: .
+    container_name: laznas-app-dev
+    restart: always
+    ports:
+      - "30001:3000"
+    environment:
+      - NODE_ENV=production

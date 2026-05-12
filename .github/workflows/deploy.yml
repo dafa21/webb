@@ -1,0 +1,35 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main # Sesuaikan dengan branch utama Anda
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Masuk ke direktori aplikasi (pisahkan direktori agar aman)
+            mkdir -p ~/apps/dev-nurhealth
+            cd ~/apps/dev-nurhealth
+            
+            # Update source code (asumsi Anda sudah git clone di server)
+            if [ -d ".git" ]; then
+              git pull origin main
+            else
+              git clone https://github.com/${{ github.repository }} .
+            fi
+            
+            # Restart container
+            docker compose down
+            docker compose up -d --build
