@@ -19,18 +19,23 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            # Pastikan direktori ada dan milik user
+            # Bersihkan folder tujuan agar tidak crash saat clone
+            sudo rm -rf /var/www/dev-nurhealth
             sudo mkdir -p /var/www/dev-nurhealth
             sudo chown -R $USER:$USER /var/www/dev-nurhealth
             cd /var/www/dev-nurhealth
             
-            # Clone langsung ke folder ini (tanda titik '.' di akhir sangat penting)
-            if [ -d ".git" ]; then
-              git pull origin main
-            else
-              git clone https://github.com/${{ github.repository }} .
-            fi
+            # Clone repo public (tanda titik '.' sangat penting)
+            git clone https://github.com/dafa21/webb.git .
             
-            # Jalankan dengan Docker
-            docker compose down || true
-            docker compose up -d --build
+            # Instalasi & Build
+            npm install
+            npm run build
+            
+            # Pastikan PM2 terinstal untuk menjaga aplikasi tetap jalan
+            sudo npm install -g pm2 || true
+            
+            # Restart aplikasi lewat PM2 dengan Port 30002
+            pm2 delete dev-nurhealth || true
+            NODE_ENV=production PORT=30002 pm2 start "npm run dev" --name "dev-nurhealth"
+            pm2 save
