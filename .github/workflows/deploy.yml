@@ -19,23 +19,41 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            # Bersihkan folder tujuan agar tidak crash saat clone
-            sudo rm -rf /var/www/dev-nurhealth
-            sudo mkdir -p /var/www/dev-nurhealth
-            sudo chown -R $USER:$USER /var/www/dev-nurhealth
-            cd /var/www/dev-nurhealth
+            # Tentukan path target
+            TARGET_DIR="/var/www/dev-nurhealth"
             
-            # Clone repo public (tanda titik '.' sangat penting)
+            # Hapus folder lama agar bersih
+            sudo rm -rf $TARGET_DIR
+            sudo mkdir -p $TARGET_DIR
+            sudo chown -R $USER:$USER $TARGET_DIR
+            cd $TARGET_DIR
+            
+            # Clone repo (Pastikan ini repo yang benar)
             git clone https://github.com/dafa21/webb.git .
             
-            # Instalasi & Build
+            # Instalasi dependensi
             npm install
+            
+            # Build frontend
             npm run build
             
-            # Pastikan PM2 terinstal untuk menjaga aplikasi tetap jalan
-            sudo npm install -g pm2 || true
+            # Pastikan static file ada
+            if [ ! -d "dist" ]; then
+              echo "Error: Folder dist tidak ditemukan setelah build!"
+              exit 1
+            fi
             
-            # Restart aplikasi lewat PM2 dengan Port 30002
+            # Setup PM2 & TSX globally jika belum ada
+            sudo npm install -g pm2 tsx || true
+            
+            # Stop proses lama jika ada
             pm2 delete dev-nurhealth || true
-            NODE_ENV=production PORT=30002 pm2 start "npm run dev" --name "dev-nurhealth"
+            
+            # Jalankan dengan environment production & Port 30002
+            # Kita gunakan npx tsx agar menggunakan file lokal jika memungkinkan
+            NODE_ENV=production PORT=30002 pm2 start "npx tsx server.ts" --name "dev-nurhealth"
+            
+            # Simpan konfigurasi PM2
             pm2 save
+            
+            echo "Deployment Selesai di Port 30002!"

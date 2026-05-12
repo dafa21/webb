@@ -9,6 +9,11 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Health check route - MUST BE BEFORE STATIC SERVING
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", env: process.env.NODE_ENV, port: PORT });
+  });
+
   // API routes
   app.post("/api/payment", async (req, res) => {
     try {
@@ -74,10 +79,17 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     // Production setup
-    const distPath = path.join(process.cwd(), 'dist');
+    const distPath = path.resolve("dist");
+    console.log(`Serving static files from: ${distPath}`);
     app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+    app.get("*", (req, res) => {
+      const indexPath = path.join(distPath, "index.html");
+      res.sendFile(indexPath, (err) => {
+        if (err) {
+          console.error("Error sending index.html:", err);
+          res.status(500).send("Internal Server Error: Missing frontend build artifacts.");
+        }
+      });
     });
   }
 
