@@ -22,38 +22,30 @@ jobs:
             # Tentukan path target
             TARGET_DIR="/var/www/dev-nurhealth"
             
-            # Hapus folder lama agar bersih
+            # Hapus folder lama agar bersih (Krusial agar git clone . tidak gagal)
             sudo rm -rf $TARGET_DIR
             sudo mkdir -p $TARGET_DIR
             sudo chown -R $USER:$USER $TARGET_DIR
             cd $TARGET_DIR
             
-            # Clone repo (Pastikan ini repo yang benar)
+            # Clone repo public (tanda titik '.' sangat penting)
             git clone https://github.com/dafa21/webb.git .
             
-            # Instalasi dependensi
+            # Instalasi dependensi & Build frontend
             npm install
-            
-            # Build frontend
             npm run build
-            
-            # Pastikan static file ada
-            if [ ! -d "dist" ]; then
-              echo "Error: Folder dist tidak ditemukan! Mencoba build ulang..."
-              npm run build
-            fi
             
             # Setup PM2 & TSX globally jika belum ada
             sudo npm install -g pm2 tsx || true
             
-            # Stop proses lama jika ada
+            # Stop proses lama jika ada agar tidak bentrok
             pm2 delete dev-nurhealth || true
             
             # Jalankan dengan environment production & Port 30002
-            # Menggunakan tsx untuk menjalankan server.ts secara langsung di server
+            # Kita gunakan npx tsx agar menggunakan server.ts secara langsung
             NODE_ENV=production PORT=30002 pm2 start "npx tsx server.ts" --name "dev-nurhealth" --log-date-format "YYYY-MM-DD HH:mm:ss"
             
-            # Simpan konfigurasi PM2
+            # Simpan konfigurasi PM2 agar auto-start saat reboot
             pm2 save
             
-            echo "Deployment Selesai di Port 30002!"
+            echo "🚀 Deployment Selesai! Aplikasi berjalan di Port 30002"

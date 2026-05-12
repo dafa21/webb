@@ -1,6 +1,7 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
+import fs from "fs";
 import midtransClient from "midtrans-client";
 
 async function startServer() {
@@ -85,17 +86,23 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     // Production setup
-    const distPath = path.resolve("dist");
+    const distPath = path.resolve(process.cwd(), "dist");
     console.log(`Serving static files from: ${distPath}`);
+
+    // Verify dist exists at startup
+    if (!fs.existsSync(distPath)) {
+      console.error(`CRITICAL: Production dist folder missing at ${distPath}`);
+    }
+
     app.use(express.static(distPath));
     app.get("*", (req, res) => {
       const indexPath = path.join(distPath, "index.html");
-      res.sendFile(indexPath, (err) => {
-        if (err) {
-          console.error("Error sending index.html:", err);
-          res.status(500).send("Internal Server Error: Missing frontend build artifacts.");
-        }
-      });
+      if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+      } else {
+        console.error(`404: Static file not found. Checked: ${indexPath}`);
+        res.status(500).send(`Internal Server Error: Missing frontend build artifacts at ${distPath}. Please run 'npm run build' on the server.`);
+      }
     });
   }
 
