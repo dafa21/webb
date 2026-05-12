@@ -548,8 +548,26 @@ export const QurbanPage = ({ onAddToCart }: { onAddToCart?: (p: any, amt: string
   const [selectedAnimal, setSelectedAnimal] = useState('kambing');
   const [selectedRegion, setSelectedRegion] = useState<'pelosok' | 'luar_negeri'>('pelosok');
   const [selectedProgram, setSelectedProgram] = useState(QURBAN_PROGRAMS[0]);
-  const [qurbanQty, setQurbanQty] = useState(1);
+  const [qurbanQty, setQurbanQty] = useState(0);
   const [qurbanFor, setQurbanFor] = useState('');
+
+  // Sounds
+  const playAnimalSound = (type: string) => {
+    try {
+      const isSapi = type.includes('sapi');
+      const soundPath = isSapi ? '/sapi.mp3' : '/kambing.mp3';
+      const audio = new Audio(soundPath);
+      audio.volume = 0.5;
+      audio.play().catch(e => console.log('Audio play blocked:', e));
+    } catch (err) {
+      console.error('Error playing sound:', err);
+    }
+  };
+
+  const handleQtyIncrease = () => {
+    setQurbanQty(prev => prev + 1);
+    playAnimalSound(selectedAnimal);
+  };
 
   const [liveDonors, setLiveDonors] = useState([
     { id: 1, name: 'Hamba Allah', item: '1', time: '12 menit lalu' },
@@ -1059,6 +1077,119 @@ export const QurbanPage = ({ onAddToCart }: { onAddToCart?: (p: any, amt: string
                          <Info className="w-3.5 h-3.5" /> Lihat Detail Program
                       </button>
 
+                      {/* Kawanan Kambing Section */}
+                      <AnimatePresence mode="wait">
+                        {selectedAnimal === 'kambing' && (
+                          <motion.div 
+                            key={`herd-kambing-${selectedProgram.id}`}
+                            initial={{ opacity: 0, scale: 0.98, y: 15 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                            className="bg-white dark:bg-slate-900/80 p-5 rounded-[2rem] border border-orange-50 dark:border-orange-900/30 shadow-xl shadow-orange-500/10 relative mb-4 overflow-hidden"
+                          >
+                            <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-orange-50/50 dark:from-orange-900/20 to-transparent pointer-events-none" />
+                            
+                            <div className="flex items-center justify-between mb-5 md:mb-6 relative z-10">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/30 text-white">
+                                  <Sparkles className="w-5 h-5" />
+                                </div>
+                                <div className="text-left">
+                                  <h3 className="text-sm md:text-base font-black uppercase tracking-tight text-slate-800 dark:text-white leading-tight">Kawanan Kebaikan</h3>
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">{qurbanQty} Ekor Kambing Pilihan</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="relative min-h-[140px] bg-slate-50/50 dark:bg-slate-950/50 rounded-[2rem] p-6 flex flex-wrap items-center justify-center gap-4 overflow-hidden">
+                              <AnimatePresence>
+                                {Array.from({ length: qurbanQty }).map((_, i) => (
+                                  <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, scale: 0, y: 20, rotate: -20 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0, rotate: 0 }}
+                                    exit={{ opacity: 0, scale: 0, y: -20 }}
+                                    whileHover={{ scale: 1.2, rotate: 5 }}
+                                    className="bg-white dark:bg-slate-800 w-14 h-14 rounded-2xl shadow-lg border border-orange-100 dark:border-orange-900/30 flex items-center justify-center text-3xl relative"
+                                  >
+                                    <span className="relative z-10">🐑</span>
+                                    <motion.div 
+                                      animate={{ scale: [1, 1.2, 1], opacity: [0, 0.5, 0] }}
+                                      transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
+                                      className="absolute inset-0 bg-orange-400/20 rounded-2xl blur-md"
+                                    />
+                                  </motion.div>
+                                ))}
+                              </AnimatePresence>
+                              {qurbanQty === 0 && (
+                                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest italic font-mono">Belum ada pilihan</p>
+                              )}
+                            </div>
+
+                            <div className="mt-4 flex justify-center">
+                              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight text-center px-4 bg-slate-50 dark:bg-slate-800 py-1 rounded-full border border-slate-100 dark:border-slate-700">Setiap ekor kambing akan disalurkan ke <span className="text-orange-500 font-black">{selectedProgram.location}</span></p>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* Jemaah Sapi Section for Sapi Utuh */}
+                      <AnimatePresence mode="wait">
+                        {selectedAnimal === 'sapi_utuh' && (
+                          <motion.div 
+                            key={`herd-sapi-utuh-${selectedProgram.id}`}
+                            initial={{ opacity: 0, scale: 0.98, y: 15 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                            className="bg-white dark:bg-slate-900/80 p-5 rounded-[2rem] border border-blue-50 dark:border-blue-900/30 shadow-xl shadow-blue-500/10 relative mb-4 overflow-hidden"
+                          >
+                            <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-blue-50/50 dark:from-blue-900/20 to-transparent pointer-events-none" />
+                            
+                            <div className="flex items-center justify-between mb-5 md:mb-6 relative z-10">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/30 text-white">
+                                  <Award className="w-5 h-5" />
+                                </div>
+                                <div className="text-left">
+                                  <h3 className="text-sm md:text-base font-black uppercase tracking-tight text-slate-800 dark:text-white leading-tight">Kawanan Utama</h3>
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">{qurbanQty} Ekor Sapi Tangguh</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="relative min-h-[140px] bg-slate-50/50 dark:bg-slate-950/50 rounded-[2rem] p-6 flex flex-wrap items-center justify-center gap-4 overflow-hidden">
+                              <AnimatePresence>
+                                {Array.from({ length: qurbanQty }).map((_, i) => (
+                                  <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, scale: 0, y: 20, rotate: 10 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0, rotate: 0 }}
+                                    exit={{ opacity: 0, scale: 0, y: -20 }}
+                                    whileHover={{ scale: 1.1, y: -5 }}
+                                    className="bg-white dark:bg-slate-800 w-20 h-20 rounded-3xl shadow-lg border border-blue-100 dark:border-blue-900/30 flex flex-col items-center justify-center relative"
+                                  >
+                                    <span className="text-4xl mb-1">🐂</span>
+                                    <span className="text-[7px] font-black uppercase text-blue-500 tracking-[0.2em]">Pilihan</span>
+                                    <motion.div 
+                                      animate={{ opacity: [0.2, 0.5, 0.2] }}
+                                      transition={{ duration: 3, repeat: Infinity, delay: i * 0.3 }}
+                                      className="absolute inset-x-4 bottom-2 h-1 bg-blue-100 dark:bg-blue-900/50 rounded-full blur-[1px]"
+                                    />
+                                  </motion.div>
+                                ))}
+                              </AnimatePresence>
+                              {qurbanQty === 0 && (
+                                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest italic font-mono text-center">Pilih jumlah sapi</p>
+                              )}
+                            </div>
+
+                            <div className="mt-4 flex justify-center">
+                              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight text-center px-4 bg-slate-50 dark:bg-slate-800 py-1 rounded-full border border-slate-100 dark:border-slate-700">Sapi utuh akan disalurkan khusus ke <span className="text-blue-500 font-black">{selectedProgram.location}</span></p>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
                       {/* Puzzle Kebaikan Section for Sapi Patungan */}
                       <AnimatePresence mode="wait">
                         {selectedAnimal === 'sapi_1_7' && (
@@ -1166,9 +1297,10 @@ export const QurbanPage = ({ onAddToCart }: { onAddToCart?: (p: any, amt: string
                                         { id: 5, d: "M300,120 L380,140 C380,180 340,200 300,200 L280,200 Z", x: 50, y: 60, rot: 15, cx: 330, cy: 160 },
                                         { id: 6, d: "M145,220 L115,220 L120,200 L150,200 Z M285,220 L255,220 L250,200 L280,200 Z", x: 0, y: 40, rot: 0, cx: 200, cy: 210 }
                                       ].map((piece, i) => {
-                                        const progressNumber = (selectedProgram.filled % 7) === 0 && selectedProgram.filled > 0 ? 7 : (selectedProgram.filled % 7);
+                                        const actualFilled = selectedProgram.filled + qurbanQty;
+                                        const progressNumber = (actualFilled % 7) === 0 && actualFilled > 0 ? 7 : (actualFilled % 7);
                                         const isFilled = i < progressNumber;
-                                        const isUserPiece = i === (progressNumber - 1);
+                                        const isUserPiece = i >= (selectedProgram.filled % 7) && i < progressNumber;
                                         const isComplete = progressNumber === 7;
 
                                         return (
@@ -1386,9 +1518,9 @@ export const QurbanPage = ({ onAddToCart }: { onAddToCart?: (p: any, amt: string
                       <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-xl border border-slate-100 dark:border-slate-800 shadow-inner mt-4">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Jumlah Qurban</label>
                         <div className="flex items-center gap-2 flex-1">
-                          <button type="button" onClick={() => setQurbanQty(Math.max(1, qurbanQty - 1))} className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 font-black shadow-sm">-</button>
+                          <button type="button" onClick={() => setQurbanQty(Math.max(0, qurbanQty - 1))} className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 font-black shadow-sm">-</button>
                           <div className="flex-1 text-center font-black text-slate-800 dark:text-white">{qurbanQty}</div>
-                          <button type="button" onClick={() => setQurbanQty(qurbanQty + 1)} className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 font-black shadow-sm">+</button>
+                          <button type="button" onClick={handleQtyIncrease} className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 font-black shadow-sm">+</button>
                         </div>
                       </div>
                     </div>
