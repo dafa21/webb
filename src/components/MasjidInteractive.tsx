@@ -123,10 +123,34 @@ export const MasjidInteractive: React.FC<MasjidInteractiveProps> = ({ onAddToCar
       <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -z-10 -translate-x-1/2 translate-y-1/2"></div>
 
-      <div className="mb-10 text-center flex flex-col items-center">
+      <div className="mb-10 text-center flex flex-col items-center w-full">
         <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 font-bold px-3 py-1 text-[10px] md:text-xs rounded-full uppercase tracking-widest mb-3">Rumah Allah di Pelosok</span>
         <h2 className="text-2xl md:text-3xl font-serif font-black text-slate-900 dark:text-white mb-3">Bangun Masjid Huda</h2>
-        <p className="text-slate-500 dark:text-slate-400 text-xs md:text-sm max-w-sm">Mari alirkan pahala tiada henti dengan membangun tempat sujud bagi saudara kita di pedalaman.</p>
+        <p className="text-slate-500 dark:text-slate-400 text-xs md:text-sm max-w-sm mb-6">Mari alirkan pahala tiada henti dengan membangun tempat sujud bagi saudara kita di pedalaman.</p>
+        
+        {/* Progress Bar Donasi */}
+        <div className="w-full max-w-[280px] bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+          <div className="flex justify-between items-end mb-2.5">
+            <span className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+              Terkumpul
+            </span>
+            <span className="text-sm font-black text-emerald-500">
+              Rp {new Intl.NumberFormat('id-ID').format(150000000)}
+            </span>
+          </div>
+          <div className="h-2.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden relative shadow-inner">
+            <motion.div 
+              initial={{ width: 0 }}
+              whileInView={{ width: '30%' }}
+              viewport={{ once: true }}
+              transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
+              className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+            />
+          </div>
+          <div className="mt-2 text-right">
+            <span className="text-[9px] text-slate-400">dari target Rp 500.000.000</span>
+          </div>
+        </div>
       </div>
 
       <div className="relative w-full max-w-[360px] md:max-w-[400px] mx-auto h-[320px] flex items-center justify-center mt-2 md:mt-4">

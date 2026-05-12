@@ -308,14 +308,15 @@ const locations: ProgramLocation[] = [
   }
 ];
 
-const MapUpdater = ({ locations, activeCategories, activeProvinces }: { locations: ProgramLocation[], activeCategories: string[], activeProvinces: string[] }) => {
+const MapUpdater = ({ locations }: { locations: ProgramLocation[] }) => {
   const map = useMap();
+  const locationIds = locations.map(l => l.id).join(',');
   useEffect(() => {
     if (locations.length > 0) {
       const bounds = L.latLngBounds(locations.map(loc => loc.coordinates as [number, number]));
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 8, duration: 0.5 });
     }
-  }, [activeCategories, activeProvinces, map]); // Only update bounds when category or province changes
+  }, [locationIds, map]); // Only update bounds when the displayed locations change
   return null;
 };
 
@@ -677,7 +678,7 @@ export const ProgramMap: React.FC = () => {
           maxZoom={19}
         />
         
-        <MapUpdater locations={filteredLocations} activeCategories={activeCategories} activeProvinces={activeProvinces} />
+        <MapUpdater locations={filteredLocations} />
         
         {filteredLocations.map((loc) => {
           const iconMarker = createCustomIcon(loc.category);
