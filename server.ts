@@ -2,7 +2,11 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
 import midtransClient from "midtrans-client";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function startServer() {
   const app = express();
@@ -86,7 +90,7 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     // Production setup
-    const distPath = path.resolve(process.cwd(), "dist");
+    const distPath = path.resolve(__dirname, "dist");
     console.log(`[DEBUG] Attempting to serve static files from: ${distPath}`);
 
     // Verify dist exists at startup
