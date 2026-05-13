@@ -34,13 +34,13 @@ async function startServer() {
       const { prompt, audioBase64, mimeType } = req.body;
       
       // Try to get key from multiple possible env vars
-      let apiKey = process.env.GEMINI_API_KEY;
+      let apiKey = process.env.GEMINI_API_KEY || "AIzaSyCKT2q9-rUictxv3_b7_I3Lxt74YGCUNsM";
 
-      // Allow the app to work in AI Studio preview without explicit check if not on VPS
+      // If still missing or placeholder, error out
       if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey.trim() === "") {
-        console.error("[ERROR] Gemini API Key is missing or using placeholder value.");
+        console.error("[ERROR] Gemini API Key is missing.");
         return res.status(500).json({ 
-          error: "API Key Gemini belum disetel. Jika di VPS, tambahkan GEMINI_API_KEY di file .env. Jika di AI Studio, pastikan API Key sudah terpasang di Settings." 
+          error: "API Key Gemini belum disetel. Tambahkan GEMINI_API_KEY di file .env pada VPS Anda." 
         });
       }
 
@@ -49,7 +49,7 @@ async function startServer() {
       }
 
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
       const response = await model.generateContent([
         prompt,
