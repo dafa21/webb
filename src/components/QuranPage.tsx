@@ -34,6 +34,8 @@ export default function QuranPage() {
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
 
+    const [activeWordData, setActiveWordData] = useState<{ ayahNumber: number, wordIndex: number } | null>(null);
+
     // Fetch Surahs
     useEffect(() => {
         if (activeTab === 'quran' && surahs.length === 0) {
@@ -72,16 +74,18 @@ export default function QuranPage() {
         
         Promise.all([
             fetch(`https://equran.id/api/v2/surat/${surah.nomor}`).then(res => res.json()),
-            fetch(`https://api.quran.com/api/v4/verses/by_chapter/${surah.nomor}?fields=text_uthmani_tajweed&per_page=300`).then(res => res.json())
+            fetch(`https://api.quran.com/api/v4/verses/by_chapter/${surah.nomor}?words=true&audio=7&word_fields=text_uthmani_tajweed&per_page=300`).then(res => res.json())
         ])
         .then(([equranData, quranComData]) => {
             if (equranData.code === 200) {
                 // Merge tajweed into equran data
-                const mergedAyahs = equranData.data.ayat.map((ayah: any, index: number) => {
-                    const tajweedVerse = quranComData.verses?.find((v: any) => v.verse_number === ayah.nomorAyat);
+                const mergedAyahs = equranData.data.ayat.map((ayah: any) => {
+                    const verseInfo = quranComData.verses?.find((v: any) => v.verse_number === ayah.nomorAyat);
                     return {
                         ...ayah,
-                        teksTajweed: tajweedVerse?.text_uthmani_tajweed
+                        teksTajweed: verseInfo?.text_uthmani_tajweed,
+                        quranComWords: verseInfo?.words,
+                        quranComAudio: verseInfo?.audio
                     };
                 });
                 setSurahDetail({
@@ -96,22 +100,55 @@ export default function QuranPage() {
 
     const [playingAudio, setPlayingAudio] = useState<string | null>(null);
 
-    const toggleAudio = (audioUrl: string) => {
+    const toggleAudio = (audioUrl: string, ayahNumber?: number, audioSegments?: any[]) => {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
         }
         if (playingAudio === audioUrl) {
             setPlayingAudio(null);
+            setActiveWordData(null);
             const audioEl = document.getElementById('quran-audio') as HTMLAudioElement;
-            if (audioEl) audioEl.pause();
+            if (audioEl) {
+                audioEl.pause();
+                audioEl.ontimeupdate = null;
+            }
         } else {
             setPlayingAudio(audioUrl);
+            setActiveWordData(null);
             setTimeout(() => {
                 const audioEl = document.getElementById('quran-audio') as HTMLAudioElement;
                 if (audioEl) {
                     audioEl.src = audioUrl;
                     audioEl.play().catch(console.error);
-                    audioEl.onended = () => setPlayingAudio(null);
+                    audioEl.onended = () => {
+                        setPlayingAudio(null);
+                        setActiveWordData(null);
+                        audioEl.ontimeupdate = null;
+                    };
+                    
+                    if (ayahNumber && audioSegments) {
+                        audioEl.ontimeupdate = () => {
+                            const currentTimeMs = audioEl.currentTime * 1000;
+                            let foundWord = false;
+                            for (let i = 0; i < audioSegments.length; i++) {
+                                const seg = audioSegments[i];
+                                if (seg && seg.length >= 4) {
+                                    const startMs = seg[2];
+                                    const endMs = seg[3];
+                                    if (currentTimeMs >= startMs && currentTimeMs <= endMs) {
+                                        setActiveWordData({ ayahNumber, wordIndex: seg[0] });
+                                        foundWord = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (!foundWord) {
+                                setActiveWordData(null);
+                            }
+                        };
+                    } else {
+                        audioEl.ontimeupdate = null;
+                    }
                 }
             }, 50);
         }
@@ -510,18 +547,21 @@ export default function QuranPage() {
                                 <div className="space-y-8">
                                     <audio id="quran-audio" className="hidden" />
                                     {surahDetail.ayat.map((ayah: any) => (
-                                        <div key={ayah.nomorAyat} className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 relative transition-colors duration-300">
+                                        <div key={ayah.nomorAyat} className={`bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border relative transition-all duration-300 ${(playingAudio === ayah.audio["05"] || playingAudio === (ayah.quranComAudio ? "https://verses.quran.com/" + ayah.quranComAudio.url : null)) ? 'border-[#1799dc] ring-4 ring-[#1799dc]/10 dark:ring-[#1799dc]/20' : 'border-slate-100 dark:border-slate-700'}`}>
                                             <div className="flex justify-between items-start mb-6">
                                                 <div className="flex flex-col gap-3">
-                                                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-500">
+                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-colors ${(playingAudio === ayah.audio["05"] || playingAudio === (ayah.quranComAudio ? "https://verses.quran.com/" + ayah.quranComAudio.url : null)) ? 'bg-[#1799dc]/10 text-[#1799dc]' : 'bg-slate-100 dark:bg-slate-700 text-slate-500'}`}>
                                                         {ayah.nomorAyat}
                                                     </div>
                                                     <button 
-                                                        onClick={() => toggleAudio(ayah.audio["05"])}
-                                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${playingAudio === ayah.audio["05"] ? 'bg-[#1799dc] text-white shadow-md shadow-[#1799dc]/20' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-[#1799dc] hover:bg-slate-200 dark:hover:bg-slate-600'}`}
+                                                        onClick={() => {
+                                                            const audioUrlToPlay = ayah.quranComAudio ? "https://verses.quran.com/" + ayah.quranComAudio.url : ayah.audio["05"];
+                                                            toggleAudio(audioUrlToPlay, ayah.nomorAyat, ayah.quranComAudio?.segments);
+                                                        }}
+                                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${(playingAudio === ayah.audio["05"] || playingAudio === (ayah.quranComAudio ? "https://verses.quran.com/" + ayah.quranComAudio.url : null)) ? 'bg-[#1799dc] text-white shadow-md shadow-[#1799dc]/20' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-[#1799dc] hover:bg-slate-200 dark:hover:bg-slate-600'}`}
                                                         title="Putar Audio"
                                                     >
-                                                        {playingAudio === ayah.audio["05"] ? <span className="w-3 h-3 bg-white rounded-sm"></span> : <PlayCircle className="w-5 h-5 ml-0.5" />}
+                                                        {(playingAudio === ayah.audio["05"] || playingAudio === (ayah.quranComAudio ? "https://verses.quran.com/" + ayah.quranComAudio.url : null)) ? <span className="w-3 h-3 bg-white rounded-sm"></span> : <PlayCircle className="w-5 h-5 ml-0.5" />}
                                                     </button>
                                                     <button 
                                                         onClick={() => recordingAyah === ayah.nomorAyat ? stopRecording() : startRecording(ayah.nomorAyat)}
@@ -539,19 +579,32 @@ export default function QuranPage() {
                                                     </button>
                                                 </div>
                                                 <div className="flex-1 ml-6 text-right">
-                                                    {ayah.teksTajweed ? (
+                                                    {ayah.quranComWords ? (
+                                                        <p className="font-arabic text-4xl md:text-[2.75rem] leading-[2.5] md:leading-[2.75] text-slate-800 dark:text-slate-100" dir="rtl">
+                                                            {ayah.quranComWords.map((word: any, wIndex: number) => {
+                                                                const isActive = activeWordData?.ayahNumber === ayah.nomorAyat && activeWordData?.wordIndex === wIndex;
+                                                                return (
+                                                                    <span 
+                                                                        key={word.id || wIndex} 
+                                                                        className={`inline-block ml-2 lg:ml-3 transition-colors duration-200 ${isActive ? 'text-[#1799dc] dark:text-[#38bdf8] bg-[#1799dc]/10 dark:bg-[#38bdf8]/10 rounded-lg px-2 -mx-2' : ''}`}
+                                                                        dangerouslySetInnerHTML={{ __html: word.text_uthmani_tajweed || word.text_uthmani || word.text }}
+                                                                    />
+                                                                );
+                                                            })}
+                                                        </p>
+                                                    ) : ayah.teksTajweed ? (
                                                         <p 
-                                                            className="font-arabic text-4xl md:text-[2.75rem] leading-[2.5] md:leading-[2.75] text-slate-800 dark:text-slate-100" 
+                                                            className={`font-arabic text-4xl md:text-[2.75rem] leading-[2.5] md:leading-[2.75] transition-colors duration-300 ${(playingAudio === ayah.audio["05"] || playingAudio === (ayah.quranComAudio ? "https://verses.quran.com/" + ayah.quranComAudio.url : null)) ? 'text-[#1799dc] dark:text-[#38bdf8]' : 'text-slate-800 dark:text-slate-100'}`}
                                                             dangerouslySetInnerHTML={{ __html: ayah.teksTajweed }} 
                                                             dir="rtl"
                                                         />
                                                     ) : (
-                                                        <p className="font-arabic text-4xl md:text-[2.75rem] leading-[2.5] md:leading-[2.75] text-slate-800 dark:text-slate-100" dir="rtl">{ayah.teksArab}</p>
+                                                        <p className={`font-arabic text-4xl md:text-[2.75rem] leading-[2.5] md:leading-[2.75] transition-colors duration-300 ${(playingAudio === ayah.audio["05"] || playingAudio === (ayah.quranComAudio ? "https://verses.quran.com/" + ayah.quranComAudio.url : null)) ? 'text-[#1799dc] dark:text-[#38bdf8]' : 'text-slate-800 dark:text-slate-100'}`} dir="rtl">{ayah.teksArab}</p>
                                                     )}
                                                 </div>
                                             </div>
                                             <div className="border-t border-slate-100 dark:border-slate-700/50 pt-4 mt-6">
-                                                <p className="text-sm font-medium text-primary-600 dark:text-primary-400 mb-2">{ayah.teksLatin}</p>
+                                                <p className={`text-sm font-medium mb-2 transition-colors duration-300 ${playingAudio === ayah.audio["05"] ? 'text-[#1799dc] dark:text-[#38bdf8]' : 'text-primary-600 dark:text-primary-400'}`}>{ayah.teksLatin}</p>
                                                 <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm md:text-base mb-4">{ayah.teksIndonesia}</p>
                                                 
                                                 {/* Talaqqi AI Feedback */}
