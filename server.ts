@@ -32,10 +32,16 @@ async function startServer() {
   app.post("/api/evaluate-talaqqi", async (req, res) => {
     try {
       const { prompt, audioBase64, mimeType } = req.body;
-      const apiKey = process.env.GEMINI_API_KEY;
+      
+      // Try to get key from multiple possible env vars
+      let apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 
-      if (!apiKey) {
-        return res.status(500).json({ error: "Gemini API key is not configured on server" });
+      // Check for placeholder values
+      if (apiKey === "MY_GEMINI_API_KEY" || !apiKey || apiKey.trim() === "") {
+        console.error("[ERROR] Gemini API Key is missing or using placeholder value.");
+        return res.status(500).json({ 
+          error: "Gemini API key is not configured correctly on the server. Please check your environment variables (GEMINI_API_KEY)." 
+        });
       }
 
       if (!prompt || !audioBase64 || !mimeType) {

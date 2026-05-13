@@ -372,9 +372,15 @@ export default function QuranPage() {
                     
                 } catch (e) {
                     console.error("Evaluation error", e);
+                    let errorMessage = e instanceof Error ? e.message : "Gagal mengevaluasi bacaan.";
+                    
+                    if (errorMessage.includes("API key not valid") || errorMessage.includes("configuration")) {
+                        errorMessage = "Konfigurasi Talaqqi AI (API Key) bermasalah. Pastikan API Key Gemini sudah terpasang dengan benar di server settings.";
+                    }
+
                     setEvaluationResults(prev => ({
                         ...prev,
-                        [ayahNumber]: e instanceof Error ? e.message : "Gagal mengevaluasi bacaan. Coba rekam suara sekali lagi."
+                        [ayahNumber]: errorMessage
                     }));
                 } finally {
                     setEvaluatingAyah(null);
