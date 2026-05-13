@@ -269,11 +269,18 @@ export default function QuranPage() {
     };
 
     const playNetworkTTS = (text: string, lang: string, audioId: string) => {
-        const words = text.split(' ');
+        // Remove diacritics for better TTS processing if it's Arabic
+        let processedText = text;
+        if (lang === 'ar-SA') {
+            // Very simple approach to remove Tashkeel for potentially better TTS engine support if needed
+            // but usually Google TTS handles it fine. Let's keep it but ensure chunks are reasonable.
+        }
+
+        const words = processedText.split(' ');
         let chunks: string[] = [];
         let currentChunk = '';
         words.forEach(word => {
-            if (currentChunk.length + word.length > 180) {
+            if (currentChunk.length + word.length > 150) {
                 if (currentChunk) chunks.push(currentChunk.trim());
                 currentChunk = word + ' ';
             } else {
@@ -282,12 +289,18 @@ export default function QuranPage() {
         });
         if (currentChunk) chunks.push(currentChunk.trim());
         
+        // If still no chunks (empty text), don't proceed
+        if (chunks.length === 0) {
+            setPlayingAudio(null);
+            return;
+        }
+        
         networkTTSChunksRef.current = chunks;
         networkTTSCurrentRef.current = 0;
         networkTTSIdRef.current = audioId;
         
         const playNextChunk = () => {
-            if (networkTTSIdRef.current !== audioId) return; // Stopped
+            if (networkTTSIdRef.current !== audioId) return;
             if (networkTTSCurrentRef.current >= networkTTSChunksRef.current.length) {
                 setPlayingAudio(null);
                 networkTTSIdRef.current = null;
@@ -297,12 +310,18 @@ export default function QuranPage() {
             const chunk = networkTTSChunksRef.current[networkTTSCurrentRef.current];
             const audioEl = document.getElementById('quran-audio') as HTMLAudioElement;
             if (audioEl) {
+                // Ensure audio is fully reset
+                audioEl.pause();
+                audioEl.currentTime = 0;
                 audioEl.src = `/api/tts?text=${encodeURIComponent(chunk)}&lang=${lang.split('-')[0]}`;
+                audioEl.load();
+
                 audioEl.onended = () => {
                     networkTTSCurrentRef.current++;
                     playNextChunk();
                 };
-                audioEl.onerror = () => {
+                audioEl.onerror = (e) => {
+                    console.error('Audio element error:', e);
                     setPlayingAudio(null);
                     networkTTSIdRef.current = null;
                 };
@@ -310,7 +329,11 @@ export default function QuranPage() {
                 const playPromise = audioEl.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(e => {
-                        console.error('Network TTS error:', e);
+                        console.error('Network TTS playback error:', e);
+                        // If it's a "NotAllowedError" (user didn't interact), we might be stuck
+                        if (e.name === 'NotAllowedError') {
+                            alert('Browser memblokir audio otomatis. Silakan klik tombol lagi.');
+                        }
                         setPlayingAudio(null);
                         networkTTSIdRef.current = null;
                     });
@@ -771,6 +794,7 @@ export default function QuranPage() {
 
     return (
         <div className="pt-20 md:pt-28 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+            <audio id="quran-audio" className="hidden" />
             <div className="max-w-4xl mx-auto px-4">
                 
                 {/* Header */}
@@ -925,7 +949,6 @@ export default function QuranPage() {
                                 </div>
                             ) : surahDetail ? (
                                 <div className="space-y-8">
-                                    <audio id="quran-audio" className="hidden" />
                                     {surahDetail.ayat.map((ayah: any) => (
                                         <div key={ayah.nomorAyat} className={`bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border relative transition-all duration-300 ${(playingAudio === ayah.audio["05"] || playingAudio === (ayah.quranComAudio ? "https://verses.quran.com/" + ayah.quranComAudio.url : null)) ? 'border-[#1799dc] ring-4 ring-[#1799dc]/10 dark:ring-[#1799dc]/20' : 'border-slate-100 dark:border-slate-700'}`}>
                                             <div className="flex justify-between items-start mb-6">
