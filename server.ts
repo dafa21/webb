@@ -28,20 +28,167 @@ async function startServer() {
     res.json({ status: "ok", env: process.env.NODE_ENV, port: PORT });
   });
 
+  app.get("/api/doa", async (req, res) => {
+    try {
+      const response = await fetch("https://doa-doa-api-ahmadramadhan.fly.dev/api");
+      if (!response.ok) throw new Error("Failed to fetch doa");
+      const data = await response.json();
+      
+      const riwayatMapping: Record<string, string> = {
+        "1": "HR. Al-Bukhari no. 6324 & Muslim no. 2711",
+        "2": "HR. Al-Bukhari no. 6312 & Muslim no. 2711",
+        "3": "HR. Al-Bukhari no. 142 & Muslim no. 375",
+        "4": "HR. Ibnu Sunni no. 163 & Ath-Thabrani",
+        "5": "HR. Abu Dawud no. 5095 & At-Tirmidzi no. 3426",
+        "6": "HR. Abu Dawud no. 5096",
+        "7": "HR. Ibnu Majah no. 925",
+        "8": "Bersumber dari Al-Qur'an & As-Sunnah",
+        "9": "Hadits mauquf riwayat Ad-Dailami",
+        "10": "HR. Abu Dawud no. 101 & Ibnu Majah no. 399",
+        "11": "HR. Muslim no. 234",
+        "12": "Bersumber dari Adab Membaca Al-Qur'an",
+        "13": "HR. Abu Dawud & Al-Baihaqi",
+        "14": "Adab harian dalam Islam",
+        "15": "HR. Abu Dawud & At-Tirmidzi",
+        "16": "HR. Muslim no. 2708",
+        "17": "HR. Abu Dawud & Ibnu Majah",
+        "18": "HR. Abu Dawud no. 4020 & At-Tirmidzi",
+        "19": "HR. At-Tirmidzi no. 606",
+        "20": "HR. Ibnu Majah & At-Tirmidzi",
+        "21": "HR. At-Tirmidzi no. 3391",
+        "22": "HR. At-Tirmidzi no. 3391",
+        "23": "HR. Ibnu Sunni no. 163 & Ath-Thabrani",
+        "24": "HR. Al-Bukhari & Muslim",
+        "25": "HR. Muslim no. 713",
+        "26": "HR. Muslim no. 713",
+        "27": "HR. Al-Bukhari no. 614",
+        "28": "HR. At-Tirmidzi no. 3446",
+        "29": "HR. At-Tirmidzi no. 3428 & Ibnu Majah no. 2235",
+        "30": "HR. Abu Dawud, At-Tirmidzi & Ibnu Majah",
+        "31": "HR. Abu Dawud, At-Tirmidzi & Ibnu Majah",
+        "32": "HR. Al-Bukhari no. 1032",
+        "33": "HR. Al-Bukhari no. 1014",
+        "34": "HR. Al-Bukhari no. 846 & Muslim no. 71",
+        "35": "Bersumber dari Al-Qur'an & Adab Harian",
+        "36": "HR. At-Tirmidzi no. 3563",
+        "37": "Bersumber dari Adab Keseharian"
+      };
+
+      const enrichedData = data.map((d: any) => ({
+        ...d,
+        riwayat: riwayatMapping[d.id] || "Riwayat tidak diketahui"
+      }));
+
+      res.json(enrichedData);
+    } catch (error) {
+      console.error("Doa Proxy Error:", error);
+      res.status(500).json({ error: error instanceof Error ? error.message : "Internal Server Error" });
+    }
+  });
+
+  const hadithCache: Record<string, {arab: string, id: string}> = {};
+
+  app.get("/api/hadith", async (req, res) => {
+    try {
+      const { book, number, ref } = req.query;
+      
+      const referenceKey = ref?.toString() || `${book} no. ${number}`;
+      
+      // Check local cache first so we don't bombard Gemini
+      if (hadithCache[referenceKey]) {
+         return res.json({
+            code: 200,
+            data: { contents: hadithCache[referenceKey] }
+         });
+      }
+
+      // Try fetching from the original API (if book and number are present)
+      if (book && number) {
+         try {
+             const response = await fetch(`https://api.hadith.gading.dev/books/${book}/${number}`);
+             const data = await response.json();
+             if (data.code === 200 && !data.error && data.data && data.data.contents) {
+                 return res.json(data);
+             }
+         } catch(e) {
+             console.error("Gading API fetch failed:", e);
+         }
+
+         // Second fallback: MyQuran API
+         try {
+             const myQuranBook = book === "abu-daud" ? "abu-dawud" : book;
+             const response = await fetch(`https://api.myquran.com/v2/hadits/${myQuranBook}/${number}`);
+             const data = await response.json();
+             if (data.status && data.data) {
+                 return res.json({
+                    code: 200,
+                    data: {
+                        contents: {
+                            number: data.data.number,
+                            arab: data.data.arab,
+                            id: data.data.id
+                        }
+                    }
+                 });
+             }
+         } catch(e) {
+             console.error("MyQuran API fetch failed:", e);
+         }
+      }
+
+      // If missing or failed or doesn't have book/num, use Gemini!
+      console.log(`Fallback to Gemini for: ${referenceKey}`);
+      const apiKey = process.env.GEMINI_API_KEY;
+
+      if (!apiKey) {
+        console.error("[ERROR] GEMINI_API_KEY is not set.");
+        return res.status(500).json({ error: "Layanan AI tidak tersedia (API Key tidak ditemukan)." });
+      }
+
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Using 1.5 flash for speed
+
+      const prompt = `Anda adalah ahli hadits.\n` + 
+      `Carikan teks asli (bahasa Arab) dan terjemahan Indonesianya untuk riwayat berikut: "${referenceKey}".\n` + 
+      `Keluarkan respons DALAM FORMAT JSON SAJA yang berisi objek dengan format: { "arab": "teks arab", "id": "teks terjemahan indonesia" }.\n` +
+      `Jika itu bukan ucapan Nabi (misal cuma adab atau quran), berikan teks ayat atau doa yang sesuai, dan terjemahannya, atau jelaskan adabnya singkat dalam arab dan id. Jangan sertakan markdown \`\`\`json, cukup balasan raw json. Jika riwayat tidak bisa dipastikan, berikan teks doa terkait atau penjelasan fallback di id.`;
+
+      const aiResponse = await model.generateContent(prompt);
+      let text = aiResponse.response.text().trim();
+      
+      // Clean markdown if gemini included it despite instructions
+      if (text.startsWith("```json")) text = text.replace(/```json/g, "");
+      if (text.startsWith("```")) text = text.replace(/```/g, "");
+      if (text.endsWith("```")) text = text.substring(0, text.length - 3);
+      
+      const parsed = JSON.parse(text.trim());
+      
+      if (parsed.arab && parsed.id) {
+         hadithCache[referenceKey] = parsed;
+         return res.json({
+            code: 200,
+            data: { contents: parsed }
+         });
+      } else {
+         throw new Error("Invalid format from AI");
+      }
+
+    } catch(err) {
+       console.error("Hadith fallback error:", err);
+       res.status(404).json({ error: "Hadith tidak ditemukan" });
+    }
+  });
+
   // Proxy endpoint for Talaqqi AI evaluation
   app.post("/api/evaluate-talaqqi", async (req, res) => {
     try {
       const { prompt, audioBase64, mimeType } = req.body;
       
-      // Try to get key from multiple possible env vars
-      let apiKey = process.env.GEMINI_API_KEY || "AIzaSyCKT2q9-rUictxv3_b7_I3Lxt74YGCUNsM";
+      const apiKey = process.env.GEMINI_API_KEY;
 
-      // If still missing or placeholder, error out
-      if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey.trim() === "") {
-        console.error("[ERROR] Gemini API Key is missing.");
-        return res.status(500).json({ 
-          error: "API Key Gemini belum disetel. Tambahkan GEMINI_API_KEY di file .env pada VPS Anda." 
-        });
+      if (!apiKey) {
+        console.error("[ERROR] GEMINI_API_KEY is not set.");
+        return res.status(500).json({ error: "Layanan AI tidak tersedia (API Key tidak ditemukan)." });
       }
 
       if (!prompt || !audioBase64 || !mimeType) {

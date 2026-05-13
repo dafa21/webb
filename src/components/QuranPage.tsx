@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function QuranPage() {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState<'quran' | 'hadits'>('quran');
+    const [activeTab, setActiveTab] = useState<'quran' | 'hadits' | 'doa'>('quran');
 
     // Quran State
     const [surahs, setSurahs] = useState<any[]>([]);
@@ -27,6 +27,15 @@ export default function QuranPage() {
     const [hadithPage, setHadithPage] = useState(1);
     const [searchHadithText, setSearchHadithText] = useState('');
 
+    // Doa State
+    const [doas, setDoas] = useState<any[]>([]);
+    const [loadingDoas, setLoadingDoas] = useState(false);
+    const [searchDoa, setSearchDoa] = useState('');
+
+    const [selectedReference, setSelectedReference] = useState<{bookId: string, number: string, bookName: string, fullText: string, fallback: {arab: string, id: string}} | null>(null);
+    const [referenceData, setReferenceData] = useState<any>(null);
+    const [loadingReference, setLoadingReference] = useState(false);
+
     // Talaqqi AI State
     const [recordingAyah, setRecordingAyah] = useState<number | null>(null);
     const [evaluatingAyah, setEvaluatingAyah] = useState<number | null>(null);
@@ -34,7 +43,8 @@ export default function QuranPage() {
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
 
-    const [activeWordData, setActiveWordData] = useState<{ ayahNumber: number, wordIndex: number } | null>(null);
+    const activeWordRef = useRef<{ ayahNumber: number, wordIndex: number } | null>(null);
+    const rqAnimRef = useRef<number | null>(null);
 
     // Fetch Surahs
     useEffect(() => {
@@ -65,6 +75,50 @@ export default function QuranPage() {
                 })
                 .catch(console.error)
                 .finally(() => setLoadingBooks(false));
+        }
+    }, [activeTab]);
+
+    useEffect(() => {
+        if (selectedReference) {
+            setLoadingReference(true);
+            setReferenceData(null);
+            fetch(`/api/hadith?book=${selectedReference.bookId}&number=${selectedReference.number}&ref=${encodeURIComponent(selectedReference.fullText)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.code === 200 && data.data && data.data.contents) {
+                        setReferenceData(data.data.contents);
+                    } else {
+                        // Use fallback directly if AI generation fails or original API fails
+                        setReferenceData({ 
+                             arab: selectedReference.fallback.arab, 
+                             id: selectedReference.fallback.id,
+                             isFallback: true
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    setReferenceData({ 
+                         arab: selectedReference.fallback.arab, 
+                         id: selectedReference.fallback.id,
+                         isFallback: true
+                    });
+                })
+                .finally(() => setLoadingReference(false));
+        }
+    }, [selectedReference]);
+
+    // Fetch Doa
+    useEffect(() => {
+        if (activeTab === 'doa' && doas.length === 0) {
+            setLoadingDoas(true);
+            fetch('/api/doa')
+                .then(res => res.json())
+                .then(data => {
+                    setDoas(data);
+                })
+                .catch(console.error)
+                .finally(() => setLoadingDoas(false));
         }
     }, [activeTab]);
 
@@ -104,17 +158,27 @@ export default function QuranPage() {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
         }
+
+        // Remove existing highlight if any
+        if (activeWordRef.current) {
+            const el = document.getElementById(`word-${activeWordRef.current.ayahNumber}-${activeWordRef.current.wordIndex}`);
+            if (el) el.classList.remove('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
+            activeWordRef.current = null;
+        }
+        if (rqAnimRef.current) {
+            cancelAnimationFrame(rqAnimRef.current);
+            rqAnimRef.current = null;
+        }
+
         if (playingAudio === audioUrl) {
             setPlayingAudio(null);
-            setActiveWordData(null);
             const audioEl = document.getElementById('quran-audio') as HTMLAudioElement;
             if (audioEl) {
                 audioEl.pause();
-                audioEl.ontimeupdate = null;
+                audioEl.onplay = null;
             }
         } else {
             setPlayingAudio(audioUrl);
-            setActiveWordData(null);
             setTimeout(() => {
                 const audioEl = document.getElementById('quran-audio') as HTMLAudioElement;
                 if (audioEl) {
@@ -122,34 +186,115 @@ export default function QuranPage() {
                     audioEl.play().catch(console.error);
                     audioEl.onended = () => {
                         setPlayingAudio(null);
-                        setActiveWordData(null);
-                        audioEl.ontimeupdate = null;
+                        if (activeWordRef.current) {
+                            const el = document.getElementById(`word-${activeWordRef.current.ayahNumber}-${activeWordRef.current.wordIndex}`);
+                            if (el) el.classList.remove('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
+                            activeWordRef.current = null;
+                        }
+                        if (rqAnimRef.current) {
+                            cancelAnimationFrame(rqAnimRef.current);
+                            rqAnimRef.current = null;
+                        }
                     };
                     
                     if (ayahNumber && audioSegments) {
-                        audioEl.ontimeupdate = () => {
+                        const updateHighlight = () => {
+                            if (!audioEl || audioEl.paused) return;
                             const currentTimeMs = audioEl.currentTime * 1000;
-                            let foundWord = false;
+                            let newActiveWord: { ayahNumber: number, wordIndex: number } | null = null;
+                            
                             for (let i = 0; i < audioSegments.length; i++) {
                                 const seg = audioSegments[i];
                                 if (seg && seg.length >= 4) {
                                     const startMs = seg[2];
                                     const endMs = seg[3];
                                     if (currentTimeMs >= startMs && currentTimeMs <= endMs) {
-                                        setActiveWordData({ ayahNumber, wordIndex: seg[0] });
-                                        foundWord = true;
+                                        newActiveWord = { ayahNumber, wordIndex: seg[0] };
                                         break;
                                     }
                                 }
                             }
-                            if (!foundWord) {
-                                setActiveWordData(null);
+                            
+                            const prev = activeWordRef.current;
+                            if (newActiveWord?.wordIndex !== prev?.wordIndex || newActiveWord?.ayahNumber !== prev?.ayahNumber) {
+                                if (prev) {
+                                    const el = document.getElementById(`word-${prev.ayahNumber}-${prev.wordIndex}`);
+                                    if (el) el.classList.remove('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
+                                }
+                                if (newActiveWord) {
+                                    const el = document.getElementById(`word-${newActiveWord.ayahNumber}-${newActiveWord.wordIndex}`);
+                                    if (el) el.classList.add('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
+                                }
+                                activeWordRef.current = newActiveWord;
                             }
+                            
+                            rqAnimRef.current = requestAnimationFrame(updateHighlight);
                         };
+                        audioEl.onplay = () => {
+                            rqAnimRef.current = requestAnimationFrame(updateHighlight);
+                        };
+                        if (!audioEl.paused) {
+                            rqAnimRef.current = requestAnimationFrame(updateHighlight);
+                        }
                     } else {
-                        audioEl.ontimeupdate = null;
+                        audioEl.onplay = null;
                     }
                 }
+            }, 50);
+        }
+    };
+
+    const getBestVoice = (lang: string) => {
+        const voices = window.speechSynthesis.getVoices();
+        let voice = voices.find(v => v.lang === lang && (v.name.includes('Google') || v.name.includes('Premium') || v.name.includes('Enhanced')));
+        if (!voice) {
+            voice = voices.find(v => v.lang.startsWith(lang.split('-')[0]) && (v.name.includes('Google') || v.name.includes('Premium') || v.name.includes('Enhanced')));
+        }
+        if (!voice) voice = voices.find(v => v.lang === lang && v.name.includes('Majed')); // Popular Arabic male voice on Apple devices
+        if (!voice) voice = voices.find(v => v.lang === lang);
+        if (!voice) voice = voices.find(v => v.lang.startsWith(lang.split('-')[0]));
+        return voice;
+    };
+
+    const toggleSpeechAudio = (text: string, id: string, lang: 'ar-SA' | 'id-ID') => {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
+        
+        // Coba untuk memberhentikan audio Quran jika sedang berjalan
+        if (playingAudio && !playingAudio.startsWith('doa') && !playingAudio.startsWith('quran-trans')) {
+            const audioEl = document.getElementById('quran-audio') as HTMLAudioElement;
+            if (audioEl) {
+                audioEl.pause();
+                audioEl.onplay = null;
+            }
+            if (rqAnimRef.current) {
+                cancelAnimationFrame(rqAnimRef.current);
+                rqAnimRef.current = null;
+            }
+            if (activeWordRef.current) {
+                const el = document.getElementById(`word-${activeWordRef.current.ayahNumber}-${activeWordRef.current.wordIndex}`);
+                if (el) el.classList.remove('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
+                activeWordRef.current = null;
+            }
+        }
+    
+        if (playingAudio === id) {
+            setPlayingAudio(null);
+        } else {
+            setPlayingAudio(id);
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang;
+            utterance.rate = 0.85; // Diperlambat sedikit agar lebih jelas
+            
+            const bestVoice = getBestVoice(lang);
+            if (bestVoice) utterance.voice = bestVoice;
+            
+            utterance.onend = () => setPlayingAudio(null);
+            utterance.onerror = () => setPlayingAudio(null);
+            
+            setTimeout(() => {
+                window.speechSynthesis.speak(utterance);
             }, 50);
         }
     };
@@ -179,16 +324,12 @@ export default function QuranPage() {
         setTimeout(() => {
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = lang;
+            utterance.rate = 0.85; // Diperlambat sedikit agar lebih jelas
             
             // Try to find a voice that matches the language
-            const voices = window.speechSynthesis.getVoices();
-            let voice = voices.find(v => v.lang === lang); // Exact match
-            if (!voice) {
-                voice = voices.find(v => v.lang.startsWith(lang.split('-')[0])); // Language match
-            }
-            
-            if (voice) {
-                utterance.voice = voice;
+            const bestVoice = getBestVoice(lang);
+            if (bestVoice) {
+                utterance.voice = bestVoice;
             }
 
             utterance.pitch = 1;
@@ -249,6 +390,77 @@ export default function QuranPage() {
         h.id.toLowerCase().includes(searchHadithText.toLowerCase()) || 
         h.arab.includes(searchHadithText)
     );
+
+    const filteredDoas = doas.filter(doa => 
+        doa.doa.toLowerCase().includes(searchDoa.toLowerCase()) || 
+        doa.artinya.toLowerCase().includes(searchDoa.toLowerCase())
+    );
+
+    const parseRiwayat = (riwayat: string, fallbackArab: string, fallbackId: string) => {
+        if (!riwayat) return null;
+
+        const bookRefs = [
+            { name: 'Al-Bukhari', id: 'bukhari' },
+            { name: 'Muslim', id: 'muslim' },
+            { name: 'Abu Dawud', id: 'abu-daud' },
+            { name: 'At-Tirmidzi', id: 'tirmidzi' },
+            { name: 'Ibnu Majah', id: 'ibnu-majah' },
+            { name: 'An-Nasai', id: 'nasai' },
+            { name: 'Ahmad', id: 'ahmad' },
+            { name: 'Darimi', id: 'darimi' },
+            { name: 'Malik', id: 'malik' }
+        ];
+
+        let parsedElements: any[] = [];
+        let remainingText = riwayat;
+
+        // Iterate and try to find references
+        while (remainingText.length > 0) {
+            let earliestMatch: any = null;
+
+            bookRefs.forEach(book => {
+                const regex = new RegExp(`(${book.name})(?:\\s*no\\.?\\s*(\\d+))?`, 'i');
+                const match = remainingText.match(regex);
+                if (match && (!earliestMatch || match.index !== undefined && earliestMatch.index !== undefined && match.index < earliestMatch.index)) {
+                    earliestMatch = {
+                        book,
+                        match: match[0],
+                        bookMatch: match[1],
+                        number: match[2],
+                        index: match.index
+                    };
+                }
+            });
+
+            if (earliestMatch && earliestMatch.number) {
+                // We found a book with a number, slice text before it as plain text
+                if (earliestMatch.index > 0) {
+                    parsedElements.push(<span key={`text-${parsedElements.length}`}>{remainingText.substring(0, earliestMatch.index)}</span>);
+                }
+                
+                // Add the clickable button
+                parsedElements.push(
+                    <button 
+                        key={`btn-${parsedElements.length}`}
+                        onClick={() => setSelectedReference({ bookId: earliestMatch.book.id, number: earliestMatch.number, bookName: earliestMatch.book.name, fullText: earliestMatch.match, fallback: { arab: fallbackArab, id: fallbackId } })}
+                        className="inline-flex items-center mx-1 px-1.5 py-0.5 bg-[#1799dc]/10 hover:bg-[#1799dc]/20 text-[#1799dc] dark:text-[#38bdf8] rounded cursor-pointer transition-colors"
+                        title="Buka Referensi Hadits"
+                    >
+                        {earliestMatch.match}
+                    </button>
+                );
+
+                remainingText = remainingText.substring(earliestMatch.index + earliestMatch.match.length);
+            } else {
+                // If we also want to match books without numbers we could, but we can't fetch them specifically
+                // Let's just treat the rest as text
+                parsedElements.push(<span key={`text-${parsedElements.length}`}>{remainingText}</span>);
+                break;
+            }
+        }
+
+        return <>{parsedElements}</>;
+    };
 
     const getHadithTitle = (text: string) => {
         const markers = ["bersabda:", "berkata:", "bertanya:", "bahwa:", "bahwasanya", "menceritakan:"];
@@ -349,13 +561,9 @@ export default function QuranPage() {
         utterance.lang = 'id-ID';
         utterance.rate = 0.95;
         
-        const voices = window.speechSynthesis.getVoices();
-        let voice = voices.find(v => v.lang === 'id-ID');
-        if (!voice) {
-            voice = voices.find(v => v.lang.startsWith('id'));
-        }
-        if (voice) {
-            utterance.voice = voice;
+        const bestVoice = getBestVoice('id-ID');
+        if (bestVoice) {
+            utterance.voice = bestVoice;
         }
         
         utterance.onend = () => {
@@ -455,6 +663,12 @@ export default function QuranPage() {
                                     className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${activeTab === 'hadits' ? 'bg-[#1799dc] text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
                                 >
                                     Hadits
+                                </button>
+                                <button 
+                                    onClick={() => setActiveTab('doa')}
+                                    className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${activeTab === 'doa' ? 'bg-[#1799dc] text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+                                >
+                                    Doa Harian
                                 </button>
                             </div>
                         </div>
@@ -564,6 +778,13 @@ export default function QuranPage() {
                                                         {(playingAudio === ayah.audio["05"] || playingAudio === (ayah.quranComAudio ? "https://verses.quran.com/" + ayah.quranComAudio.url : null)) ? <span className="w-3 h-3 bg-white rounded-sm"></span> : <PlayCircle className="w-5 h-5 ml-0.5" />}
                                                     </button>
                                                     <button 
+                                                        onClick={() => toggleSpeechAudio(ayah.teksIndonesia, `quran-trans-${ayah.nomorAyat}`, 'id-ID')}
+                                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${playingAudio === `quran-trans-${ayah.nomorAyat}` ? 'bg-[#8b5cf6] text-white shadow-md shadow-[#8b5cf6]/20' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:bg-[#8b5cf6]/10 hover:text-[#8b5cf6]'}`}
+                                                        title="Putar Terjemahan"
+                                                    >
+                                                        {playingAudio === `quran-trans-${ayah.nomorAyat}` ? <span className="w-3 h-3 bg-white rounded-sm"></span> : <PlayCircle className="w-5 h-5 ml-0.5" />}
+                                                    </button>
+                                                    <button 
                                                         onClick={() => recordingAyah === ayah.nomorAyat ? stopRecording() : startRecording(ayah.nomorAyat)}
                                                         disabled={evaluatingAyah === ayah.nomorAyat || (recordingAyah !== null && recordingAyah !== ayah.nomorAyat)}
                                                         className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${recordingAyah === ayah.nomorAyat ? 'bg-red-500 text-white shadow-md shadow-red-500/30 animate-pulse' : evaluatingAyah === ayah.nomorAyat ? 'bg-amber-100 text-amber-500 cursor-not-allowed' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:bg-[#1799dc]/10 hover:text-[#1799dc]'} disabled:opacity-50`}
@@ -582,11 +803,11 @@ export default function QuranPage() {
                                                     {ayah.quranComWords ? (
                                                         <p className="font-arabic text-4xl md:text-[2.75rem] leading-[2.5] md:leading-[2.75] text-slate-800 dark:text-slate-100" dir="rtl">
                                                             {ayah.quranComWords.map((word: any, wIndex: number) => {
-                                                                const isActive = activeWordData?.ayahNumber === ayah.nomorAyat && activeWordData?.wordIndex === wIndex;
                                                                 return (
                                                                     <span 
+                                                                        id={`word-${ayah.nomorAyat}-${wIndex}`}
                                                                         key={word.id || wIndex} 
-                                                                        className={`inline-block ml-2 lg:ml-3 transition-colors duration-200 ${isActive ? 'text-[#1799dc] dark:text-[#38bdf8] bg-[#1799dc]/10 dark:bg-[#38bdf8]/10 rounded-lg px-2 -mx-2' : ''}`}
+                                                                        className={`inline-block ml-2 lg:ml-3 transition-colors duration-200`}
                                                                         dangerouslySetInnerHTML={{ __html: word.text_uthmani_tajweed || word.text_uthmani || word.text }}
                                                                     />
                                                                 );
@@ -823,8 +1044,136 @@ export default function QuranPage() {
                         </div>
                     )}
 
+                    {activeTab === 'doa' && (
+                        <div>
+                            <div className="relative max-w-md mx-auto mb-8">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                <input 
+                                    type="text" 
+                                    placeholder="Cari Doa..."
+                                    value={searchDoa}
+                                    onChange={(e) => setSearchDoa(e.target.value)}
+                                    className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl focus:ring-2 focus:ring-[#1799dc]/50 outline-none transition-shadow block"
+                                />
+                            </div>
+
+                            {loadingDoas ? (
+                                <div className="flex justify-center items-center py-20">
+                                    <Loader2 className="w-8 h-8 animate-spin text-[#1799dc]" />
+                                </div>
+                            ) : (
+                                <div className="space-y-6">
+                                    {filteredDoas.map((doa) => (
+                                        <div key={doa.id} className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[2rem] shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700 transition-all">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-slate-100 dark:border-slate-700/50">
+                                                <div className="flex-1">
+                                                    <h3 className="font-black text-slate-800 dark:text-slate-100 text-xl md:text-2xl leading-tight mb-2">
+                                                        {doa.doa}
+                                                    </h3>
+                                                    {doa.riwayat && (
+                                                        <div className="inline-block mt-1 px-3 py-1.5 bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 rounded-lg text-xs font-bold uppercase tracking-wide">
+                                                            {parseRiwayat(doa.riwayat, doa.ayat, doa.artinya)}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-3 shrink-0">
+                                                    <button 
+                                                        onClick={() => toggleSpeechAudio(doa.ayat, `doa-ar-${doa.id}`, 'ar-SA')}
+                                                        className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${playingAudio === `doa-ar-${doa.id}` ? 'bg-[#1799dc] text-white shadow-lg shadow-[#1799dc]/30 scale-105' : 'bg-[#1799dc]/10 text-[#1799dc] hover:bg-[#1799dc] hover:text-white'}`}
+                                                        title="Putar Audio Arab"
+                                                    >
+                                                        {playingAudio === `doa-ar-${doa.id}` ? <span className="w-4 h-4 bg-white rounded-sm"></span> : <PlayCircle className="w-6 h-6 ml-0.5" />}
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => toggleSpeechAudio(doa.artinya, `doa-id-${doa.id}`, 'id-ID')}
+                                                        className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${playingAudio === `doa-id-${doa.id}` ? 'bg-[#8b5cf6] text-white shadow-lg shadow-[#8b5cf6]/30 scale-105' : 'bg-[#8b5cf6]/10 text-[#8b5cf6] hover:bg-[#8b5cf6] hover:text-white'}`}
+                                                        title="Putar Audio Terjemahan"
+                                                    >
+                                                        {playingAudio === `doa-id-${doa.id}` ? <span className="w-4 h-4 bg-white rounded-sm"></span> : <PlayCircle className="w-6 h-6 ml-0.5" />}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex flex-col gap-8">
+                                                <div>
+                                                    <p className="font-arabic text-3xl md:text-5xl leading-[2.5] md:leading-[2.5] text-right text-slate-800 dark:text-slate-100 mb-6" dir="rtl">
+                                                        {doa.ayat}
+                                                    </p>
+                                                </div>
+                                                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 border border-slate-100 dark:border-slate-700">
+                                                    <p className="text-sm font-medium text-primary-600 dark:text-primary-400 mb-3">{doa.latin}</p>
+                                                    <p className="text-slate-700 dark:text-slate-300 leading-loose md:text-lg font-medium">
+                                                        {doa.artinya}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    {filteredDoas.length === 0 && doas.length > 0 && (
+                                        <div className="text-center py-10 text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                                            Tidak ada doa yang cocok dengan pencarian Anda.
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                 </div>
             </div>
+
+            {/* Hadith Reference Modal */}
+            {selectedReference && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" onClick={() => setSelectedReference(null)}>
+                    <div 
+                        className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-700">
+                            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">
+                                {selectedReference.bookName} - Hadits No. {selectedReference.number}
+                            </h3>
+                            <button 
+                                onClick={() => setSelectedReference(null)}
+                                className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                            </button>
+                        </div>
+                        
+                        <div className="p-6 md:p-8 overflow-y-auto w-full">
+                            {loadingReference ? (
+                                <div className="flex flex-col items-center justify-center py-12">
+                                    <Loader2 className="w-10 h-10 animate-spin text-[#1799dc] mb-4" />
+                                    <p className="text-slate-500">Memuat hadits...</p>
+                                </div>
+                            ) : referenceData?.arab ? (
+                                <div className="space-y-8">
+                                    <p className="font-arabic text-3xl leading-[2.2] text-right text-slate-800 dark:text-slate-100" dir="rtl">
+                                        {referenceData.arab}
+                                    </p>
+                                    <div className="bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-700">
+                                        <p className="text-slate-700 dark:text-slate-300 leading-loose text-lg font-medium">
+                                            {referenceData.id}
+                                        </p>
+                                    </div>
+                                    {referenceData.isFallback && (
+                                        <p className="text-sm text-slate-400 mt-4 text-center italic">
+                                            Teks hadits lengkap saat ini sedang tidak tersedia. Di atas adalah kutipan doa yang dimaksud dari hadits ini.
+                                        </p>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="text-center py-12">
+                                    <p className="text-slate-500 text-lg mb-4">{referenceData?.error || 'Hadits tidak ditemukan'}</p>
+                                    <p className="text-sm text-slate-400">Pastikan nomor hadits valid untuk kitab ini.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
