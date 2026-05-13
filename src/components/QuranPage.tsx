@@ -48,6 +48,19 @@ export default function QuranPage() {
     const networkTTSChunksRef = useRef<string[]>([]);
     const networkTTSCurrentRef = useRef<number>(0);
     const networkTTSIdRef = useRef<string | null>(null);
+    const voicesLoadedRef = useRef(false);
+
+    useEffect(() => {
+        const handleVoicesChanged = () => {
+            voicesLoadedRef.current = true;
+        };
+        window.speechSynthesis.addEventListener('voiceschanged', handleVoicesChanged);
+        // Sometimes it's already loaded
+        if (window.speechSynthesis.getVoices().length > 0) {
+            voicesLoadedRef.current = true;
+        }
+        return () => window.speechSynthesis.removeEventListener('voiceschanged', handleVoicesChanged);
+    }, []);
 
     const activeWordRef = useRef<{ ayahNumber: number, wordIndex: number } | null>(null);
     const rqAnimRef = useRef<number | null>(null);
@@ -259,78 +272,126 @@ export default function QuranPage() {
     };
 
     const stopNetworkTTS = () => {
-        const audioEl = document.getElementById('quran-audio') as HTMLAudioElement;
-        if (audioEl && networkTTSIdRef.current) {
-            audioEl.pause();
-            audioEl.onended = null;
-            audioEl.onerror = null;
+        try {
+            const audioEl = document.getElementById('quran-audio') as HTMLAudioElement;
+            if (audioEl) {
+                audioEl.pause();
+                audioEl.onended = null;
+                audioEl.onerror = null;
+            }
+        } catch (e) {
+            console.error('Error stopping network TTS:', e);
         }
         networkTTSIdRef.current = null;
     };
 
-    const playNetworkTTS = (text: string, lang: string, audioId: string) => {
-        // Remove diacritics for better TTS processing if it's Arabic
-        let processedText = text;
-        if (lang === 'ar-SA') {
-            // Very simple approach to remove Tashkeel for potentially better TTS engine support if needed
-            // but usually Google TTS handles it fine. Let's keep it but ensure chunks are reasonable.
-        }
-
-        const words = processedText.split(' ');
-        let chunks: string[] = [];
-        let currentChunk = '';
-        words.forEach(word => {
-            if (currentChunk.length + word.length > 150) {
-                if (currentChunk) chunks.push(currentChunk.trim());
-                currentChunk = word + ' ';
-            } else {
-                currentChunk += word + ' ';
-            }
-        });
-        if (currentChunk) chunks.push(currentChunk.trim());
-        
-        // If still no chunks (empty text), don't proceed
-        if (chunks.length === 0) {
+    const speakViaBasicSpeech = (text: string, lang: string, audioId: string) => {
+        try {
+            if (!('speechSynthesis' in window)) return;
+            
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang;
+            utterance.rate = 0.85;
+            
+            const voice = getBestVoice(lang);
+            if (voice) utterance.voice = voice;
+            
+            utterance.onend = () => {
+                if (networkTTSIdRef.current === audioId) {
+                    setPlayingAudio(null);
+                    networkTTSIdRef.current = null;
+                }
+            };
+            utterance.onerror = () => {
+                if (networkTTSIdRef.current === audioId) {
+                    setPlayingAudio(null);
+                    networkTTSIdRef.current = null;
+                }
+            };
+            
+            networkTTSIdRef.current = audioId;
+            setPlayingAudio(audioId);
+            window.speechSynthesis.speak(utterance);
+        } catch (e) {
+            console.error('Basic speech fallback failed:', e);
             setPlayingAudio(null);
-            return;
         }
-        
-        networkTTSChunksRef.current = chunks;
-        networkTTSCurrentRef.current = 0;
-        networkTTSIdRef.current = audioId;
-        
-        const playNextChunk = () => {
-            if (networkTTSIdRef.current !== audioId) return;
-            if (networkTTSCurrentRef.current >= networkTTSChunksRef.current.length) {
+    };
+
+    const playNetworkTTS = (text: string, lang: string, audioId: string) => {
+        try {
+            const processedText = text.trim();
+            if (!processedText) {
                 setPlayingAudio(null);
-                networkTTSIdRef.current = null;
+                return;
+            }
+
+            const chunks: string[] = [];
+            if (processedText.length <= 180) {
+                chunks.push(processedText);
+            } else {
+                const words = processedText.split(' ');
+                let currentChunk = '';
+                words.forEach(word => {
+                    if (currentChunk.length + word.length > 160) {
+                        if (currentChunk) chunks.push(currentChunk.trim());
+                        currentChunk = word + ' ';
+                    } else {
+                        currentChunk += word + ' ';
+                    }
+                });
+                if (currentChunk) chunks.push(currentChunk.trim());
+            }
+            
+            if (chunks.length === 0) {
+                setPlayingAudio(null);
                 return;
             }
             
-            const chunk = networkTTSChunksRef.current[networkTTSCurrentRef.current];
+            networkTTSChunksRef.current = chunks;
+            networkTTSCurrentRef.current = 0;
+            networkTTSIdRef.current = audioId;
+            
             const audioEl = document.getElementById('quran-audio') as HTMLAudioElement;
-            if (audioEl) {
-                // Ensure audio is fully reset
+            if (!audioEl) {
+                setPlayingAudio(null);
+                return;
+            }
+
+            const playNextChunk = () => {
+                if (networkTTSIdRef.current !== audioId) return;
+                
+                if (networkTTSCurrentRef.current >= networkTTSChunksRef.current.length) {
+                    setPlayingAudio(null);
+                    networkTTSIdRef.current = null;
+                    return;
+                }
+                
+                const chunk = networkTTSChunksRef.current[networkTTSCurrentRef.current];
+                
                 audioEl.pause();
-                audioEl.currentTime = 0;
+                audioEl.onended = null;
+                audioEl.onerror = null;
                 audioEl.src = `/api/tts?text=${encodeURIComponent(chunk)}&lang=${lang.split('-')[0]}`;
                 audioEl.load();
 
                 audioEl.onended = () => {
-                    networkTTSCurrentRef.current++;
-                    playNextChunk();
+                    if (networkTTSIdRef.current === audioId) {
+                        networkTTSCurrentRef.current++;
+                        playNextChunk();
+                    }
                 };
+
                 audioEl.onerror = (e) => {
-                    console.error('Audio element error:', e);
-                    setPlayingAudio(null);
-                    networkTTSIdRef.current = null;
+                    console.error('Audio element error during chunk:', e);
+                    speakViaBasicSpeech(chunk, lang, audioId);
                 };
                 
                 const playPromise = audioEl.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(e => {
                         console.error('Network TTS playback error:', e);
-                        // If it's a "NotAllowedError" (user didn't interact), we might be stuck
                         if (e.name === 'NotAllowedError') {
                             alert('Browser memblokir audio otomatis. Silakan klik tombol lagi.');
                         }
@@ -338,115 +399,132 @@ export default function QuranPage() {
                         networkTTSIdRef.current = null;
                     });
                 }
-            }
-        };
-        
-        playNextChunk();
+            };
+            
+            playNextChunk();
+        } catch (error) {
+            console.error('Error in playNetworkTTS:', error);
+            setPlayingAudio(null);
+        }
     };
 
     const toggleSpeechAudio = (text: string, id: string, lang: 'ar-SA' | 'id-ID') => {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-        }
-        stopNetworkTTS();
+        try {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            stopNetworkTTS();
+            
+            if (playingAudio && !playingAudio.startsWith('doa') && !playingAudio.startsWith('quran-trans') && !playingAudio.startsWith('hadith')) {
+                const audioEl = document.getElementById('quran-audio') as HTMLAudioElement;
+                if (audioEl) {
+                    audioEl.pause();
+                    audioEl.onplay = null;
+                    audioEl.onended = null;
+                }
+                if (rqAnimRef.current) {
+                    cancelAnimationFrame(rqAnimRef.current);
+                    rqAnimRef.current = null;
+                }
+                if (activeWordRef.current) {
+                    const el = document.getElementById(`word-${activeWordRef.current.ayahNumber}-${activeWordRef.current.wordIndex}`);
+                    if (el) el.classList.remove('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
+                    activeWordRef.current = null;
+                }
+            }
         
-        // Coba untuk memberhentikan audio Quran jika sedang berjalan
-        if (playingAudio && !playingAudio.startsWith('doa') && !playingAudio.startsWith('quran-trans') && !playingAudio.startsWith('hadith')) {
-            const audioEl = document.getElementById('quran-audio') as HTMLAudioElement;
-            if (audioEl) {
-                audioEl.pause();
-                audioEl.onplay = null;
-                audioEl.onended = null;
-            }
-            if (rqAnimRef.current) {
-                cancelAnimationFrame(rqAnimRef.current);
-                rqAnimRef.current = null;
-            }
-            if (activeWordRef.current) {
-                const el = document.getElementById(`word-${activeWordRef.current.ayahNumber}-${activeWordRef.current.wordIndex}`);
-                if (el) el.classList.remove('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
-                activeWordRef.current = null;
-            }
-        }
-    
-        if (playingAudio === id) {
-            setPlayingAudio(null);
-        } else {
-            setPlayingAudio(id);
-            if (lang === 'ar-SA') {
-                playNetworkTTS(text, lang, id);
+            if (playingAudio === id) {
+                setPlayingAudio(null);
             } else {
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = lang;
-                utterance.rate = 0.85; // Diperlambat sedikit agar lebih jelas
+                setPlayingAudio(id);
                 
-                const bestVoice = getBestVoice(lang);
-                if (bestVoice) utterance.voice = bestVoice;
-                
-                utterance.onend = () => setPlayingAudio(null);
-                utterance.onerror = () => setPlayingAudio(null);
-                
-                window.speechSynthesis.speak(utterance);
+                if (lang === 'ar-SA') {
+                    const voice = getBestVoice(lang);
+                    const isHighQuality = voice && (
+                        voice.name.includes('Google') || 
+                        voice.name.includes('Natural') || 
+                        voice.name.includes('Neural') || 
+                        voice.name.includes('Enhanced') ||
+                        voice.name.includes('Premium')
+                    );
+
+                    if (isHighQuality) {
+                        const utterance = new SpeechSynthesisUtterance(text);
+                        utterance.lang = lang;
+                        utterance.voice = voice;
+                        utterance.rate = 0.85;
+                        utterance.onend = () => setPlayingAudio(null);
+                        utterance.onerror = () => setPlayingAudio(null);
+                        setTimeout(() => window.speechSynthesis.speak(utterance), 50);
+                    } else {
+                        playNetworkTTS(text, lang, id);
+                    }
+                } else {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = lang;
+                    utterance.rate = 0.85;
+                    const voice = getBestVoice(lang);
+                    if (voice) utterance.voice = voice;
+                    utterance.onend = () => setPlayingAudio(null);
+                    utterance.onerror = () => setPlayingAudio(null);
+                    setTimeout(() => window.speechSynthesis.speak(utterance), 50);
+                }
             }
+        } catch (err) {
+            console.error('Error in toggleSpeechAudio:', err);
+            setPlayingAudio(null);
         }
     };
 
     const toggleHadithAudio = (text: string, id: number, lang: 'ar-SA' | 'id-ID' = 'ar-SA') => {
-        const audioEl = document.getElementById('quran-audio') as HTMLAudioElement;
-        
-        if (!('speechSynthesis' in window)) {
-            alert('Fitur suara tidak didukung di browser ini.');
-            return;
-        }
-        
-        window.speechSynthesis.cancel();
-        stopNetworkTTS();
-        
-        if (playingAudio && !playingAudio.startsWith('doa') && !playingAudio.startsWith('quran-trans') && !playingAudio.startsWith('hadith')) {
-            if (audioEl) {
-                audioEl.pause();
-                audioEl.onplay = null;
-                audioEl.onended = null;
+        try {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
             }
-        }
-        
-        const audioId = `hadith-${id}-${lang}`;
-        if (playingAudio === audioId) {
-            setPlayingAudio(null);
-            return;
-        }
-
-        if (lang === 'ar-SA') {
-            setPlayingAudio(audioId);
-            playNetworkTTS(text, lang, audioId);
-        } else {
-            // Resume if paused
-            if (window.speechSynthesis.paused) {
-                window.speechSynthesis.resume();
-            }
-
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = lang;
-            utterance.rate = 0.85; // Diperlambat sedikit agar lebih jelas
+            stopNetworkTTS();
             
-            // Try to find a voice that matches the language
-            const bestVoice = getBestVoice(lang);
-            if (bestVoice) {
-                utterance.voice = bestVoice;
-            }
-
-            utterance.pitch = 1;
-            utterance.rate = 0.9; // Slightly slower for better clarity
-            
-            utterance.onend = () => setPlayingAudio(null);
-            utterance.onerror = (event) => {
-                console.error('SpeechSynthesis Error:', event);
+            const audioId = `hadith-${id}-${lang}`;
+            if (playingAudio === audioId) {
                 setPlayingAudio(null);
-            };
-            
+                return;
+            }
+
             setPlayingAudio(audioId);
-            // Small delay without setTimeout, just call directly
-            window.speechSynthesis.speak(utterance);
+
+            if (lang === 'ar-SA') {
+                const voice = getBestVoice(lang);
+                const isHighQuality = voice && (
+                    voice.name.includes('Google') || 
+                    voice.name.includes('Natural') || 
+                    voice.name.includes('Neural') || 
+                    voice.name.includes('Enhanced') ||
+                    voice.name.includes('Premium')
+                );
+
+                if (isHighQuality) {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = lang;
+                    utterance.voice = voice;
+                    utterance.rate = 0.85;
+                    utterance.onend = () => setPlayingAudio(null);
+                    utterance.onerror = () => setPlayingAudio(null);
+                    setTimeout(() => window.speechSynthesis.speak(utterance), 50);
+                } else {
+                    playNetworkTTS(text, lang, audioId);
+                }
+            } else {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = lang;
+                const voice = getBestVoice(lang);
+                if (voice) utterance.voice = voice;
+                utterance.rate = 0.9;
+                utterance.onend = () => setPlayingAudio(null);
+                utterance.onerror = () => setPlayingAudio(null);
+                setTimeout(() => window.speechSynthesis.speak(utterance), 50);
+            }
+        } catch (err) {
+            console.error('Error in toggleHadithAudio:', err);
+            setPlayingAudio(null);
         }
     };
 

@@ -184,25 +184,32 @@ async function startServer() {
       const { text, lang } = req.query;
       if (!text) return res.status(400).json({ error: "Text is required" });
       
-      const response = await fetch(`https://translate.google.com/translate_tts?ie=UTF-8&tl=${lang || 'ar'}&client=tw-ob&q=${encodeURIComponent(text.toString())}`, {
+      const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${lang || 'ar'}&client=tw-ob&q=${encodeURIComponent(text.toString())}`;
+      
+      const response = await fetch(ttsUrl, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          'Referer': 'https://translate.google.com/',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
         }
       });
       
       if (!response.ok) {
-        console.error(`Google TTS failed with status: ${response.status}`);
-        return res.status(response.status).json({ error: "Google TTS failed" });
+        const errorText = await response.text().catch(() => 'No body');
+        console.error(`Google TTS failed with status: ${response.status}. Body: ${errorText.substring(0, 500)}`);
+        return res.status(response.status).json({ error: "Google TTS failed", details: errorText.substring(0, 100) });
       }
       
-      res.setHeader('Content-Type', 'audio/mpeg');
+      const contentType = response.headers.get('content-type');
+      if (contentType) res.setHeader('Content-Type', contentType);
+      else res.setHeader('Content-Type', 'audio/mpeg');
+      
       res.setHeader('Cache-Control', 'public, max-age=31536000');
       
       const arrayBuffer = await response.arrayBuffer();
       res.send(Buffer.from(arrayBuffer));
     } catch (error) {
-      console.error("TTS Proxy Error:", error);
-      res.status(500).json({ error: "Failed to generate TTS" });
+      console.error("TTS Proxy Exception:", error);
+      res.status(500).json({ error: "Internal error in TTS proxy" });
     }
   });
 
