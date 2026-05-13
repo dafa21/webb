@@ -11,12 +11,15 @@ import {
   Globe, Tent, HandCoins, ShieldCheck, Sun, Moon, CheckCircle2, Award, Star, Milestone, Activity,
   ArrowRight, PlayCircle, Phone, Mail, ShoppingBag, Bell, Image as ImageIcon, Search,
   Share2, Download, Sparkles, Calculator, Home, Wallet, Lock, Info, Component, ShoppingCart,
-  Loader2, LayoutGrid, BookOpen
+  Loader2, LayoutGrid, BookOpen, AlertCircle, CheckCircle
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
 import { Routes, Route, useNavigate, useLocation, Navigate, Link } from 'react-router-dom';
 import confetti from 'canvas-confetti';
+import { auth, db, handleFirestoreError, OperationType } from './firebase';
+import { collection, addDoc, query, where, getDocs, orderBy, onSnapshot, serverTimestamp, setDoc, doc } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 import { Chatbot } from './components/Chatbot';
 import { ProgramMap } from './components/ProgramMap';
 import { QurbanMap } from './components/QurbanMap';
@@ -26,6 +29,7 @@ import { ZakatPage } from './components/ZakatPage';
 import { QurbanPage } from './components/QurbanPage';
 import { ProgramDetailPage } from './components/ProgramDetailPage';
 import { InteractiveDonationCarousel } from './components/InteractiveDonationCarousel';
+import { PohonKebaikanInteractive } from './components/PohonKebaikanInteractive';
 
 // Types
 export interface Program {
@@ -87,6 +91,16 @@ const PROGRAMS: Program[] = [
     collected: 120000000,
     target: 500000000,
     donors: 45
+  },
+  {
+    id: 5,
+    title: "Pembangunan Sumur Desa Sukamaju",
+    category: "Sosial",
+    description: "Alhamdulillah sumur telah selesai dibangun dan air bersih sudah mengalir untuk warga Desa Sukamaju. Terima kasih orang baik!",
+    image: "https://images.unsplash.com/photo-1590492804562-b91b5c92822a?q=80&w=800&auto=format&fit=crop",
+    collected: 50000000,
+    target: 50000000,
+    donors: 312
   }
 ];
 
@@ -504,7 +518,11 @@ const ProgramCardSkeleton = () => (
                 <span className="text-[7px] font-bold text-white uppercase tracking-wider">Live</span>
               </div>
             )}
-            {p.urgent && (
+            {p.collected >= p.target ? (
+              <div className="bg-emerald-500/90 backdrop-blur-sm text-white text-[8px] font-bold px-2 py-0.5 rounded-full shadow-lg shadow-emerald-500/20 uppercase tracking-widest flex items-center gap-1 border border-emerald-400/30">
+                <CheckCircle2 className="w-3 h-3 text-white" /> Selesai
+              </div>
+            ) : p.urgent && (
               <div className="bg-red-500/90 backdrop-blur-sm text-white text-[8px] font-bold px-2 py-0.5 rounded-full shadow-lg shadow-red-500/20 uppercase tracking-widest flex items-center gap-1 border border-red-400/30">
                 <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Mendesak
               </div>
@@ -540,67 +558,80 @@ const ProgramCardSkeleton = () => (
           </div>
 
           <div className="mt-auto pt-2 flex flex-col gap-1.5 md:gap-2">
-            <motion.button whileTap={{ scale: 0.98 }} whileHover={{ scale: 1.02 }} 
-              onClick={() => setLocalDonationAmount(p.category === 'Qurban' ? '2.500.000' : '100.000')}
-              className="w-full bg-[#1799dc]/5 text-[#1799dc] hover:bg-[#1799dc]/10 font-bold text-[9px] md:text-xs py-1.5 md:py-2.5 rounded-full transition-colors active:scale-95 whitespace-nowrap overflow-hidden text-ellipsis px-1.5 md:px-2"
-            >
-               {p.category === 'Qurban' ? 'Harga 1 Saham' : 'Paket Spesial'}
-            </motion.button>
-
-            <div className="flex gap-1 md:gap-2 h-7 md:h-10">
-              <div className="flex-1 flex items-center border border-slate-200 dark:border-slate-700 rounded-full overflow-hidden bg-slate-50/50 dark:bg-slate-900/50 focus-within:border-[#1799dc] focus-within:ring-1 focus-within:ring-[#1799dc] transition-all">
-                <span className="pl-2.5 md:pl-4 pr-1 md:pr-1.5 text-slate-400 font-bold text-[9px] md:text-[11px] select-none">Rp</span>
-                <motion.input 
-                  type="text"
-                  value={formatCurrencyForm(localDonationAmount)}
-                  onChange={(e) => setLocalDonationAmount(e.target.value)}
-                  animate={isPulsing ? { scale: 1.05, color: '#1799dc' } : { scale: 1 }}
-                  transition={{ duration: 0.15 }}
-                  className="w-full h-full bg-transparent outline-none pr-1 md:pr-3 text-[10px] md:text-sm font-bold text-slate-800 dark:text-slate-100 placeholder:text-slate-400 min-w-0" 
-                  placeholder="0"
-                />
+            {p.collected >= p.target ? (
+              <div className="flex flex-col gap-2 mt-2">
+                <div className="w-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-center text-[10px] md:text-xs py-2 rounded-lg flex items-center justify-center gap-1.5">
+                  <CheckCircle className="w-3.5 h-3.5" /> Target Terpenuhi
+                </div>
+                <Link to={`/program/${p.id}`} className="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-bold text-center text-[11px] md:text-[13px] py-2 md:py-2.5 rounded-full transition-colors flex justify-center items-center h-8 md:h-10">
+                  Lihat Detail
+                </Link>
               </div>
+            ) : (
+              <>
+                <motion.button whileTap={{ scale: 0.98 }} whileHover={{ scale: 1.02 }} 
+                  onClick={() => setLocalDonationAmount(p.category === 'Qurban' ? '2.500.000' : '100.000')}
+                  className="w-full bg-[#1799dc]/5 text-[#1799dc] hover:bg-[#1799dc]/10 font-bold text-[9px] md:text-xs py-1.5 md:py-2.5 rounded-full transition-colors active:scale-95 whitespace-nowrap overflow-hidden text-ellipsis px-1.5 md:px-2"
+                >
+                   {p.category === 'Qurban' ? 'Harga 1 Saham' : 'Paket Spesial'}
+                </motion.button>
 
-              <div className="flex flex-col w-[22px] md:w-[34px] border border-[#1799dc]/20 bg-[#1799dc]/5 rounded-full overflow-hidden shrink-0 text-[#1799dc]">
-                <motion.button whileTap={{ scale: 0.9 }}
-                  className="flex-1 flex items-center justify-center hover:bg-[#1799dc]/10 font-black border-b border-[#1799dc]/10 text-[8px] md:text-xs leading-none"
-                  onClick={() => {
-                    const val = parseInt(localDonationAmount.replace(/\D/g, '') || '0');
-                    handleAmountChange((val + 50000).toString());
-                  }}
-                >+</motion.button>
-                <motion.button whileTap={{ scale: 0.9 }}
-                  className="flex-1 flex items-center justify-center hover:bg-[#1799dc]/10 font-black text-[8px] md:text-xs leading-none"
-                  onClick={() => {
-                    const val = parseInt(localDonationAmount.replace(/\D/g, '') || '0');
-                    if (val > 50000) handleAmountChange((val - 50000).toString());
-                  }}
-                >-</motion.button>
-              </div>
-            </div>
+                <div className="flex gap-1 md:gap-2 h-7 md:h-10">
+                  <div className="flex-1 flex items-center border border-slate-200 dark:border-slate-700 rounded-full overflow-hidden bg-slate-50/50 dark:bg-slate-900/50 focus-within:border-[#1799dc] focus-within:ring-1 focus-within:ring-[#1799dc] transition-all">
+                    <span className="pl-2.5 md:pl-4 pr-1 md:pr-1.5 text-slate-400 font-bold text-[9px] md:text-[11px] select-none">Rp</span>
+                    <motion.input 
+                      type="text"
+                      value={formatCurrencyForm(localDonationAmount)}
+                      onChange={(e) => setLocalDonationAmount(e.target.value)}
+                      animate={isPulsing ? { scale: 1.05, color: '#1799dc' } : { scale: 1 }}
+                      transition={{ duration: 0.15 }}
+                      className="w-full h-full bg-transparent outline-none pr-1 md:pr-3 text-[10px] md:text-sm font-bold text-slate-800 dark:text-slate-100 placeholder:text-slate-400 min-w-0" 
+                      placeholder="0"
+                    />
+                  </div>
 
-            <div className="flex gap-1.5 md:gap-2">
-              <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => onAddToCart(p, localDonationAmount.replace(/\D/g, ''))}
-                className="w-8 h-8 md:w-10 md:h-10 shrink-0 bg-[#1799dc] hover:bg-[#1588c4] text-white flex items-center justify-center rounded-full shadow-sm transition-colors"
-                title="Masukkan ke Kantung Donasi"
-              >
-                <ShoppingBag className="w-3.5 h-3.5 md:w-4 md:h-4 fill-white/20" />
-              </motion.button>
+                  <div className="flex flex-col w-[22px] md:w-[34px] border border-[#1799dc]/20 bg-[#1799dc]/5 rounded-full overflow-hidden shrink-0 text-[#1799dc]">
+                    <motion.button whileTap={{ scale: 0.9 }}
+                      className="flex-1 flex items-center justify-center hover:bg-[#1799dc]/10 font-black border-b border-[#1799dc]/10 text-[8px] md:text-xs leading-none"
+                      onClick={() => {
+                        const val = parseInt(localDonationAmount.replace(/\D/g, '') || '0');
+                        handleAmountChange((val + 50000).toString());
+                      }}
+                    >+</motion.button>
+                    <motion.button whileTap={{ scale: 0.9 }}
+                      className="flex-1 flex items-center justify-center hover:bg-[#1799dc]/10 font-black text-[8px] md:text-xs leading-none"
+                      onClick={() => {
+                        const val = parseInt(localDonationAmount.replace(/\D/g, '') || '0');
+                        if (val > 50000) handleAmountChange((val - 50000).toString());
+                      }}
+                    >-</motion.button>
+                  </div>
+                </div>
 
-              <motion.button 
-                whileTap={{ scale: 0.97 }} 
-                whileHover={{ scale: 1.02 }} 
-                onClick={() => onQuickDonate(p, localDonationAmount.replace(/\D/g, ''))}
-                className="flex-1 h-8 md:h-10 bg-gradient-to-r from-[#f29f05] to-[#f09a00] hover:from-[#d98f04] hover:to-[#df8f00] text-white font-extrabold text-[11px] md:text-[13px] rounded-full flex items-center justify-center gap-1 md:gap-1.5 shadow-[0_4px_14px_0_rgba(242,159,5,0.3)] active:scale-[0.98] transition-all whitespace-nowrap px-1 md:px-2"
-              >
-                <Heart className="w-3 h-3 md:w-4 md:h-4 fill-white/80 shrink-0" />
-                <span className="hidden sm:inline">Kebaikan Cepat</span>
-                <span className="sm:hidden">Donasi</span>
-              </motion.button>
-            </div>
+                <div className="flex gap-1.5 md:gap-2">
+                  <motion.button 
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => onAddToCart(p, localDonationAmount.replace(/\D/g, ''))}
+                    className="w-8 h-8 md:w-10 md:h-10 shrink-0 bg-[#1799dc] hover:bg-[#1588c4] text-white flex items-center justify-center rounded-full shadow-sm transition-colors"
+                    title="Masukkan ke Kantung Donasi"
+                  >
+                    <ShoppingBag className="w-3.5 h-3.5 md:w-4 md:h-4 fill-white/20" />
+                  </motion.button>
+
+                  <motion.button 
+                    whileTap={{ scale: 0.97 }} 
+                    whileHover={{ scale: 1.02 }} 
+                    onClick={() => onQuickDonate(p, localDonationAmount.replace(/\D/g, ''))}
+                    className="flex-1 h-8 md:h-10 bg-gradient-to-r from-[#f29f05] to-[#f09a00] hover:from-[#d98f04] hover:to-[#df8f00] text-white font-extrabold text-[11px] md:text-[13px] rounded-full flex items-center justify-center gap-1 md:gap-1.5 shadow-[0_4px_14px_0_rgba(242,159,5,0.3)] active:scale-[0.98] transition-all whitespace-nowrap px-1 md:px-2"
+                  >
+                    <Heart className="w-3 h-3 md:w-4 md:h-4 fill-white/80 shrink-0" />
+                    <span className="hidden sm:inline">Kebaikan Cepat</span>
+                    <span className="sm:hidden">Donasi</span>
+                  </motion.button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </motion.div>
@@ -624,9 +655,11 @@ const LIVE_TRANSACTIONS = [
 
 const DonasiPage = ({ onAddToCart, onQuickDonate }: { onAddToCart: (p: any, amt: string) => void, onQuickDonate: (p: any, amt: string) => void }) => {
   const [activeFilter, setActiveFilter] = useState('Semua');
+  const [activeStatusFilter, setActiveStatusFilter] = useState('Semua');
   const [currentPage, setCurrentPage] = useState(1);
   const [showAll, setShowAll] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
   const itemsPerPage = 6;
 
   const filters = [
@@ -637,11 +670,25 @@ const DonasiPage = ({ onAddToCart, onQuickDonate }: { onAddToCart: (p: any, amt:
     { id: 'Qurban', icon: Tent }
   ];
   
+  const statusFilters = [
+    { id: 'Semua', icon: LayoutGrid },
+    { id: 'Aktif', icon: Activity },
+    { id: 'Mendesak', icon: AlertCircle },
+    { id: 'Selesai', icon: CheckCircle }
+  ];
+
+  const getProgramStatus = (p: any) => {
+    if (p.collected >= p.target) return 'Selesai';
+    if (p.urgent) return 'Mendesak';
+    return 'Aktif';
+  };
+  
   const filteredPrograms = EXTENDED_PROGRAMS.filter(p => {
-    const matchesFilter = activeFilter === 'Semua' ? true : p.category === activeFilter;
+    const matchesCategory = activeFilter === 'Semua' ? true : p.category === activeFilter;
+    const matchesStatus = activeStatusFilter === 'Semua' ? true : getProgramStatus(p) === activeStatusFilter;
     const searchLower = searchQuery.toLowerCase();
     const matchesSearch = p.title.toLowerCase().includes(searchLower) || p.description.toLowerCase().includes(searchLower);
-    return matchesFilter && matchesSearch;
+    return matchesCategory && matchesStatus && matchesSearch;
   });
   
   const totalPages = Math.ceil(filteredPrograms.length / itemsPerPage);
@@ -649,6 +696,12 @@ const DonasiPage = ({ onAddToCart, onQuickDonate }: { onAddToCart: (p: any, amt:
 
   const handleFilterClick = (f: string) => {
      setActiveFilter(f);
+     setCurrentPage(1);
+     setShowAll(false);
+  };
+  
+  const handleStatusFilterClick = (f: string) => {
+     setActiveStatusFilter(f);
      setCurrentPage(1);
      setShowAll(false);
   };
@@ -676,24 +729,66 @@ const DonasiPage = ({ onAddToCart, onQuickDonate }: { onAddToCart: (p: any, amt:
          </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mb-8 md:mb-10">
-         {filters.map(filter => {
-           const Icon = filter.icon;
-           return (
-             <button
-               key={filter.id}
-               onClick={() => handleFilterClick(filter.id)}
-               className={`px-4 py-2.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center gap-2 border ${
-                 activeFilter === filter.id 
-                 ? 'bg-[#1799dc] text-white border-[#1799dc] shadow-[#1799dc]/20' 
-                 : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-[#1799dc]/5 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 hover:border-[#1799dc]/30'
-               }`}
-             >
-               <Icon className={`w-4 h-4 ${activeFilter === filter.id ? 'text-white' : 'text-[#1799dc]'}`} />
-               {filter.id}
-             </button>
-           );
-         })}
+      <div className="flex flex-col gap-4 mb-8 md:mb-10">
+         <div className="flex justify-center mb-2">
+            <button
+               onClick={() => setShowFilters(!showFilters)}
+               className="flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full font-bold text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition"
+            >
+               <LayoutGrid className="w-4 h-4 text-[#1799dc]" />
+               Filter Program {(activeFilter !== 'Semua' || activeStatusFilter !== 'Semua') && <span className="w-2 h-2 rounded-full bg-red-500"></span>}
+               <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+            </button>
+         </div>
+         <AnimatePresence>
+            {showFilters && (
+               <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="flex flex-col gap-4 overflow-hidden"
+               >
+                  <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
+                     {filters.map(filter => {
+                       const Icon = filter.icon;
+                       return (
+                         <button
+                           key={filter.id}
+                           onClick={() => handleFilterClick(filter.id)}
+                           className={`px-4 py-2.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center gap-2 border ${
+                             activeFilter === filter.id 
+                             ? 'bg-[#1799dc] text-white border-[#1799dc] shadow-[#1799dc]/20' 
+                             : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-[#1799dc]/5 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 hover:border-[#1799dc]/30'
+                           }`}
+                         >
+                           <Icon className={`w-4 h-4 ${activeFilter === filter.id ? 'text-white' : 'text-[#1799dc]'}`} />
+                           {filter.id}
+                         </button>
+                       );
+                     })}
+                  </div>
+                  <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 lg:pb-2">
+                     {statusFilters.map(filter => {
+                       const Icon = filter.icon;
+                       return (
+                         <button
+                           key={`status-${filter.id}`}
+                           onClick={() => handleStatusFilterClick(filter.id)}
+                           className={`px-4 py-2.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center gap-2 border ${
+                             activeStatusFilter === filter.id 
+                             ? 'bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 border-slate-800 dark:border-slate-200' 
+                             : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700'
+                           }`}
+                         >
+                           <Icon className={`w-4 h-4 ${activeStatusFilter === filter.id ? 'text-white dark:text-slate-900' : 'text-slate-500 dark:text-slate-400'}`} />
+                           {filter.id}
+                         </button>
+                       );
+                     })}
+                  </div>
+               </motion.div>
+            )}
+         </AnimatePresence>
       </div>
 
       {currentPrograms.length > 0 ? (
@@ -862,11 +957,43 @@ export default function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isTwibbonModalOpen, setIsTwibbonModalOpen] = useState(false);
 
-  const finishDonation = () => {
+  const finishDonation = async () => {
     setIsDonationSuccess(true);
     setShowPaymentInstructions(false);
     setCartItems([]);
     
+    if (auth.currentUser && selectedProgramForDonation) {
+        const uid = auth.currentUser.uid;
+        try {
+            const valAmount = parseInt(donationAmount.replace(/\D/g, '')) || 0;
+            
+            const payload = {
+                date: new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' }),
+                program: selectedProgramForDonation.title,
+                amount: valAmount,
+                status: 'Berhasil',
+                createdAt: serverTimestamp()
+            };
+            
+            await addDoc(collection(db, 'users', uid, 'donations'), payload);
+            
+            // Simpan profil donatur
+            await setDoc(doc(db, 'users', uid), {
+                name: donorName || 'Hamba Allah',
+                email: donorEmail || '',
+                updatedAt: serverTimestamp()
+            }, { merge: true });
+        } catch (error) {
+            handleFirestoreError(error, OperationType.CREATE, `users/${uid}/donations`);
+            // Fallback for UI if rules are not propagated
+            setUserDonations((prev: any[]) => [{
+                ...payload,
+                id: 'mock-' + Date.now(),
+                createdAt: { toDate: () => new Date() } // Mock timestamp
+            }, ...prev]);
+        }
+    }
+
     if (newPrayerMessage.trim()) {
       const newPrayer = {
         id: Date.now(),
@@ -900,6 +1027,37 @@ export default function App() {
   const [liveTransactionIndex, setLiveTransactionIndex] = useState(-1);
   const [showLiveTransaction, setShowLiveTransaction] = useState(false);
   const [historyTab, setHistoryTab] = useState('Semua');
+  const [userDonations, setUserDonations] = useState<any[]>([]);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    let unsubSnap = () => {};
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        const q = query(collection(db, 'users', currentUser.uid, 'donations'), orderBy('createdAt', 'desc'));
+        unsubSnap = onSnapshot(q, (snapshot) => {
+          const history: any[] = [];
+          snapshot.forEach(doc => {
+            history.push({ 
+              id: doc.id, 
+              ...doc.data(), 
+              date: doc.data().date || new Date().toLocaleDateString('id-ID')
+            });
+          });
+          setUserDonations(history);
+        }, (error) => {
+          handleFirestoreError(error, OperationType.LIST, `users/${currentUser.uid}/donations`);
+        });
+      } else {
+        setUserDonations([]);
+      }
+    });
+    return () => {
+      unsubscribe();
+      unsubSnap();
+    };
+  }, []);
   const [impactTab, setImpactTab] = useState<'infografis' | 'peta' | 'peta_qurban' | 'galeri'>('infografis');
   const [selectedGalleryItem, setSelectedGalleryItem] = useState<typeof GALLERY_ITEMS[0] | null>(null);
   
@@ -1338,13 +1496,13 @@ export default function App() {
             <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }} 
               onClick={() => {
                 navigate('/history');
-                window.scrollTo(0,0);
+                window.scrollTo(0, 0);
               }}
               aria-label="Dashboard Donatur"
               title="Dashboard Donatur"
               className={`transition-all duration-300 hidden md:flex relative items-center justify-center rounded-full transition-all duration-300 ${
                 isScrolled ? 'w-10 h-10 md:w-11 md:h-11 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200' : 'w-10 h-10 md:w-11 md:h-11 bg-white dark:bg-slate-800 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700 text-primary-500 hover:scale-105'
-              } transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}>
+              } transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95 overflow-hidden`}>
               <UserCircle className="w-5 h-5 flex-shrink-0" />
             </motion.button>
 
@@ -1429,9 +1587,9 @@ export default function App() {
               
               <motion.button whileTap={{ scale: 0.98 }} whileHover={{ scale: 1.02 }} 
                 onClick={() => {
-                  navigate('/history');
                   setMobileMenuOpen(false);
-                  window.scrollTo(0,0);
+                  navigate('/history');
+                  window.scrollTo(0, 0);
                 }} 
                 className="w-full text-left text-[15px] font-bold text-slate-700 dark:text-slate-200 hover:text-[#1799dc] dark:hover:text-[#1799dc] hover:bg-slate-50 dark:hover:bg-slate-800/50 p-2.5 rounded-xl flex items-center gap-3 transition-all"
               >
@@ -2319,12 +2477,12 @@ export default function App() {
                 <p className="text-slate-500 font-medium text-sm md:text-base">Melihat jejak kebaikan dan dampak nyata dari sedekah Anda.</p>
               </div>
               <div className="bg-primary-100 text-primary-800 font-bold px-5 py-3 rounded-xl flex items-center gap-4 border border-primary-200">
-                <div className="p-2 bg-primary-600 text-white rounded-xl shadow-inner">
-                  <TrendingUp className="w-5 h-5" />
+                <div className="p-2 bg-primary-600 text-white rounded-xl shadow-inner cursor-default">
+                  <UserCircle className="w-5 h-5" />
                 </div>
                 <div>
                   <div className="text-[10px] uppercase tracking-widest font-bold opacity-80 mb-0.5">Total Kebaikan Terkumpul</div>
-                  <div className="text-xl">Rp 2.250.000</div>
+                  <div className="text-xl">Rp {formatCurrencyForm(userDonations.filter(t => t.status === 'Berhasil').reduce((acc, curr) => acc + curr.amount, 0).toString())}</div>
                 </div>
               </div>
             </div>
@@ -2335,7 +2493,7 @@ export default function App() {
                   <HandHeart className="w-6 h-6" />
                 </div>
                 <div>
-                  <div className="text-2xl font-black text-slate-800 dark:text-slate-100">3</div>
+                  <div className="text-2xl font-black text-slate-800 dark:text-slate-100">{new Set(userDonations.map(d => d.program)).size}</div>
                   <div className="text-xs font-bold text-slate-500 uppercase">Program Didukung</div>
                 </div>
               </div>
@@ -2381,7 +2539,7 @@ export default function App() {
                       <p className="text-xs text-slate-500 font-medium tracking-wide uppercase">Level Saat Ini</p>
                     </div>
                     {(() => {
-                      const totalInfak = DONATION_HISTORY.filter(t => t.status === 'Berhasil' && !t.program.includes('Zakat')).reduce((acc, curr) => acc + curr.amount, 0);
+                      const totalInfak = userDonations.filter((t: any) => t.status === 'Berhasil' && typeof t.program === 'string' && !t.program.includes('Zakat')).reduce((acc: any, curr: any) => acc + curr.amount, 0);
                       const currentMilestone = MILESTONES.filter(m => totalInfak >= m.amount).pop() || MILESTONES[0];
                       const nextMilestone = MILESTONES.find(m => totalInfak < m.amount);
                       const Icon = currentMilestone.icon;
@@ -2396,7 +2554,7 @@ export default function App() {
                   </div>
 
                   {(() => {
-                    const totalInfak = DONATION_HISTORY.filter(t => t.status === 'Berhasil' && !t.program.includes('Zakat')).reduce((acc, curr) => acc + curr.amount, 0);
+                    const totalInfak = userDonations.filter((t: any) => t.status === 'Berhasil' && typeof t.program === 'string' && !t.program.includes('Zakat')).reduce((acc: any, curr: any) => acc + curr.amount, 0);
                     const currentMilestone = MILESTONES.filter(m => totalInfak >= m.amount).pop() || MILESTONES[0];
                     const nextMilestone = MILESTONES.find(m => m.amount > currentMilestone.amount) || null;
                     const progress = nextMilestone ? Math.min(((totalInfak - currentMilestone.amount) / (nextMilestone.amount - currentMilestone.amount)) * 100, 100) : 100;
@@ -2435,7 +2593,7 @@ export default function App() {
                       <p className="text-xs text-slate-500 font-medium tracking-wide uppercase">Level Saat Ini</p>
                     </div>
                     {(() => {
-                      const totalZakat = DONATION_HISTORY.filter(t => t.status === 'Berhasil' && t.program.includes('Zakat')).reduce((acc, curr) => acc + curr.amount, 0);
+                      const totalZakat = userDonations.filter((t: any) => t.status === 'Berhasil' && typeof t.program === 'string' && t.program.includes('Zakat')).reduce((acc: any, curr: any) => acc + curr.amount, 0);
                       const currentMilestone = ZAKAT_MILESTONES.filter(m => totalZakat >= m.amount).pop() || ZAKAT_MILESTONES[0];
                       const Icon = currentMilestone.icon;
                       
@@ -2449,7 +2607,7 @@ export default function App() {
                   </div>
 
                   {(() => {
-                    const totalZakat = DONATION_HISTORY.filter(t => t.status === 'Berhasil' && t.program.includes('Zakat')).reduce((acc, curr) => acc + curr.amount, 0);
+                    const totalZakat = userDonations.filter((t: any) => t.status === 'Berhasil' && typeof t.program === 'string' && t.program.includes('Zakat')).reduce((acc: any, curr: any) => acc + curr.amount, 0);
                     const currentMilestone = ZAKAT_MILESTONES.filter(m => totalZakat >= m.amount).pop() || ZAKAT_MILESTONES[0];
                     const nextMilestone = ZAKAT_MILESTONES.find(m => m.amount > currentMilestone.amount) || null;
                     const progress = nextMilestone ? Math.min(((totalZakat - currentMilestone.amount) / (nextMilestone.amount - currentMilestone.amount)) * 100, 100) : 100;
@@ -2474,6 +2632,14 @@ export default function App() {
                     );
                   })()}
                 </div>
+              </div>
+
+              {/* Pohon Kebaikan Interactive Visualizer */}
+              <div className="mt-6">
+                {(() => {
+                   const totalSemua = userDonations.filter((t: any) => t.status === 'Berhasil').reduce((acc: any, curr: any) => acc + curr.amount, 0);
+                   return <PohonKebaikanInteractive totalDonation={totalSemua} />;
+                })()}
               </div>
             </div>
 
@@ -2507,7 +2673,7 @@ export default function App() {
                        </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                       {(historyTab === 'Semua' ? DONATION_HISTORY : DONATION_HISTORY.filter(t => t.status === historyTab)).map((txn) => (
+                       {(historyTab === 'Semua' ? userDonations : userDonations.filter((t: any) => t.status === historyTab)).map((txn: any) => (
                          <tr key={txn.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group">
                             <td className="p-4 whitespace-nowrap">
                                <div className="text-sm font-bold text-slate-700 dark:text-slate-300">{txn.date}</div>
@@ -2560,7 +2726,7 @@ export default function App() {
 
               {/* Mobile View */}
               <div className="md:hidden grid grid-cols-1 divide-y divide-slate-100 dark:divide-slate-700/50">
-                {(historyTab === 'Semua' ? DONATION_HISTORY : DONATION_HISTORY.filter(t => t.status === historyTab)).map((txn) => (
+                {(historyTab === 'Semua' ? userDonations : userDonations.filter((t: any) => t.status === historyTab)).map((txn: any) => (
                   <div key={txn.id} className="p-4 flex flex-col gap-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                     <div className="flex items-start justify-between gap-4">
                       <div>
@@ -2782,7 +2948,7 @@ export default function App() {
           <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }} 
             onClick={() => {
               navigate('/history');
-              window.scrollTo(0,0);
+              window.scrollTo(0, 0);
             }}
             className={`transition-all duration-300 flex flex-col items-center justify-center gap-1 w-12 ${location.pathname === '/history' ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'} transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}>
             <UserCircle className="w-5 h-5" strokeWidth={location.pathname === '/history' ? 2.5 : 2} />
