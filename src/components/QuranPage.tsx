@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, Book, ArrowLeft, Search, Bookmark, AlignRight, FileText, ChevronRight, PlayCircle, Loader2, Mic, Square, Activity, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export default function QuranPage() {
     const navigate = useNavigate();
@@ -304,12 +304,38 @@ export default function QuranPage() {
         }
     };
 
+    const speakFeedbackAndPlayCorrect = (feedbackText: string, correctAudioUrl: string, ayahNumber: number) => {
+        if (window.speechSynthesis.paused) {
+            window.speechSynthesis.resume();
+        }
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(feedbackText);
+        utterance.lang = 'id-ID';
+        utterance.rate = 0.95;
+        
+        const voices = window.speechSynthesis.getVoices();
+        let voice = voices.find(v => v.lang === 'id-ID');
+        if (!voice) {
+            voice = voices.find(v => v.lang.startsWith('id'));
+        }
+        if (voice) {
+            utterance.voice = voice;
+        }
+        
+        utterance.onend = () => {
+            // Setelah AI selesai bicara, putar audio aslinya yang benar
+            toggleAudio(correctAudioUrl);
+        };
+        
+        window.speechSynthesis.speak(utterance);
+    };
+
     const evaluateAudio = async (ayahNumber: number, audioBlob: Blob, mimeType: string) => {
         try {
             const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
             if (!apiKey) throw new Error("Gemini API key is missing");
             
-            const ai = new GoogleGenAI({ apiKey });
+            const genAI = new GoogleGenerativeAI(apiKey);
             
             const reader = new FileReader();
             reader.readAsDataURL(audioBlob);
@@ -320,21 +346,29 @@ export default function QuranPage() {
                 const ayah = surahDetail?.ayat.find((a: any) => a.nomorAyat === ayahNumber);
                 if (!ayah) return;
                 
-                const prompt = `Kamu adalah Talaqqi AI, guru tahsin Al-Quran yang sangat sabar, ramah, dan memotivasi. Dengarkan rekaman ini. Ini membaca surat ${surahDetail.namaLatin} ayat ${ayahNumber}. Ayat aslinya: ${ayah.teksArab} (${ayah.teksLatin}). Evaluasi bacaannya. Berikan pujian dulu, lalu koreksi makhraj atau mad/tajwidnya jika ada menggunakan kata-kata yang mudah dimengerti. Jangan kaku. Jika bacaan sempurna, katakan sempurna. Singkat saja, maksimal 2 paragraf pendek.`;
+                const prompt = `Kamu adalah Talaqqi AI, guru tahsin Al-Quran yang santai, ramah, dan memotivasi. Dengarkan rekaman ini: membaca surat ${surahDetail.namaLatin} ayat ${ayahNumber}. Ayat aslinya: ${ayah.teksArab} (${ayah.teksLatin}). Evaluasi bacaannya. Berikan pujian dulu, lalu koreksi makhraj atau mad/tajwidnya jika ada dengan menggunakan ejaan bahasa Indonesia yang mudah dibaca oleh text-to-speech. Jangan gunakan simbol rumit atau tanda kurung berlebihan. Jika bacaan sempurna, puji dengan tulus. Setelah koreksi, katakan 'Mari kita dengarkan bacaan yang benarnya berikut ini.'. Singkat saja, maksimal 2 paragraf pendek.`;
                 
                 try {
-                    const response = await ai.models.generateContent({
-                        model: 'gemini-2.5-flash',
-                        contents: [
-                            { text: prompt },
-                            { inlineData: { mimeType, data: base64Content } }
-                        ]
-                    });
+                    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                    const response = await model.generateContent([
+                        prompt,
+                        {
+                            inlineData: {
+                                mimeType: mimeType,
+                                data: base64Content
+                            }
+                        }
+                    ]);
                     
+                    const responseText = response.response.text();
+                    const feedbackText = responseText || "Tidak dapat memberikan umpan balik saat ini.";
                     setEvaluationResults(prev => ({
                         ...prev,
-                        [ayahNumber]: response.text || "Tidak dapat memberikan umpan balik saat ini."
+                        [ayahNumber]: feedbackText
                     }));
+                    
+                    speakFeedbackAndPlayCorrect(feedbackText, ayah.audio["05"], ayahNumber);
+                    
                 } catch (e) {
                     console.error("Gemini eval error", e);
                     setEvaluationResults(prev => ({
