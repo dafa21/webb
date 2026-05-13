@@ -206,6 +206,34 @@ export default function QuranPage() {
         h.arab.includes(searchHadithText)
     );
 
+    const getHadithTitle = (text: string) => {
+        const markers = ["bersabda:", "berkata:", "bertanya:", "bahwa:", "bahwasanya", "menceritakan:"];
+        let content = text;
+        
+        for (const marker of markers) {
+            const index = text.indexOf(marker);
+            if (index !== -1) {
+                content = text.substring(index + marker.length).trim();
+                break;
+            }
+        }
+        
+        // Clean up quotes, brackets and specific markers
+        content = content.replace(/^["'\[\(\s\d]+|["'\]\)\s]+$/g, '');
+        
+        // Take first 7-9 words
+        const words = content.split(/\s+/);
+        if (words.length > 0 && words[0].length < 3) {
+             // skip very short words like "Ia"
+             const title = words.slice(0, 10).join(' ');
+             return title.charAt(0).toUpperCase() + title.slice(1) + (words.length > 10 ? '...' : '');
+        }
+        
+        const titleLen = words.length > 8 ? 8 : words.length;
+        const title = words.slice(0, titleLen).join(' ');
+        return title.charAt(0).toUpperCase() + title.slice(1) + (words.length > titleLen ? '...' : '');
+    };
+
     return (
         <div className="pt-20 md:pt-28 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
             <div className="max-w-4xl mx-auto px-4">
@@ -419,12 +447,19 @@ export default function QuranPage() {
                             ) : (
                                 <div className="space-y-6">
                                     {filteredHadiths.map((hadith) => (
-                                        <div key={hadith.number} className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
-                                            <div className="flex items-center justify-between gap-3 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4">
-                                                <div className="flex flex-col">
-                                                    <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg">{selectedBook.name}</h3>
-                                                    <div className="text-primary-600 dark:text-primary-400 font-semibold text-sm">
-                                                        Hadits #{hadith.number}
+                                        <div key={hadith.number} className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[2rem] shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700 transition-all group">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-slate-100 dark:border-slate-700/50">
+                                                <div className="flex-1">
+                                                    <h3 className="font-black text-slate-800 dark:text-slate-100 text-xl md:text-2xl leading-tight mb-2 group-hover:text-[#1799dc] transition-colors">
+                                                        {getHadithTitle(hadith.id)}
+                                                    </h3>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="px-2 py-1 bg-[#1799dc]/10 text-[#1799dc] rounded-lg text-[10px] font-bold uppercase tracking-widest leading-none">
+                                                            {selectedBook.name}
+                                                        </span>
+                                                        <span className="text-slate-400 dark:text-slate-500 font-bold text-xs">
+                                                            Hadits #{hadith.number}
+                                                        </span>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2">
