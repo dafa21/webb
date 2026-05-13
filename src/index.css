@@ -109,8 +109,10 @@ tajweed.madda_normal, .madda_normal { color: #8b5cf6 !important; } /* purple-500
 tajweed.madda_permissible, .madda_permissible { color: #7c3aed !important; } /* purple-600 */
 tajweed.madda_necessery, .madda_necessery { color: #6d28d9 !important; } /* purple-700 */
 tajweed.madda_necessary, .madda_necessary { color: #6d28d9 !important; } /* purple-700 */
+tajweed.madda_lazim, .madda_lazim { color: #8b5cf6 !important; } /* purple-500 */
 tajweed.madda_obligatory, .madda_obligatory { color: #6d28d9 !important; } 
 tajweed.qalaqah, .qalaqah { color: #ef4444 !important; } /* red-500 */
+tajweed.idhar, .idhar, tajweed.idzhar, .idzhar { color: inherit !important; font-weight: 500; }
 tajweed.ikhfa, .ikhfa, tajweed.ikhafa, .ikhafa { color: #22c55e !important; } /* green-500 */
 tajweed.ikhfa_shafawi, .ikhfa_shafawi, tajweed.ikhafa_shafawi, .ikhafa_shafawi { color: #22c55e !important; }
 tajweed.idgham_shafawi, .idgham_shafawi { color: #f59e0b !important; } /* amber-500 */

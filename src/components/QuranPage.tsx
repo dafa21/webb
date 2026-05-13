@@ -490,24 +490,75 @@ export default function QuranPage() {
         return title.charAt(0).toUpperCase() + title.slice(1) + (words.length > titleLen ? '...' : '');
     };
 
+    const [showTajweedGuide, setShowTajweedGuide] = useState(false);
+
+    const tajweedDefinitions = [
+        { 
+            name: 'Madd', 
+            meaning: 'Panjang', 
+            reading: 'Dibaca panjang 2 harakat atau lebih sesuai jenisnya.', 
+            color: '#8b5cf6', 
+            patterns: ['madda_normal', 'madda_permissible', 'madda_necessery', 'madda_necessary', 'madda_obligatory', 'madda_lazim'] 
+        },
+        { 
+            name: 'Ghunnah', 
+            meaning: 'Dengung', 
+            reading: 'Dibaca mendengung yang jelas dan ditahan 2 harakat.', 
+            color: '#ec4899', 
+            patterns: ['ghunnah'] 
+        },
+        { 
+            name: 'Ikhfa', 
+            meaning: 'Samar', 
+            reading: 'Membaca huruf dengan samar-samar antara Idzhar dan Idgham disertai dengungan.', 
+            color: '#22c55e', 
+            patterns: ['ikhfa', 'ikhafa', 'ikhfa_shafawi', 'ikhafa_shafawi'] 
+        },
+        { 
+            name: 'Iqlab', 
+            meaning: 'Tukar', 
+            reading: 'Mengganti bunyi Nun Mati/Tanwin menjadi bunyi Mim bila bertemu huruf Ba.', 
+            color: '#3b82f6', 
+            patterns: ['iqlaab', 'iqlab'] 
+        },
+        { 
+            name: 'Idgham Bighunnah', 
+            meaning: 'Melebur dengan Dengung', 
+            reading: 'Melebur bunyi Nun Mati/Tanwin ke huruf berikutnya disertai dengungan.', 
+            color: '#f59e0b', 
+            patterns: ['idgham_with_ghunnah', 'idgham_ghunnah', 'idgham_shafawi', 'idgham_mutajanisayn', 'idgham_mutaqaribayn'] 
+        },
+        { 
+            name: 'Idgham Bilaghunnah', 
+            meaning: 'Melebur tanpa Dengung', 
+            reading: 'Melebur bunyi Nun Mati/Tanwin ke huruf berikutnya tanpa dengungan.', 
+            color: '#94a3b8', 
+            patterns: ['idgham_without_ghunnah', 'idgham_wo_ghunnah', 'idgham_bilaghunnah'] 
+        },
+        { 
+            name: 'Qalqalah', 
+            meaning: 'Memantul', 
+            reading: 'Memantulkan bunyi huruf saat dalam keadaan sukun atau waqaf.', 
+            color: '#ef4444', 
+            patterns: ['qalaqah'] 
+        },
+        { 
+            name: 'Idzhar', 
+            meaning: 'Jelas', 
+            reading: 'Membaca bunyi Nun Mati/Tanwin dengan jelas dan tegas tanpa dengungan.', 
+            color: '#0f172a', 
+            patterns: ['idhar', 'idzhar', 'idhar_shafawi', 'idzhar_shafawi'] 
+        }
+    ];
+
     const getVerseTajweedRules = (html: string) => {
         if (!html) return [];
         
-        const rules: { name: string, color: string }[] = [];
-        const tajweedDefinitions = [
-            { name: 'Madd', color: '#8b5cf6', patterns: ['madda_normal', 'madda_permissible', 'madda_necessery', 'madda_necessary', 'madda_obligatory'] },
-            { name: 'Ghunnah', color: '#ec4899', patterns: ['ghunnah'] },
-            { name: 'Ikhfa', color: '#22c55e', patterns: ['ikhfa', 'ikhafa', 'ikhfa_shafawi', 'ikhafa_shafawi'] },
-            { name: 'Iqlab', color: '#3b82f6', patterns: ['iqlaab', 'iqlab'] },
-            { name: 'Idgham Bighunnah', color: '#f59e0b', patterns: ['idgham_with_ghunnah', 'idgham_ghunnah', 'idgham_shafawi', 'idgham_mutajanisayn', 'idgham_mutaqaribayn'] },
-            { name: 'Idgham Bilaghunnah', color: '#94a3b8', patterns: ['idgham_without_ghunnah', 'idgham_wo_ghunnah', 'idgham_bilaghunnah'] },
-            { name: 'Qalqalah', color: '#ef4444', patterns: ['qalaqah'] },
-        ];
-
+        const rules: any[] = [];
         tajweedDefinitions.forEach(def => {
             const hasRule = def.patterns.some(pattern => html.includes(pattern));
             if (hasRule) {
-                rules.push({ name: def.name, color: def.color });
+                rules.push(def);
             }
         });
 
@@ -742,16 +793,50 @@ export default function QuranPage() {
                                 <p className="opacity-90 font-medium tracking-wide uppercase text-[10px] md:text-xs relative z-10">{selectedSurah.arti} &middot; {selectedSurah.jumlahAyat} Ayat &middot; {selectedSurah.tempatTurun}</p>
                             </div>
 
-                            <div className="mb-8 flex flex-wrap gap-2 md:gap-3 justify-center text-[10px] md:text-xs font-medium">
-                                <span className="px-2 md:px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm"><span className="text-[#8b5cf6] text-lg md:text-xl leading-none px-0.5 relative top-0.5 md:top-1">•</span> Madd (Panjang)</span>
-                                <span className="px-2 md:px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm"><span className="text-[#ec4899] text-lg md:text-xl leading-none px-0.5 relative top-0.5 md:top-1">•</span> Ghunnah (Dengung)</span>
-                                <span className="px-2 md:px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm"><span className="text-[#22c55e] text-lg md:text-xl leading-none px-0.5 relative top-0.5 md:top-1">•</span> Ikhfa</span>
-                                <span className="px-2 md:px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm"><span className="text-[#3b82f6] text-lg md:text-xl leading-none px-0.5 relative top-0.5 md:top-1">•</span> Iqlab</span>
-                                <span className="px-2 md:px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm"><span className="text-[#f59e0b] text-lg md:text-xl leading-none px-0.5 relative top-0.5 md:top-1">•</span> Idgham Bighunnah</span>
-                                <span className="px-2 md:px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm"><span className="text-[#94a3b8] text-lg md:text-xl leading-none px-0.5 relative top-0.5 md:top-1">•</span> Idgham Bilaghunnah</span>
-                                <span className="px-2 md:px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm"><span className="text-slate-800 dark:text-slate-100 text-lg md:text-xl leading-none px-0.5 relative top-0.5 md:top-1">•</span> Idzhar (Hitam)</span>
-                                <span className="px-2 md:px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm"><span className="text-[#ef4444] text-lg md:text-xl leading-none px-0.5 relative top-0.5 md:top-1">•</span> Qalqalah</span>
+                            <div className="mb-6 flex flex-col items-center gap-4">
+                                <div className="flex flex-wrap gap-2 md:gap-3 justify-center text-[10px] md:text-xs font-medium">
+                                    {tajweedDefinitions.map(rule => (
+                                        <span key={rule.name} className="px-2 md:px-3 py-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm flex items-center">
+                                            <span className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: rule.color }}></span>
+                                            {rule.name}
+                                        </span>
+                                    ))}
+                                </div>
+                                <button 
+                                    onClick={() => setShowTajweedGuide(!showTajweedGuide)}
+                                    className="flex items-center gap-2 text-xs font-bold text-[#1799dc] bg-[#1799dc]/10 px-4 py-2 rounded-full hover:bg-[#1799dc]/20 transition-colors"
+                                >
+                                    <AlignRight className="w-4 h-4" />
+                                    {showTajweedGuide ? 'Tutup Panduan Tajwid' : 'Lihat Penjelasan Tajwid'}
+                                </button>
                             </div>
+
+                            <AnimatePresence>
+                                {showTajweedGuide && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="mb-8 overflow-hidden"
+                                    >
+                                        <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm grid md:grid-cols-2 gap-4">
+                                            {tajweedDefinitions.map(rule => (
+                                                <div key={rule.name} className="flex gap-4">
+                                                    <div className="w-1.5 rounded-full shrink-0" style={{ backgroundColor: rule.color }}></div>
+                                                    <div>
+                                                        <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-2">
+                                                            {rule.name} <span className="text-[10px] text-slate-400 font-medium">({rule.meaning})</span>
+                                                        </h4>
+                                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                                                            {rule.reading}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
 
                             {loadingSurahDetail ? (
                                 <div className="flex justify-center items-center py-20">
@@ -871,17 +956,42 @@ export default function QuranPage() {
                                                 </AnimatePresence>
 
                                                 {/* Tajweed Section */}
-                                                {ayah.teksTajweed && (
-                                                    <div className="mt-4 pt-4 border-t border-dashed border-slate-100 dark:border-slate-700/50">
-                                                        <h4 className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-400 dark:text-slate-500 mb-3">Hukum Tajwid Ayat Ini</h4>
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {getVerseTajweedRules(ayah.teksTajweed).map(rule => (
-                                                                <div key={rule.name} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-700 text-[10px] font-bold shadow-sm">
-                                                                    <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.1)]" style={{ backgroundColor: rule.color }}></div>
-                                                                    <span className="text-slate-700 dark:text-slate-300 uppercase tracking-widest">{rule.name}</span>
+                                                {(ayah.teksTajweed || ayah.teksArab || ayah.quranComWords) && (
+                                                    <div className="mt-6 pt-5 border-t border-dashed border-slate-200 dark:border-slate-700/50">
+                                                        <div className="flex items-center gap-2 mb-3">
+                                                            <div className="w-1.5 h-4 bg-[#1799dc] rounded-full"></div>
+                                                            <h4 className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500 dark:text-slate-400">Tajwid & Cara Baca</h4>
+                                                        </div>
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                            {getVerseTajweedRules(
+                                                                (ayah.teksTajweed || '') + 
+                                                                (ayah.teksArab || '') + 
+                                                                (ayah.quranComWords?.map((w:any) => w.text_uthmani_tajweed || '').join(' ') || '')
+                                                            ).map(rule => (
+                                                                <div 
+                                                                    key={rule.name} 
+                                                                    className="flex items-start gap-3 p-2.5 rounded-2xl bg-slate-50/50 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-700/40 hover:border-[#1799dc]/30 transition-colors"
+                                                                >
+                                                                    <div className="w-2.5 h-2.5 rounded-full mt-1 shrink-0 shadow-sm" style={{ backgroundColor: rule.color }}></div>
+                                                                    <div className="flex-1">
+                                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                                            <span className="text-[10px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest">{rule.name}</span>
+                                                                            <span className="text-[9px] text-[#1799dc] font-medium bg-[#1799dc]/10 px-1.5 rounded-md">{rule.meaning}</span>
+                                                                        </div>
+                                                                        <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed mt-1">
+                                                                            {rule.reading}
+                                                                        </p>
+                                                                    </div>
                                                                 </div>
                                                             ))}
                                                         </div>
+                                                        {getVerseTajweedRules(
+                                                            (ayah.teksTajweed || '') + 
+                                                            (ayah.teksArab || '') + 
+                                                            (ayah.quranComWords?.map((w:any) => w.text_uthmani_tajweed || '').join(' ') || '')
+                                                        ).length === 0 && (
+                                                            <p className="text-[10px] text-slate-400 font-medium italic">Tidak ditemukan hukum tajwid khusus di ayat ini.</p>
+                                                        )}
                                                     </div>
                                                 )}
                                             </div>
