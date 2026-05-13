@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Book, ArrowLeft, Search, Bookmark, AlignRight, FileText, ChevronRight, PlayCircle, Loader2, Mic, Square, Activity, Sparkles } from 'lucide-react';
+import { BookOpen, Book, ArrowLeft, Search, Bookmark, AlignRight, AlignLeft, FileText, ChevronRight, PlayCircle, Play, Pause, Loader2, Mic, Square, Activity, Sparkles, Copy, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import doaData from '../data/doa.json';
+import dzikirData from '../data/dzikir.json';
 
 export default function QuranPage() {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState<'quran' | 'hadits' | 'doa'>('quran');
+    const [activeTab, setActiveTab] = useState<'quran' | 'hadits' | 'doa' | 'dzikir'>('quran');
 
     // Quran State
     const [surahs, setSurahs] = useState<any[]>([]);
@@ -32,6 +33,21 @@ export default function QuranPage() {
     const [doas, setDoas] = useState<any[]>([]);
     const [loadingDoas, setLoadingDoas] = useState(false);
     const [searchDoa, setSearchDoa] = useState('');
+    const [selectedDoa, setSelectedDoa] = useState<any | null>(null);
+
+    // Dzikir State
+    const [dzikirs, setDzikirs] = useState<any[]>([]);
+    const [loadingDzikirs, setLoadingDzikirs] = useState(false);
+    const [searchDzikir, setSearchDzikir] = useState('');
+    const [selectedDzikir, setSelectedDzikir] = useState<any | null>(null);
+    const [selectedDzikirCategory, setSelectedDzikirCategory] = useState<string>('Al-Ma\'tsurat Pagi');
+    const [copiedId, setCopiedId] = useState<string | null>(null);
+
+    const handleCopy = (text: string, id: string) => {
+        navigator.clipboard.writeText(text);
+        setCopiedId(id);
+        setTimeout(() => setCopiedId(null), 2000);
+    };
 
     const [selectedReference, setSelectedReference] = useState<{bookId: string, number: string, bookName: string, fullText: string, fallback: {arab: string, id: string}} | null>(null);
     const [referenceData, setReferenceData] = useState<any>(null);
@@ -131,10 +147,20 @@ export default function QuranPage() {
     useEffect(() => {
         if (activeTab === 'doa' && doas.length === 0) {
             setLoadingDoas(true);
-            // using local data instead of fetch API to support static deployment without node backend
             setTimeout(() => {
                 setDoas(doaData);
                 setLoadingDoas(false);
+            }, 300);
+        }
+    }, [activeTab]);
+
+    // Fetch Dzikir
+    useEffect(() => {
+        if (activeTab === 'dzikir' && dzikirs.length === 0) {
+            setLoadingDzikirs(true);
+            setTimeout(() => {
+                setDzikirs(dzikirData);
+                setLoadingDzikirs(false);
             }, 300);
         }
     }, [activeTab]);
@@ -578,6 +604,14 @@ export default function QuranPage() {
         doa.artinya.toLowerCase().includes(searchDoa.toLowerCase())
     );
 
+    const filteredDzikirs = dzikirs.filter(dzikir => 
+        dzikir.category === selectedDzikirCategory && (
+            dzikir.title.toLowerCase().includes(searchDzikir.toLowerCase()) || 
+            dzikir.translation.toLowerCase().includes(searchDzikir.toLowerCase()) ||
+            dzikir.category.toLowerCase().includes(searchDzikir.toLowerCase())
+        )
+    );
+
     const parseRiwayat = (riwayat: string, fallbackArab: string, fallbackId: string) => {
         if (!riwayat) return null;
 
@@ -870,6 +904,12 @@ export default function QuranPage() {
         }
     };
 
+    const changeTab = (tab: 'quran' | 'hadits' | 'doa' | 'dzikir') => {
+        setActiveTab(tab);
+        setSelectedDoa(null);
+        setSelectedDzikir(null);
+    };
+
     return (
         <div className="pt-20 md:pt-28 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
             <audio id="quran-audio" className="hidden" />
@@ -887,22 +927,28 @@ export default function QuranPage() {
                         <div className="flex justify-center mt-4">
                             <div className="flex bg-white dark:bg-slate-800 rounded-full p-1 shadow-sm border border-slate-200 dark:border-slate-700">
                                 <button 
-                                    onClick={() => setActiveTab('quran')}
+                                    onClick={() => changeTab('quran')}
                                     className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${activeTab === 'quran' ? 'bg-[#1799dc] text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
                                 >
                                     Al-Qur'an
                                 </button>
                                 <button 
-                                    onClick={() => setActiveTab('hadits')}
+                                    onClick={() => changeTab('hadits')}
                                     className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${activeTab === 'hadits' ? 'bg-[#1799dc] text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
                                 >
                                     Hadits
                                 </button>
                                 <button 
-                                    onClick={() => setActiveTab('doa')}
+                                    onClick={() => changeTab('doa')}
                                     className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${activeTab === 'doa' ? 'bg-[#1799dc] text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
                                 >
                                     Doa Harian
+                                </button>
+                                <button 
+                                    onClick={() => changeTab('dzikir')}
+                                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${activeTab === 'dzikir' ? 'bg-[#1799dc] text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+                                >
+                                    Dzikir
                                 </button>
                             </div>
                         </div>
@@ -1065,10 +1111,17 @@ export default function QuranPage() {
                                                             <Mic className="w-5 h-5" />
                                                         )}
                                                     </button>
+                                                    <button 
+                                                        onClick={() => handleCopy(`${ayah.teksArab}\n\n${ayah.teksIndonesia}`, `quran-${ayah.nomorAyat}`)}
+                                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${copiedId === `quran-${ayah.nomorAyat}` ? 'bg-green-100 text-green-600' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-[#8b5cf6]'}`}
+                                                        title="Salin Ayat"
+                                                    >
+                                                        {copiedId === `quran-${ayah.nomorAyat}` ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                                                    </button>
                                                 </div>
                                                 <div className="flex-1 ml-6 text-right">
                                                     {ayah.quranComWords ? (
-                                                        <p className="font-arabic text-4xl md:text-[2.75rem] leading-[2.5] md:leading-[2.75] text-slate-800 dark:text-slate-100" dir="rtl">
+                                                        <p className="font-arabic text-3xl md:text-4xl leading-[2.2] md:leading-[2.5] text-slate-800 dark:text-slate-100" dir="rtl">
                                                             {ayah.quranComWords.map((word: any, wIndex: number) => {
                                                                 return (
                                                                     <span 
@@ -1082,12 +1135,12 @@ export default function QuranPage() {
                                                         </p>
                                                     ) : ayah.teksTajweed ? (
                                                         <p 
-                                                            className={`font-arabic text-4xl md:text-[2.75rem] leading-[2.5] md:leading-[2.75] transition-colors duration-300 ${(playingAudio === ayah.audio["05"] || playingAudio === (ayah.quranComAudio ? "https://verses.quran.com/" + ayah.quranComAudio.url : null)) ? 'text-[#1799dc] dark:text-[#38bdf8]' : 'text-slate-800 dark:text-slate-100'}`}
+                                                            className={`font-arabic text-3xl md:text-4xl leading-[2.2] md:leading-[2.5] transition-colors duration-300 ${(playingAudio === ayah.audio["05"] || playingAudio === (ayah.quranComAudio ? "https://verses.quran.com/" + ayah.quranComAudio.url : null)) ? 'text-[#1799dc] dark:text-[#38bdf8]' : 'text-slate-800 dark:text-slate-100'}`}
                                                             dangerouslySetInnerHTML={{ __html: ayah.teksTajweed }} 
                                                             dir="rtl"
                                                         />
                                                     ) : (
-                                                        <p className={`font-arabic text-4xl md:text-[2.75rem] leading-[2.5] md:leading-[2.75] transition-colors duration-300 ${(playingAudio === ayah.audio["05"] || playingAudio === (ayah.quranComAudio ? "https://verses.quran.com/" + ayah.quranComAudio.url : null)) ? 'text-[#1799dc] dark:text-[#38bdf8]' : 'text-slate-800 dark:text-slate-100'}`} dir="rtl">{ayah.teksArab}</p>
+                                                        <p className={`font-arabic text-3xl md:text-4xl leading-[2.2] md:leading-[2.5] transition-colors duration-300 ${(playingAudio === ayah.audio["05"] || playingAudio === (ayah.quranComAudio ? "https://verses.quran.com/" + ayah.quranComAudio.url : null)) ? 'text-[#1799dc] dark:text-[#38bdf8]' : 'text-slate-800 dark:text-slate-100'}`} dir="rtl">{ayah.teksArab}</p>
                                                     )}
                                                 </div>
                                             </div>
@@ -1193,18 +1246,21 @@ export default function QuranPage() {
                                     <Loader2 className="w-8 h-8 animate-spin text-[#1799dc]" />
                                 </div>
                             ) : (
-                                <div className="grid md:grid-cols-3 gap-4">
-                                    {books.map(book => (
+                                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {books.map((book, index) => (
                                         <button 
                                             key={book.id}
                                             onClick={() => handleSelectBook(book)}
-                                            className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700 flex flex-col items-center justify-center text-center transition-all hover:border-[#1799dc]/30 group"
+                                            className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700 flex items-center gap-4 text-left transition-all hover:border-[#1799dc]/30 group"
                                         >
-                                            <div className="w-16 h-16 bg-[#1799dc]/10 rounded-full flex items-center justify-center text-[#1799dc] mb-4 group-hover:scale-110 transition-transform">
-                                                <Book className="w-8 h-8" />
+                                            <div className="w-12 h-12 bg-[#1799dc]/10 rounded-xl flex items-center justify-center text-[#1799dc] font-black text-lg group-hover:bg-[#1799dc] group-hover:text-white transition-all">
+                                                {index + 1}
                                             </div>
-                                            <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg mb-1">{book.name}</h3>
-                                            <p className="text-xs text-slate-500 font-medium bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-full">{book.available} Hadits</p>
+                                            <div className="flex-1">
+                                                <h3 className="font-black text-slate-800 dark:text-slate-100 text-base md:text-lg group-hover:text-[#1799dc] transition-colors">{book.name}</h3>
+                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{book.available} Hadits</p>
+                                            </div>
+                                            <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-[#1799dc] group-hover:translate-x-1 transition-all" />
                                         </button>
                                     ))}
                                 </div>
@@ -1215,21 +1271,24 @@ export default function QuranPage() {
                     {/* HADITH DETAIL VIEW */}
                     {activeTab === 'hadits' && selectedBook && (
                         <div>
-                            <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center justify-between mb-8">
                                 <button 
                                     onClick={() => { setSelectedBook(null); setHadiths([]); }}
-                                    className="flex items-center gap-2 text-slate-500 hover:text-[#1799dc] font-bold"
+                                    className="flex items-center gap-2 text-slate-500 hover:text-[#1799dc] font-bold group"
                                 >
-                                    <ArrowLeft className="w-5 h-5" /> Kembali
+                                    <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> Kembali
                                 </button>
-                                <h2 className="text-xl font-bold border-b-2 border-[#1799dc] pb-1 pr-4">{selectedBook.name}</h2>
+                                <div className="text-right">
+                                    <h2 className="text-xl md:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">{selectedBook.name}</h2>
+                                    <p className="text-[10px] font-black text-[#1799dc] uppercase tracking-widest">{selectedBook.available} Koleksi Hadits</p>
+                                </div>
                             </div>
 
-                            <div className="relative w-full mb-8">
+                            <div className="relative w-full max-w-md mx-auto mb-10">
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                 <input 
                                     type="text" 
-                                    placeholder={`Cari dalam ${selectedBook.name} (halaman ini)...`}
+                                    placeholder={`Cari dalam ${selectedBook.name}...`}
                                     value={searchHadithText}
                                     onChange={(e) => setSearchHadithText(e.target.value)}
                                     className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl focus:ring-2 focus:ring-[#1799dc]/50 outline-none transition-shadow block"
@@ -1241,58 +1300,77 @@ export default function QuranPage() {
                                     <Loader2 className="w-8 h-8 animate-spin text-[#1799dc]" />
                                 </div>
                             ) : (
-                                <div className="space-y-6">
+                                <div className="space-y-10">
                                     {filteredHadiths.map((hadith) => (
-                                        <div key={hadith.number} className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[2rem] shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700 transition-all group">
-                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-slate-100 dark:border-slate-700/50">
-                                                <div className="flex-1">
-                                                    <h3 className="font-black text-slate-800 dark:text-slate-100 text-xl md:text-2xl leading-tight mb-2 group-hover:text-[#1799dc] transition-colors">
-                                                        {getHadithTitle(hadith.id)}
-                                                    </h3>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="px-2 py-1 bg-[#1799dc]/10 text-[#1799dc] rounded-lg text-[10px] font-bold uppercase tracking-widest leading-none">
-                                                            {selectedBook.name}
-                                                        </span>
-                                                        <span className="text-slate-400 dark:text-slate-500 font-bold text-xs">
-                                                            Hadits #{hadith.number}
-                                                        </span>
+                                        <div key={hadith.number} className="bg-white dark:bg-slate-800 p-8 md:p-10 rounded-[3rem] shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700 transition-all group overflow-hidden relative">
+                                            <div className="absolute top-0 right-0 w-48 h-48 bg-[#1799dc]/5 blur-[60px] -mr-24 -mt-24 rounded-full"></div>
+                                            
+                                            <div className="relative z-10">
+                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 pb-6 border-b border-slate-50 dark:border-slate-700/50">
+                                                    <div className="flex-1">
+                                                        <h3 className="font-black text-slate-800 dark:text-slate-100 text-lg md:text-xl leading-tight mb-3 group-hover:text-[#1799dc] transition-colors">
+                                                            {getHadithTitle(hadith.id)}
+                                                        </h3>
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="px-2.5 py-1 bg-[#1799dc]/10 text-[#1799dc] rounded-full text-[9px] font-black uppercase tracking-widest">
+                                                                {selectedBook.name}
+                                                            </span>
+                                                            <span className="text-slate-400 dark:text-slate-500 font-bold text-[10px] uppercase tracking-widest">
+                                                                Hadits #{hadith.number}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <button 
+                                                            onClick={() => handleCopy(`${hadith.arab}\n\n${hadith.id}`, `hadith-${hadith.number}`)}
+                                                            className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all active:scale-95 ${copiedId === `hadith-${hadith.number}` ? 'bg-green-100 text-green-600' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-600 hover:text-slate-800'}`}
+                                                            title="Salin Hadits"
+                                                        >
+                                                            {copiedId === `hadith-${hadith.number}` ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                                                        </button>
+                                                        <button 
+                                                            type="button"
+                                                            onClick={(e) => { e.stopPropagation(); toggleHadithAudio(hadith.arab, hadith.number, 'ar-SA'); }}
+                                                            className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${playingAudio === 'hadith-' + hadith.number + '-ar-SA' ? 'bg-[#1799dc] text-white shadow-xl shadow-[#1799dc]/30 scale-110' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-[#1799dc] hover:bg-slate-200 active:scale-95'}`}
+                                                            title="Putar Audio Arab"
+                                                        >
+                                                            {playingAudio === 'hadith-' + hadith.number + '-ar-SA' ? (
+                                                                <div className="flex items-center gap-0.5">
+                                                                    <span className="w-1 h-4 bg-white rounded-full animate-pulse"></span>
+                                                                    <span className="w-1 h-3 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></span>
+                                                                    <span className="w-1 h-4 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></span>
+                                                                </div>
+                                                            ) : <PlayCircle className="w-7 h-7" />}
+                                                        </button>
+                                                        <button 
+                                                            type="button"
+                                                            onClick={(e) => { e.stopPropagation(); toggleHadithAudio(hadith.id, hadith.number, 'id-ID'); }}
+                                                            className={`px-4 h-12 rounded-2xl flex items-center justify-center gap-2 transition-all duration-300 text-xs font-black ${playingAudio === 'hadith-' + hadith.number + '-id-ID' ? 'bg-[#8b5cf6] text-white shadow-xl shadow-[#8b5cf6]/30 scale-105' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-[#8b5cf6] hover:bg-slate-200 active:scale-95'}`}
+                                                            title="Dengarkan Terjemahan"
+                                                        >
+                                                            {playingAudio === 'hadith-' + hadith.number + '-id-ID' ? <div className="w-2 h-2 bg-white rounded-full animate-ping" /> : <FileText className="w-4 h-4" />}
+                                                            {playingAudio === 'hadith-' + hadith.number + '-id-ID' ? 'Memutar' : 'Terjemahan'}
+                                                        </button>
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-2">
-                                                    <button 
-                                                        onClick={() => toggleHadithAudio(hadith.arab, hadith.number, 'ar-SA')}
-                                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${playingAudio === 'hadith-' + hadith.number + '-ar-SA' ? 'bg-[#1799dc] text-white shadow-md shadow-[#1799dc]/20' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-[#1799dc] hover:bg-slate-200 dark:hover:bg-slate-600'}`}
-                                                        title="Putar Audio Arab"
-                                                    >
-                                                        {playingAudio === 'hadith-' + hadith.number + '-ar-SA' ? <span className="w-3 h-3 bg-white rounded-sm"></span> : <PlayCircle className="w-5 h-5 ml-0.5" />}
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => toggleHadithAudio(hadith.id, hadith.number, 'id-ID')}
-                                                        className={`px-3 h-10 rounded-full flex items-center justify-center gap-2 transition-colors text-xs font-bold ${playingAudio === 'hadith-' + hadith.number + '-id-ID' ? 'bg-[#1799dc] text-white shadow-md shadow-[#1799dc]/20' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-[#1799dc] hover:bg-slate-200 dark:hover:bg-slate-600'}`}
-                                                        title="Dengarkan Terjemahan"
-                                                    >
-                                                        {playingAudio === 'hadith-' + hadith.number + '-id-ID' ? <span className="w-2.5 h-2.5 bg-white rounded-sm"></span> : <FileText className="w-4 h-4" />}
-                                                        {playingAudio === 'hadith-' + hadith.number + '-id-ID' ? 'Berhenti' : 'Terjemahan'}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <p 
-                                                onClick={() => toggleHadithAudio(hadith.arab, hadith.number, 'ar-SA')}
-                                                className="font-arabic text-3xl md:text-[2.5rem] leading-[2.5] md:leading-[2.5] text-slate-800 dark:text-slate-100 text-right mb-6 cursor-pointer hover:text-[#1799dc] transition-colors" 
-                                                dir="rtl"
-                                                title="Klik untuk memutar audio Arab"
-                                            >
-                                                {hadith.arab}
-                                            </p>
-                                            <div className="relative pl-6 border-l-4 border-slate-100 dark:border-slate-700">
-                                                <p className="text-slate-700 dark:text-slate-300 leading-loose md:text-lg italic font-medium whitespace-pre-line">
-                                                    {hadith.id.split(/(\[[^\]]+\])/).map((part: string, i: number) => {
-                                                        if (part.startsWith('[') && part.endsWith(']')) {
-                                                            return <span key={i} className="text-[#1799dc] dark:text-[#2db2f5] not-italic font-bold">{part}</span>;
-                                                        }
-                                                        return part;
-                                                    })}
+                                                <p 
+                                                    onClick={() => toggleHadithAudio(hadith.arab, hadith.number, 'ar-SA')}
+                                                    className="font-arabic text-xl md:text-3xl leading-[2.2] md:leading-[2.5] text-slate-800 dark:text-slate-100 text-right mb-10 cursor-pointer hover:text-[#1799dc] transition-colors" 
+                                                    dir="rtl"
+                                                >
+                                                    {hadith.arab}
                                                 </p>
+                                                <div className="relative pl-6 border-l-4 border-[#1799dc]/20 dark:border-slate-700">
+                                                    <div className="absolute -left-1.5 top-0 w-2.5 h-2.5 bg-[#1799dc] rounded-full"></div>
+                                                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed md:text-lg italic font-medium whitespace-pre-line">
+                                                        {hadith.id.split(/(\[[^\]]+\])/).map((part: string, i: number) => {
+                                                            if (part.startsWith('[') && part.endsWith(']')) {
+                                                                return <span key={i} className="text-[#1799dc] dark:text-[#2db2f5] not-italic font-black decoration-dotted underline underline-offset-4">{part}</span>;
+                                                            }
+                                                            return part;
+                                                        })}
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
@@ -1338,73 +1416,306 @@ export default function QuranPage() {
 
                     {activeTab === 'doa' && (
                         <div>
-                            <div className="relative max-w-md mx-auto mb-8">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                                <input 
-                                    type="text" 
-                                    placeholder="Cari Doa..."
-                                    value={searchDoa}
-                                    onChange={(e) => setSearchDoa(e.target.value)}
-                                    className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl focus:ring-2 focus:ring-[#1799dc]/50 outline-none transition-shadow block"
-                                />
-                            </div>
+                            {selectedDoa ? (
+                                <div>
+                                    <button 
+                                        onClick={() => setSelectedDoa(null)}
+                                        className="flex items-center gap-2 text-slate-500 hover:text-[#1799dc] mb-6 transition-colors font-bold group"
+                                    >
+                                        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                                        Kembali ke Daftar Doa
+                                    </button>
 
-                            {loadingDoas ? (
-                                <div className="flex justify-center items-center py-20">
-                                    <Loader2 className="w-8 h-8 animate-spin text-[#1799dc]" />
-                                </div>
-                            ) : (
-                                <div className="space-y-6">
-                                    {filteredDoas.map((doa) => (
-                                        <div key={doa.id} className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[2rem] shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700 transition-all">
-                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-slate-100 dark:border-slate-700/50">
+                                    <div className="bg-white dark:bg-slate-800 p-8 md:p-12 rounded-[3.5rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-700 overflow-hidden relative">
+                                        <div className="absolute top-0 right-0 w-64 h-64 bg-[#1799dc]/5 blur-[80px] -mr-32 -mt-32 rounded-full"></div>
+                                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#8b5cf6]/5 blur-[80px] -ml-32 -mb-32 rounded-full"></div>
+                                        
+                                        <div className="relative z-10">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 pb-8 border-b border-slate-50 dark:border-slate-700/50">
                                                 <div className="flex-1">
-                                                    <h3 className="font-black text-slate-800 dark:text-slate-100 text-xl md:text-2xl leading-tight mb-2">
-                                                        {doa.doa}
-                                                    </h3>
-                                                    {doa.riwayat && (
-                                                        <div className="inline-block mt-1 px-3 py-1.5 bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 rounded-lg text-xs font-bold uppercase tracking-wide">
-                                                            {parseRiwayat(doa.riwayat, doa.ayat, doa.artinya)}
+                                                    <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-slate-100 mb-3 tracking-tight">
+                                                        {selectedDoa.doa}
+                                                    </h2>
+                                                    {selectedDoa.riwayat && (
+                                                        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 rounded-xl text-[10px] font-bold uppercase tracking-widest">
+                                                            <BookOpen className="w-3.5 h-3.5" />
+                                                            {parseRiwayat(selectedDoa.riwayat, selectedDoa.ayat, selectedDoa.artinya)}
                                                         </div>
                                                     )}
                                                 </div>
                                                 <div className="flex items-center gap-3 shrink-0">
                                                     <button 
-                                                        onClick={() => toggleSpeechAudio(doa.ayat, `doa-ar-${doa.id}`, 'ar-SA')}
-                                                        className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${playingAudio === `doa-ar-${doa.id}` ? 'bg-[#1799dc] text-white shadow-lg shadow-[#1799dc]/30 scale-105' : 'bg-[#1799dc]/10 text-[#1799dc] hover:bg-[#1799dc] hover:text-white'}`}
-                                                        title="Putar Audio Arab"
+                                                        onClick={() => handleCopy(`${selectedDoa.ayat}\n\n${selectedDoa.artinya}`, `doa-${selectedDoa.id}`)}
+                                                        className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all active:scale-95 ${copiedId === `doa-${selectedDoa.id}` ? 'bg-green-100 text-green-600' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-600 hover:text-slate-800'}`}
+                                                        title="Salin Doa"
                                                     >
-                                                        {playingAudio === `doa-ar-${doa.id}` ? <span className="w-4 h-4 bg-white rounded-sm"></span> : <PlayCircle className="w-6 h-6 ml-0.5" />}
+                                                        {copiedId === `doa-${selectedDoa.id}` ? <Check className="w-6 h-6" /> : <Copy className="w-6 h-6" />}
                                                     </button>
                                                     <button 
-                                                        onClick={() => toggleSpeechAudio(doa.artinya, `doa-id-${doa.id}`, 'id-ID')}
-                                                        className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${playingAudio === `doa-id-${doa.id}` ? 'bg-[#8b5cf6] text-white shadow-lg shadow-[#8b5cf6]/30 scale-105' : 'bg-[#8b5cf6]/10 text-[#8b5cf6] hover:bg-[#8b5cf6] hover:text-white'}`}
+                                                        onClick={() => toggleSpeechAudio(selectedDoa.ayat, `doa-ar-${selectedDoa.id}`, 'ar-SA')}
+                                                        className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${playingAudio === `doa-ar-${selectedDoa.id}` ? 'bg-[#1799dc] text-white shadow-2xl shadow-[#1799dc]/40 scale-110' : 'bg-[#1799dc]/10 text-[#1799dc] hover:bg-[#1799dc] hover:text-white active:scale-95'}`}
+                                                        title="Putar Audio Arab"
+                                                    >
+                                                        {playingAudio === `doa-ar-${selectedDoa.id}` ? (
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="w-1 h-5 bg-white rounded-full animate-pulse"></span>
+                                                                <span className="w-1 h-3 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></span>
+                                                                <span className="w-1 h-5 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></span>
+                                                            </div>
+                                                        ) : (
+                                                            <PlayCircle className="w-8 h-8 ml-0.5" />
+                                                        )}
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => toggleSpeechAudio(selectedDoa.artinya, `doa-id-${selectedDoa.id}`, 'id-ID')}
+                                                        className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${playingAudio === `doa-id-${selectedDoa.id}` ? 'bg-[#8b5cf6] text-white shadow-2xl shadow-[#8b5cf6]/40 scale-110' : 'bg-[#8b5cf6]/10 text-[#8b5cf6] hover:bg-[#8b5cf6] hover:text-white active:scale-95'}`}
                                                         title="Putar Audio Terjemahan"
                                                     >
-                                                        {playingAudio === `doa-id-${doa.id}` ? <span className="w-4 h-4 bg-white rounded-sm"></span> : <PlayCircle className="w-6 h-6 ml-0.5" />}
+                                                        {playingAudio === `doa-id-${selectedDoa.id}` ? (
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="w-1 h-5 bg-white rounded-full animate-pulse"></span>
+                                                                <span className="w-1 h-3 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></span>
+                                                                <span className="w-1 h-5 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></span>
+                                                            </div>
+                                                        ) : (
+                                                            <PlayCircle className="w-8 h-8 ml-0.5" />
+                                                        )}
                                                     </button>
                                                 </div>
                                             </div>
-
-                                            <div className="flex flex-col gap-8">
-                                                <div>
-                                                    <p className="font-arabic text-3xl md:text-5xl leading-[2.5] md:leading-[2.5] text-right text-slate-800 dark:text-slate-100 mb-6" dir="rtl">
-                                                        {doa.ayat}
+                                            <div className="space-y-12">
+                                                <div className="text-center md:text-right">
+                                                    <p className="font-arabic text-3xl md:text-5xl leading-[2.2] md:leading-[2.5] text-slate-800 dark:text-slate-100" dir="rtl">
+                                                        {selectedDoa.ayat}
                                                     </p>
                                                 </div>
-                                                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 border border-slate-100 dark:border-slate-700">
-                                                    <p className="text-sm font-medium text-primary-600 dark:text-primary-400 mb-3">{doa.latin}</p>
-                                                    <p className="text-slate-700 dark:text-slate-300 leading-loose md:text-lg font-medium">
-                                                        {doa.artinya}
+                                                
+                                                <div className="bg-slate-50/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-[2rem] p-8 border border-slate-100 dark:border-slate-700 relative group">
+                                                    <div className="absolute -top-3 -left-3 w-10 h-10 bg-white dark:bg-slate-700 rounded-xl shadow-md flex items-center justify-center border border-slate-100 dark:border-slate-600">
+                                                        <AlignRight className="w-5 h-5 text-[#1799dc]" />
+                                                    </div>
+                                                    <p className="text-[#1799dc] font-black mb-4 tracking-widest uppercase text-[10px]">Transliterasi & Makna</p>
+                                                    <p className="text-slate-500 dark:text-slate-400 font-medium italic mb-6 leading-relaxed text-base md:text-lg">
+                                                        {selectedDoa.latin}
+                                                    </p>
+                                                    <p className="text-slate-800 dark:text-slate-200 leading-relaxed text-lg md:text-xl font-black">
+                                                        {selectedDoa.artinya}
                                                     </p>
                                                 </div>
                                             </div>
                                         </div>
-                                    ))}
+                                    </div>
 
-                                    {filteredDoas.length === 0 && doas.length > 0 && (
-                                        <div className="text-center py-10 text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
-                                            Tidak ada doa yang cocok dengan pencarian Anda.
+                                </div>
+                            ) : (
+                                <div>
+                                    <div className="relative max-w-md mx-auto mb-8">
+                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                        <input 
+                                            type="text" 
+                                            placeholder="Cari Doa..."
+                                            value={searchDoa}
+                                            onChange={(e) => setSearchDoa(e.target.value)}
+                                            className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl focus:ring-2 focus:ring-[#1799dc]/50 outline-none transition-shadow block"
+                                        />
+                                    </div>
+
+                                    {loadingDoas ? (
+                                        <div className="flex justify-center items-center py-20">
+                                            <Loader2 className="w-8 h-8 animate-spin text-[#1799dc]" />
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {filteredDoas.map((doa) => (
+                                                <button 
+                                                    key={doa.id}
+                                                    onClick={() => {
+                                                        setSelectedDoa(doa);
+                                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                    }}
+                                                    className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm hover:shadow-md hover:border-[#1799dc] border border-slate-100 dark:border-slate-700 transition-all text-left group"
+                                                >
+                                                    <div className="flex justify-between items-center gap-3">
+                                                        <h3 className="font-bold text-slate-800 dark:text-slate-100 group-hover:text-[#1799dc] transition-colors line-clamp-1">
+                                                            {doa.doa}
+                                                        </h3>
+                                                        <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-[#1799dc] group-hover:translate-x-1 transition-all shrink-0" />
+                                                    </div>
+                                                </button>
+                                            ))}
+
+                                            {filteredDoas.length === 0 && doas.length > 0 && (
+                                                <div className="col-span-full text-center py-10 text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                                                    Tidak ada doa yang cocok dengan pencarian Anda.
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === 'dzikir' && (
+                        <div>
+                            {selectedDzikir ? (
+                                <div>
+                                    <button 
+                                        onClick={() => setSelectedDzikir(null)}
+                                        className="flex items-center gap-2 text-slate-500 hover:text-[#1799dc] mb-6 transition-colors font-bold group"
+                                    >
+                                        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                                        Kembali ke Daftar Dzikir
+                                    </button>
+
+                                    <div className="bg-white dark:bg-slate-800 p-8 md:p-12 rounded-[3.5rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-700 overflow-hidden relative">
+                                        <div className="absolute top-0 right-0 w-64 h-64 bg-[#1799dc]/5 blur-[80px] -mr-32 -mt-32 rounded-full"></div>
+                                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#8b5cf6]/5 blur-[80px] -ml-32 -mb-32 rounded-full"></div>
+                                        
+                                        <div className="relative z-10">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 pb-8 border-b border-slate-50 dark:border-slate-700/50">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-3 mb-3">
+                                                        <span className="px-3 py-1 bg-[#1799dc]/10 text-[#1799dc] rounded-full text-[9px] font-black uppercase tracking-widest">
+                                                            {selectedDzikir.category}
+                                                        </span>
+                                                        {selectedDzikir.note && (
+                                                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                                                                <Sparkles className="w-3 h-3" />
+                                                                {selectedDzikir.note}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <h2 className="font-black text-slate-800 dark:text-slate-100 text-2xl md:text-3xl leading-tight tracking-tight">
+                                                        {selectedDzikir.title}
+                                                    </h2>
+                                                </div>
+                                                <div className="flex items-center gap-3 shrink-0">
+                                                    <button 
+                                                        onClick={() => handleCopy(`${selectedDzikir.arab}\n\n${selectedDzikir.translation}`, `dzikir-${selectedDzikir.id}`)}
+                                                        className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all active:scale-95 ${copiedId === `dzikir-${selectedDzikir.id}` ? 'bg-green-100 text-green-600' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-600 hover:text-slate-800'}`}
+                                                        title="Salin Dzikir"
+                                                    >
+                                                        {copiedId === `dzikir-${selectedDzikir.id}` ? <Check className="w-6 h-6" /> : <Copy className="w-6 h-6" />}
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => toggleSpeechAudio(selectedDzikir.arab, `dz-ar-${selectedDzikir.id}`, 'ar-SA')}
+                                                        className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${playingAudio === `dz-ar-${selectedDzikir.id}` ? 'bg-[#1799dc] text-white shadow-2xl shadow-[#1799dc]/40 scale-110' : 'bg-[#1799dc]/10 text-[#1799dc] hover:bg-[#1799dc] hover:text-white active:scale-95'}`}
+                                                        title="Putar Audio Arab"
+                                                    >
+                                                        {playingAudio === `dz-ar-${selectedDzikir.id}` ? (
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="w-1 h-5 bg-white rounded-full animate-pulse"></span>
+                                                                <span className="w-1 h-3 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></span>
+                                                                <span className="w-1 h-5 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></span>
+                                                            </div>
+                                                        ) : (
+                                                            <PlayCircle className="w-8 h-8 ml-0.5" />
+                                                        )}
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => toggleSpeechAudio(selectedDzikir.translation, `dz-id-${selectedDzikir.id}`, 'id-ID')}
+                                                        className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${playingAudio === `dz-id-${selectedDzikir.id}` ? 'bg-[#8b5cf6] text-white shadow-2xl shadow-[#8b5cf6]/40 scale-110' : 'bg-[#8b5cf6]/10 text-[#8b5cf6] hover:bg-[#8b5cf6] hover:text-white active:scale-95'}`}
+                                                        title="Putar Audio Terjemahan"
+                                                    >
+                                                        {playingAudio === `dz-id-${selectedDzikir.id}` ? (
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="w-1 h-5 bg-white rounded-full animate-pulse"></span>
+                                                                <span className="w-1 h-3 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></span>
+                                                                <span className="w-1 h-5 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></span>
+                                                            </div>
+                                                        ) : (
+                                                            <PlayCircle className="w-8 h-8 ml-0.5" />
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            </div>
+ 
+                                            <div className="flex flex-col gap-10">
+                                                <div className="text-center md:text-right">
+                                                    <p className="font-arabic text-3xl md:text-5xl leading-[2.2] md:leading-[2.5] text-slate-800 dark:text-slate-100" dir="rtl">
+                                                        {selectedDzikir.arab}
+                                                    </p>
+                                                </div>
+                                                <div className="bg-slate-50/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-[2rem] p-8 border border-slate-100 dark:border-slate-700 relative group">
+                                                    <div className="absolute -top-3 -left-3 w-10 h-10 bg-white dark:bg-slate-700 rounded-xl shadow-md flex items-center justify-center border border-slate-100 dark:border-slate-600">
+                                                        <Activity className="w-5 h-5 text-[#1799dc]" />
+                                                    </div>
+                                                    <p className="text-[10px] font-black text-[#1799dc] mb-4 tracking-widest uppercase">Latin & Terjemahan</p>
+                                                    <p className="text-slate-500 dark:text-slate-400 font-medium italic mb-6 leading-relaxed text-base md:text-lg">
+                                                        {selectedDzikir.latin}
+                                                    </p>
+                                                    <p className="text-slate-800 dark:text-slate-200 leading-relaxed text-lg md:text-xl font-black">
+                                                        {selectedDzikir.translation}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            ) : (
+                                <div>
+                                    <div className="flex flex-wrap justify-center gap-2 mb-8">
+                                        {['Al-Ma\'tsurat Pagi', 'Al-Ma\'tsurat Petang', 'Setelah Sholat'].map((cat) => (
+                                            <button
+                                                key={cat}
+                                                onClick={() => setSelectedDzikirCategory(cat)}
+                                                className={`px-4 py-2 rounded-xl text-sm font-black transition-all ${selectedDzikirCategory === cat ? 'bg-[#1799dc] text-white shadow-lg shadow-[#1799dc]/20 active:scale-95' : 'bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-100 dark:border-slate-700'}`}
+                                            >
+                                                {cat}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <div className="relative max-w-md mx-auto mb-8">
+                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                        <input 
+                                            type="text" 
+                                            placeholder={`Cari Dzikir di ${selectedDzikirCategory}...`}
+                                            value={searchDzikir}
+                                            onChange={(e) => setSearchDzikir(e.target.value)}
+                                            className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl focus:ring-2 focus:ring-[#1799dc]/50 outline-none transition-shadow block"
+                                        />
+                                    </div>
+
+                                    {loadingDzikirs ? (
+                                        <div className="flex justify-center items-center py-20">
+                                            <Loader2 className="w-8 h-8 animate-spin text-[#1799dc]" />
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <AnimatePresence mode="popLayout">
+                                                {filteredDzikirs.map((dzikir) => (
+                                                    <motion.button 
+                                                        key={dzikir.id}
+                                                        layout
+                                                        initial={{ opacity: 0, y: 10 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        exit={{ opacity: 0, scale: 0.95 }}
+                                                        onClick={() => {
+                                                            setSelectedDzikir(dzikir);
+                                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                        }}
+                                                        className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm hover:shadow-md hover:border-[#1799dc] border border-slate-100 dark:border-slate-700 transition-all text-left group"
+                                                    >
+                                                        <div className="flex justify-between items-center gap-3">
+                                                            <div className="flex-1 min-w-0">
+                                                                <h3 className="font-bold text-slate-800 dark:text-slate-100 group-hover:text-[#1799dc] transition-colors line-clamp-1">
+                                                                    {dzikir.title}
+                                                                </h3>
+                                                            </div>
+                                                            <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-[#1799dc] group-hover:translate-x-1 transition-all shrink-0" />
+                                                        </div>
+                                                    </motion.button>
+                                                ))}
+                                            </AnimatePresence>
+
+                                            {filteredDzikirs.length === 0 && dzikirs.length > 0 && (
+                                                <div className="col-span-full text-center py-10 text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                                                    Tidak ada dzikir yang cocok dengan pencarian Anda di kategori ini.
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>

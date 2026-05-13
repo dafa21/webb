@@ -1,10 +1,15 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signInAnonymously, signOut } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer, collection, addDoc, getDocs, query, where, orderBy, setDoc } from 'firebase/firestore';
+import { initializeFirestore, getFirestore, doc, getDocFromServer, collection, addDoc, getDocs, query, where, orderBy, setDoc } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+
+// Initialize Firestore with experimental long polling to improve connectivity in proxied environments
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+}, (firebaseConfig as any).firestoreDatabaseId);
+
 export const auth = getAuth(app);
 
 // Simple connection test
