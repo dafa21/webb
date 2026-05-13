@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, Book, ArrowLeft, Search, Bookmark, AlignRight, FileText, ChevronRight, PlayCircle, Loader2, Mic, Square, Activity, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import doaData from '../data/doa.json';
 
 export default function QuranPage() {
     const navigate = useNavigate();
@@ -82,13 +83,13 @@ export default function QuranPage() {
         if (selectedReference) {
             setLoadingReference(true);
             setReferenceData(null);
-            fetch(`/api/hadith?book=${selectedReference.bookId}&number=${selectedReference.number}&ref=${encodeURIComponent(selectedReference.fullText)}`)
+            fetch(`https://api.hadith.gading.dev/books/${selectedReference.bookId}/${selectedReference.number}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.code === 200 && data.data && data.data.contents) {
                         setReferenceData(data.data.contents);
                     } else {
-                        // Use fallback directly if AI generation fails or original API fails
+                        // Use fallback directly if original API fails
                         setReferenceData({ 
                              arab: selectedReference.fallback.arab, 
                              id: selectedReference.fallback.id,
@@ -112,13 +113,11 @@ export default function QuranPage() {
     useEffect(() => {
         if (activeTab === 'doa' && doas.length === 0) {
             setLoadingDoas(true);
-            fetch('/api/doa')
-                .then(res => res.json())
-                .then(data => {
-                    setDoas(data);
-                })
-                .catch(console.error)
-                .finally(() => setLoadingDoas(false));
+            // using local data instead of fetch API to support static deployment without node backend
+            setTimeout(() => {
+                setDoas(doaData);
+                setLoadingDoas(false);
+            }, 300);
         }
     }, [activeTab]);
 
