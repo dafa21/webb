@@ -297,7 +297,7 @@ export default function QuranPage() {
             const chunk = networkTTSChunksRef.current[networkTTSCurrentRef.current];
             const audioEl = document.getElementById('quran-audio') as HTMLAudioElement;
             if (audioEl) {
-                audioEl.src = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${lang.split('-')[0]}&client=tw-ob&q=${encodeURIComponent(chunk)}`;
+                audioEl.src = `/api/tts?text=${encodeURIComponent(chunk)}&lang=${lang.split('-')[0]}`;
                 audioEl.onended = () => {
                     networkTTSCurrentRef.current++;
                     playNextChunk();
@@ -306,11 +306,15 @@ export default function QuranPage() {
                     setPlayingAudio(null);
                     networkTTSIdRef.current = null;
                 };
-                audioEl.play().catch(e => {
-                    console.error('Network TTS error:', e);
-                    setPlayingAudio(null);
-                    networkTTSIdRef.current = null;
-                });
+                
+                const playPromise = audioEl.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(e => {
+                        console.error('Network TTS error:', e);
+                        setPlayingAudio(null);
+                        networkTTSIdRef.current = null;
+                    });
+                }
             }
         };
         

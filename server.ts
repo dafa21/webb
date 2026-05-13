@@ -179,6 +179,26 @@ async function startServer() {
     }
   });
 
+  app.get("/api/tts", async (req, res) => {
+    try {
+      const { text, lang } = req.query;
+      if (!text) return res.status(400).json({ error: "Text is required" });
+      
+      const response = await fetch(`https://translate.google.com/translate_tts?ie=UTF-8&tl=${lang || 'ar'}&client=tw-ob&q=${encodeURIComponent(text.toString())}`);
+      if (!response.ok) {
+        throw new Error(`Google TTS failed: ${response.status}`);
+      }
+      
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for a year
+      const buffer = await response.arrayBuffer();
+      res.send(Buffer.from(buffer));
+    } catch (error) {
+      console.error("TTS Error:", error);
+      res.status(500).json({ error: "Failed to generate TTS" });
+    }
+  });
+
   // Proxy endpoint for Talaqqi AI evaluation
   app.post("/api/evaluate-talaqqi", async (req, res) => {
     try {
