@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Book, ArrowLeft, Search, Bookmark, AlignRight, FileText, ChevronRight, PlayCircle, Loader2 } from 'lucide-react';
+import { BookOpen, Book, ArrowLeft, Search, Bookmark, AlignRight, FileText, ChevronRight, PlayCircle, Loader2, Mic, Square, Activity, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { GoogleGenAI } from "@google/genai";
 
 export default function QuranPage() {
     const navigate = useNavigate();
@@ -26,6 +27,13 @@ export default function QuranPage() {
     const [loadingHadiths, setLoadingHadiths] = useState(false);
     const [hadithPage, setHadithPage] = useState(1);
     const [searchHadithText, setSearchHadithText] = useState('');
+
+    // Talaqqi AI State
+    const [recordingAyah, setRecordingAyah] = useState<number | null>(null);
+    const [evaluatingAyah, setEvaluatingAyah] = useState<number | null>(null);
+    const [evaluationResults, setEvaluationResults] = useState<{ [key: number]: string }>({});
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const audioChunksRef = useRef<Blob[]>([]);
 
     // Fetch Surahs
     useEffect(() => {
@@ -258,6 +266,91 @@ export default function QuranPage() {
         return rules;
     };
 
+    const startRecording = async (ayahNumber: number) => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            // Coba format yang didukung browser
+            const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
+            const mediaRecorder = new MediaRecorder(stream, { mimeType });
+            mediaRecorderRef.current = mediaRecorder;
+            audioChunksRef.current = [];
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
+                }
+            };
+
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+                stream.getTracks().forEach(track => track.stop());
+                await evaluateAudio(ayahNumber, audioBlob, mimeType);
+            };
+
+            mediaRecorder.start();
+            setRecordingAyah(ayahNumber);
+        } catch (err) {
+            console.error('Error accessing microphone:', err);
+            alert('Tidak dapat mengakses mikrofon. Pastikan Anda telah memberikan izin.');
+        }
+    };
+
+    const stopRecording = () => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+            const currentAyah = recordingAyah;
+            mediaRecorderRef.current.stop();
+            setRecordingAyah(null);
+            setEvaluatingAyah(currentAyah);
+        }
+    };
+
+    const evaluateAudio = async (ayahNumber: number, audioBlob: Blob, mimeType: string) => {
+        try {
+            const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+            if (!apiKey) throw new Error("Gemini API key is missing");
+            
+            const ai = new GoogleGenAI({ apiKey });
+            
+            const reader = new FileReader();
+            reader.readAsDataURL(audioBlob);
+            reader.onloadend = async () => {
+                const base64data = reader.result as string;
+                const base64Content = base64data.split(',')[1];
+                
+                const ayah = surahDetail?.ayat.find((a: any) => a.nomorAyat === ayahNumber);
+                if (!ayah) return;
+                
+                const prompt = `Kamu adalah Talaqqi AI, guru tahsin Al-Quran yang sangat sabar, ramah, dan memotivasi. Dengarkan rekaman ini. Ini membaca surat ${surahDetail.namaLatin} ayat ${ayahNumber}. Ayat aslinya: ${ayah.teksArab} (${ayah.teksLatin}). Evaluasi bacaannya. Berikan pujian dulu, lalu koreksi makhraj atau mad/tajwidnya jika ada menggunakan kata-kata yang mudah dimengerti. Jangan kaku. Jika bacaan sempurna, katakan sempurna. Singkat saja, maksimal 2 paragraf pendek.`;
+                
+                try {
+                    const response = await ai.models.generateContent({
+                        model: 'gemini-2.5-flash',
+                        contents: [
+                            { text: prompt },
+                            { inlineData: { mimeType, data: base64Content } }
+                        ]
+                    });
+                    
+                    setEvaluationResults(prev => ({
+                        ...prev,
+                        [ayahNumber]: response.text || "Tidak dapat memberikan umpan balik saat ini."
+                    }));
+                } catch (e) {
+                    console.error("Gemini eval error", e);
+                    setEvaluationResults(prev => ({
+                        ...prev,
+                        [ayahNumber]: "Gagal mengevaluasi bacaan. Coba rekam suara sekali lagi dengan volume lebih keras."
+                    }));
+                } finally {
+                    setEvaluatingAyah(null);
+                }
+            };
+        } catch (err) {
+            console.error('Error during evaluation:', err);
+            setEvaluatingAyah(null);
+        }
+    };
+
     return (
         <div className="pt-20 md:pt-28 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
             <div className="max-w-4xl mx-auto px-4">
@@ -385,8 +478,23 @@ export default function QuranPage() {
                                                     <button 
                                                         onClick={() => toggleAudio(ayah.audio["05"])}
                                                         className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${playingAudio === ayah.audio["05"] ? 'bg-[#1799dc] text-white shadow-md shadow-[#1799dc]/20' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-[#1799dc] hover:bg-slate-200 dark:hover:bg-slate-600'}`}
+                                                        title="Putar Audio"
                                                     >
                                                         {playingAudio === ayah.audio["05"] ? <span className="w-3 h-3 bg-white rounded-sm"></span> : <PlayCircle className="w-5 h-5 ml-0.5" />}
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => recordingAyah === ayah.nomorAyat ? stopRecording() : startRecording(ayah.nomorAyat)}
+                                                        disabled={evaluatingAyah === ayah.nomorAyat || (recordingAyah !== null && recordingAyah !== ayah.nomorAyat)}
+                                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${recordingAyah === ayah.nomorAyat ? 'bg-red-500 text-white shadow-md shadow-red-500/30 animate-pulse' : evaluatingAyah === ayah.nomorAyat ? 'bg-amber-100 text-amber-500 cursor-not-allowed' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:bg-[#1799dc]/10 hover:text-[#1799dc]'} disabled:opacity-50`}
+                                                        title="Talaqqi AI (Cek Bacaan)"
+                                                    >
+                                                        {evaluatingAyah === ayah.nomorAyat ? (
+                                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                                        ) : recordingAyah === ayah.nomorAyat ? (
+                                                            <Square className="w-4 h-4 fill-current" />
+                                                        ) : (
+                                                            <Mic className="w-5 h-5" />
+                                                        )}
                                                     </button>
                                                 </div>
                                                 <div className="flex-1 ml-6 text-right">
@@ -405,6 +513,48 @@ export default function QuranPage() {
                                                 <p className="text-sm font-medium text-primary-600 dark:text-primary-400 mb-2">{ayah.teksLatin}</p>
                                                 <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm md:text-base mb-4">{ayah.teksIndonesia}</p>
                                                 
+                                                {/* Talaqqi AI Feedback */}
+                                                <AnimatePresence>
+                                                    {(evaluatingAyah === ayah.nomorAyat || evaluationResults[ayah.nomorAyat] || recordingAyah === ayah.nomorAyat) && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                                                            animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
+                                                            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                                            className="overflow-hidden"
+                                                        >
+                                                            <div className={`p-4 rounded-2xl border ${recordingAyah === ayah.nomorAyat ? 'bg-red-50/50 border-red-100 dark:bg-red-900/10 dark:border-red-900/30' : evaluatingAyah === ayah.nomorAyat ? 'bg-amber-50/50 border-amber-100 dark:bg-amber-900/10 dark:border-amber-900/30' : 'bg-[#1799dc]/5 border-[#1799dc]/20 dark:bg-[#1799dc]/10 dark:border-[#1799dc]/30'}`}>
+                                                                <div className="flex items-start gap-3">
+                                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${recordingAyah === ayah.nomorAyat ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' : evaluatingAyah === ayah.nomorAyat ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-[#1799dc]/20 text-[#1799dc] dark:bg-[#1799dc]/30'}`}>
+                                                                        {recordingAyah === ayah.nomorAyat ? (
+                                                                            <Mic className="w-4 h-4 animate-pulse" />
+                                                                        ) : evaluatingAyah === ayah.nomorAyat ? (
+                                                                            <Activity className="w-4 h-4 animate-pulse" />
+                                                                        ) : (
+                                                                            <Sparkles className="w-4 h-4" />
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="flex-1">
+                                                                        <h4 className={`text-sm font-bold mb-1 ${recordingAyah === ayah.nomorAyat ? 'text-red-700 dark:text-red-400' : evaluatingAyah === ayah.nomorAyat ? 'text-amber-700 dark:text-amber-400' : 'text-[#1799dc]'}`}>
+                                                                            {recordingAyah === ayah.nomorAyat ? 'Merekam bacaan...' : evaluatingAyah === ayah.nomorAyat ? 'Talaqqi AI sedang mengevaluasi...' : 'Evaluasi Talaqqi AI'}
+                                                                        </h4>
+                                                                        {recordingAyah === ayah.nomorAyat && (
+                                                                            <p className="text-xs text-red-600/80 dark:text-red-400/80">Silakan baca ayat ini dengan jelas. Tekan tombol kotak merah untuk berhenti.</p>
+                                                                        )}
+                                                                        {evaluatingAyah === ayah.nomorAyat && (
+                                                                            <p className="text-xs text-amber-600/80 dark:text-amber-400/80">Tunggu sebentar, AI sedang mendengarkan dan menganalisis bacaan dan tajwid Anda.</p>
+                                                                        )}
+                                                                        {evaluationResults[ayah.nomorAyat] && !evaluatingAyah && !recordingAyah && (
+                                                                            <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+                                                                                {evaluationResults[ayah.nomorAyat]}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+
                                                 {/* Tajweed Section */}
                                                 {ayah.teksTajweed && (
                                                     <div className="mt-4 pt-4 border-t border-dashed border-slate-100 dark:border-slate-700/50">
