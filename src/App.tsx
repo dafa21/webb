@@ -929,7 +929,6 @@ export default function App() {
   const [donationAmount, setDonationAmount] = useState('100.000');
   const [isDonationSuccess, setIsDonationSuccess] = useState(false);
   const [showPaymentInstructions, setShowPaymentInstructions] = useState(false);
-  const [activeMidtransToken, setActiveMidtransToken] = useState('');
 
   useEffect(() => {
     if (isDonationSuccess && 'speechSynthesis' in window) {
@@ -3391,32 +3390,11 @@ export default function App() {
                          whileHover={{ scale: 1.02 }}
                          whileTap={{ scale: 0.98 }}
                          onClick={() => {
-                           if (activeMidtransToken === 'MOCK_TOKEN') {
-                             finishDonation();
-                             return;
-                           }
-                           if (activeMidtransToken) {
-                             window.snap.pay(activeMidtransToken, {
-                               onSuccess: function() {
-                                 finishDonation();
-                               },
-                               onPending: function() {
-                                 alert("Menunggu pembayaran Anda diselesaikan...");
-                                 setSelectedProgramForDonation(null);
-                                 setShowPaymentInstructions(false);
-                               },
-                               onError: function() {
-                                 alert("Pembayaran gagal!");
-                               },
-                               onClose: function() {
-                                 // Optional
-                               }
-                             });
-                           }
+                           finishDonation();
                          }}
                          className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-extrabold py-4 rounded-2xl shadow-xl shadow-primary-500/30 flex items-center justify-center gap-2 text-base"
                        >
-                         Bayar Sekarang
+                         Saya Sudah Transfer
                          <ArrowRight className="w-5 h-5" />
                        </motion.button>
                        
@@ -3440,13 +3418,6 @@ export default function App() {
                     setIsSubmitting(true);
                     
                     try {
-                      if (!window.snap) {
-                        alert("Sistem pembayaran sedang memuat atau belum siap. Pastikan Anda terhubung ke internet dan coba lagi.");
-                        setIsSubmitting(false);
-                        return;
-                      }
-
-                      // Gunakan API call ke backend yang kita buat
                       const valAmount = parseInt(donationAmount.replace(/\D/g, ''));
                       if (!valAmount || valAmount <= 0) {
                         alert("Nominal donasi tidak valid");
@@ -3454,37 +3425,9 @@ export default function App() {
                         return;
                       }
 
-                      const payload: any = {
-                        amount: valAmount,
-                        programName: selectedProgramForDonation.title,
-                        donorName: donorName || 'Hamba Allah',
-                        donorEmail: donorEmail || 'hamba.allah@example.com',
-                        paymentMethod: selectedPaymentMethod
-                      };
+                      // Simulasi proses
+                      await new Promise(resolve => setTimeout(resolve, 800));
 
-                      if (selectedProgramForDonation.category === 'Qurban') {
-                        payload.qurbanName = qurbanName;
-                        payload.qurbanQty = qurbanQty;
-                        payload.qurbanLocation = qurbanLocation;
-                        payload.qurbanAnimal = qurbanAnimal;
-                        payload.qurbanProcessing = qurbanProcessing;
-                        payload.qurbanForParents = qurbanForParents;
-                      }
-
-                      const response = await fetch('/api/payment', {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(payload)
-                      });
-
-                      const data = await response.json();
-                      if (!response.ok) {
-                        throw new Error(data.error || "Gagal membuat invoice midtrans");
-                      }
-
-                      setActiveMidtransToken(data.token);
                       setShowPaymentInstructions(true);
                       setIsSubmitting(false);
                       

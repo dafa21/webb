@@ -3,7 +3,6 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
-import midtransClient from "midtrans-client";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,62 +22,6 @@ async function startServer() {
   // Health check route - MUST BE BEFORE STATIC SERVING
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", env: process.env.NODE_ENV, port: PORT });
-  });
-
-  // API routes
-  app.post("/api/payment", async (req, res) => {
-    try {
-      const { amount, programName, donorName, donorEmail, paymentMethod, qurbanName, qurbanQty, qurbanLocation, qurbanAnimal, qurbanProcessing, qurbanForParents } = req.body;
-
-      if (!process.env.MIDTRANS_SERVER_KEY) {
-        console.warn("MIDTRANS_SERVER_KEY environment variable is missing. Returning a MOCK_TOKEN for testing purposes.");
-        return res.json({ token: 'MOCK_TOKEN', orderId: `DONATION-MOCK-${Date.now()}` });
-      }
-
-      // Create Snap API instance
-      let snap = new midtransClient.Snap({
-        isProduction: false,
-        serverKey: process.env.MIDTRANS_SERVER_KEY,
-      });
-
-      const orderId = `DONATION-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-      
-      let finalName = `Donasi: ${programName.substring(0, 40)}`;
-      if (qurbanName && qurbanAnimal) {
-        let animalName = qurbanAnimal.replace('_', ' ');
-        finalName = `Qurban: ${qurbanName} (${qurbanQty} ${animalName})`;
-      }
-
-      let parameter = {
-        transaction_details: {
-          order_id: orderId,
-          gross_amount: amount,
-        },
-        item_details: [
-          {
-            id: 'DONATION',
-            price: amount,
-            quantity: 1,
-            name: finalName.substring(0, 50),
-          }
-        ],
-        customer_details: {
-          first_name: donorName || "Hamba Allah",
-          email: donorEmail || "hamba.allah@example.com",
-        },
-        enabled_payments: paymentMethod ? [paymentMethod] : ["gopay", "shopeepay", "bca_va", "mandiri_va", "other_va"],
-        credit_card: {
-          secure: true
-        }
-      };
-
-      const transaction = await snap.createTransaction(parameter);
-      
-      res.json({ token: transaction.token, orderId });
-    } catch (error: any) {
-      console.error("Payment error:", error);
-      res.status(500).json({ error: error.message || "Failed to create payment" });
-    }
   });
 
   // Vite middleware for development
