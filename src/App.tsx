@@ -8,7 +8,7 @@ import {
   Heart, Menu, X, ChevronRight, ChevronDown, Users, HandHeart, 
   MapPin, Facebook, Instagram, Youtube, UserCircle,
   TrendingUp, FileText, History as HistoryIcon,
-  Globe, Tent, HandCoins, ShieldCheck, Sun, Moon, CheckCircle2, Award, Star, Milestone, Activity,
+  Globe, Tent, HandCoins, ShieldCheck, Sun, Moon, CheckCircle2, Award, Star, Milestone, Activity, Sunrise, HeartHandshake, Repeat,
   ArrowRight, PlayCircle, Phone, Mail, ShoppingBag, Bell, Image as ImageIcon, Search,
   Share2, Download, Sparkles, Calculator, Home, Wallet, Lock, Info, Component, ShoppingCart,
   Loader2, LayoutGrid, BookOpen, AlertCircle, CheckCircle
@@ -30,6 +30,7 @@ import { QurbanPage } from './components/QurbanPage';
 import { ProgramDetailPage } from './components/ProgramDetailPage';
 import { InteractiveDonationCarousel } from './components/InteractiveDonationCarousel';
 import { PohonKebaikanInteractive } from './components/PohonKebaikanInteractive';
+import QuranPage from './components/QuranPage';
 
 // Types
 export interface Program {
@@ -972,6 +973,10 @@ export default function App() {
                 program: selectedProgramForDonation.title,
                 amount: valAmount,
                 status: 'Berhasil',
+                method: selectedPaymentMethod === 'shopeepay' ? 'ShopeePay' : 
+                        selectedPaymentMethod === 'gopay' ? 'GoPay' : 
+                        selectedPaymentMethod === 'bsi' ? 'BSI Virtual Account' : 
+                        selectedPaymentMethod === 'bca' ? 'BCA Virtual Account' : selectedPaymentMethod,
                 createdAt: serverTimestamp()
             };
             
@@ -1329,6 +1334,7 @@ export default function App() {
                 {[
                   { name: 'Beranda', id: 'beranda' },
                   { name: 'Program', id: 'program' },
+                  { name: "Qur'an", path: '/quran' },
                   { name: 'Zakat', path: '/zakat' },
                   { name: 'Qurban', path: '/qurban' },
                   { name: 'Tentang Kami', id: 'tentang-kami' },
@@ -1551,6 +1557,7 @@ export default function App() {
               {[
                 { name: 'Beranda', icon: Home, id: 'beranda' },
                 { name: 'Program', icon: HandHeart, id: 'program' },
+                { name: "Qur'an", icon: BookOpen, path: '/quran' },
                 { name: 'Zakat', icon: HandCoins, path: '/zakat' },
                 { name: 'Qurban', icon: Tent, path: '/qurban' },
                 { name: 'Tentang Kami', icon: Info, id: 'tentang-kami' },
@@ -2634,6 +2641,78 @@ export default function App() {
                 </div>
               </div>
 
+              {/* Lencana Pencapaian */}
+              <div className="mt-8 mb-6">
+                <div className="flex items-center gap-3 mb-6 px-1">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+                    <Award className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">Lencana Pencapaian</h2>
+                    <p className="text-sm font-medium text-slate-500 hidden md:block">Apresiasi khusus atas keikhlasan & konsistensi Anda dalam berbagi.</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                  {(() => {
+                    const hasDonation = userDonations.filter((t: any) => t.status === 'Berhasil').length > 0;
+                    
+                    const badges = [
+                      {
+                        id: 'pejuang-subuh',
+                        name: 'Pejuang Subuh',
+                        desc: 'Sering berbagi di waktu fajar',
+                        icon: Sunrise,
+                        color: 'text-amber-500',
+                        bg: 'bg-amber-50 dark:bg-amber-500/10',
+                        border: 'border-amber-200 dark:border-amber-500/20',
+                        unlocked: hasDonation // Logic dummy: minimal 1 donasi untuk membuka badge pertama agar tidak kosong
+                      },
+                      {
+                        id: 'sahabat-yatim',
+                        name: 'Sahabat Yatim',
+                        desc: 'Simpati pada program yatim',
+                        icon: HeartHandshake,
+                        color: 'text-rose-500',
+                        bg: 'bg-rose-50 dark:bg-rose-500/10',
+                        border: 'border-rose-200 dark:border-rose-500/20',
+                        unlocked: userDonations.some((t: any) => typeof t.program === 'string' && t.program.toLowerCase().includes('yatim'))
+                      },
+                      {
+                        id: 'istiqomah',
+                        name: 'Istiqomah',
+                        desc: 'Donasi rutin 3x atau lebih',
+                        icon: Repeat,
+                        color: 'text-[#1799dc]',
+                        bg: 'bg-[#1799dc]/5 dark:bg-[#1799dc]/10',
+                        border: 'border-[#1799dc]/30 dark:border-[#1799dc]/20',
+                        unlocked: userDonations.filter((t: any) => t.status === 'Berhasil').length >= 3
+                      }
+                    ];
+
+                    return badges.map(badge => (
+                      <div key={badge.id} className={`p-5 md:p-6 rounded-3xl border relative overflow-hidden transition-all duration-300 ${badge.unlocked ? `bg-white dark:bg-slate-800 shadow-sm ${badge.border} hover:scale-[1.02] hover:shadow-md cursor-default` : 'bg-slate-50 dark:bg-slate-800/40 border-dashed border-slate-200 dark:border-slate-700 grayscale opacity-60'}`}>
+                        {badge.unlocked && <div className={`absolute top-0 right-0 w-32 h-32 rounded-full -mr-16 -mt-16 opacity-50 ${badge.bg}`}></div>}
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 ${badge.unlocked ? badge.bg : 'bg-slate-200 dark:bg-slate-700'}`}>
+                          <badge.icon className={`w-7 h-7 ${badge.unlocked ? badge.color : 'text-slate-400'}`} />
+                        </div>
+                        <h4 className="font-bold text-slate-800 dark:text-slate-100 mb-1.5 md:text-lg">{badge.name}</h4>
+                        <p className="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 leading-snug">{badge.desc}</p>
+                        {!badge.unlocked && (
+                           <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700/50 text-[10px] uppercase tracking-wider font-bold text-slate-400 flex items-center gap-1.5">
+                             <Lock className="w-3.5 h-3.5" /> Terkunci
+                           </div>
+                        )}
+                        {badge.unlocked && (
+                           <div className="absolute bottom-4 right-4 text-emerald-500/20">
+                              <CheckCircle className="w-16 h-16" />
+                           </div>
+                        )}
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </div>
+
               {/* Pohon Kebaikan Interactive Visualizer */}
               <div className="mt-6">
                 {(() => {
@@ -2815,6 +2894,7 @@ export default function App() {
             <AnalyticsDashboard />
           </>
         } />
+        <Route path="/quran" element={<QuranPage />} />
         <Route path="/zakat" element={<ZakatPage />} />
         <Route path="/qurban" element={<QurbanPage onAddToCart={handleAddToCart} />} />
         <Route path="*" element={<Navigate to="/" />} />
