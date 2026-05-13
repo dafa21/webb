@@ -110,7 +110,7 @@ export default function QuranPage() {
         }
     };
 
-    const toggleHadithAudio = (text: string, id: number) => {
+    const toggleHadithAudio = (text: string, id: number, lang: 'ar-SA' | 'id-ID' = 'ar-SA') => {
         const audioEl = document.getElementById('quran-audio') as HTMLAudioElement;
         if (audioEl) audioEl.pause();
         
@@ -121,17 +121,18 @@ export default function QuranPage() {
         
         window.speechSynthesis.cancel();
         
-        if (playingAudio === `hadith-${id}`) {
+        const audioId = `hadith-${id}-${lang}`;
+        if (playingAudio === audioId) {
             setPlayingAudio(null);
             return;
         }
 
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'ar-SA';
+        utterance.lang = lang;
         utterance.onend = () => setPlayingAudio(null);
         utterance.onerror = () => setPlayingAudio(null);
         
-        setPlayingAudio(`hadith-${id}`);
+        setPlayingAudio(audioId);
         window.speechSynthesis.speak(utterance);
     };
 
@@ -395,19 +396,48 @@ export default function QuranPage() {
                                     {filteredHadiths.map((hadith) => (
                                         <div key={hadith.number} className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
                                             <div className="flex items-center justify-between gap-3 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4">
-                                                <div className="px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 rounded-lg font-black text-sm">
-                                                    Hadits #{hadith.number}
+                                                <div className="flex flex-col">
+                                                    <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg">{selectedBook.name}</h3>
+                                                    <div className="text-primary-600 dark:text-primary-400 font-semibold text-sm">
+                                                        Hadits #{hadith.number}
+                                                    </div>
                                                 </div>
-                                                <button 
-                                                    onClick={() => toggleHadithAudio(hadith.arab, hadith.number)}
-                                                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${playingAudio === 'hadith-' + hadith.number ? 'bg-[#1799dc] text-white shadow-md shadow-[#1799dc]/20' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-[#1799dc] hover:bg-slate-200 dark:hover:bg-slate-600'}`}
-                                                    title="Putar Audio"
-                                                >
-                                                    {playingAudio === 'hadith-' + hadith.number ? <span className="w-3 h-3 bg-white rounded-sm"></span> : <PlayCircle className="w-5 h-5 ml-0.5" />}
-                                                </button>
+                                                <div className="flex items-center gap-2">
+                                                    <button 
+                                                        onClick={() => toggleHadithAudio(hadith.arab, hadith.number, 'ar-SA')}
+                                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${playingAudio === 'hadith-' + hadith.number + '-ar-SA' ? 'bg-[#1799dc] text-white shadow-md shadow-[#1799dc]/20' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-[#1799dc] hover:bg-slate-200 dark:hover:bg-slate-600'}`}
+                                                        title="Putar Audio Arab"
+                                                    >
+                                                        {playingAudio === 'hadith-' + hadith.number + '-ar-SA' ? <span className="w-3 h-3 bg-white rounded-sm"></span> : <PlayCircle className="w-5 h-5 ml-0.5" />}
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => toggleHadithAudio(hadith.id, hadith.number, 'id-ID')}
+                                                        className={`px-3 h-10 rounded-full flex items-center justify-center gap-2 transition-colors text-xs font-bold ${playingAudio === 'hadith-' + hadith.number + '-id-ID' ? 'bg-[#1799dc] text-white shadow-md shadow-[#1799dc]/20' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-[#1799dc] hover:bg-slate-200 dark:hover:bg-slate-600'}`}
+                                                        title="Dengarkan Terjemahan"
+                                                    >
+                                                        {playingAudio === 'hadith-' + hadith.number + '-id-ID' ? <span className="w-2.5 h-2.5 bg-white rounded-sm"></span> : <FileText className="w-4 h-4" />}
+                                                        {playingAudio === 'hadith-' + hadith.number + '-id-ID' ? 'Berhenti' : 'Terjemahan'}
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <p className="font-arabic text-3xl md:text-[2.5rem] leading-[2.5] md:leading-[2.5] text-slate-800 dark:text-slate-100 text-right mb-6" dir="rtl">{hadith.arab}</p>
-                                            <p className="text-slate-600 dark:text-slate-300 leading-relaxed">{hadith.id}</p>
+                                            <p 
+                                                onClick={() => toggleHadithAudio(hadith.arab, hadith.number, 'ar-SA')}
+                                                className="font-arabic text-3xl md:text-[2.5rem] leading-[2.5] md:leading-[2.5] text-slate-800 dark:text-slate-100 text-right mb-6 cursor-pointer hover:text-[#1799dc] transition-colors" 
+                                                dir="rtl"
+                                                title="Klik untuk memutar audio Arab"
+                                            >
+                                                {hadith.arab}
+                                            </p>
+                                            <div className="relative pl-6 border-l-4 border-slate-100 dark:border-slate-700">
+                                                <p className="text-slate-700 dark:text-slate-300 leading-loose md:text-lg italic font-medium whitespace-pre-line">
+                                                    {hadith.id.split(/(\[[^\]]+\])/).map((part: string, i: number) => {
+                                                        if (part.startsWith('[') && part.endsWith(']')) {
+                                                            return <span key={i} className="text-[#1799dc] dark:text-[#2db2f5] not-italic font-bold">{part}</span>;
+                                                        }
+                                                        return part;
+                                                    })}
+                                                </p>
+                                            </div>
                                         </div>
                                     ))}
 

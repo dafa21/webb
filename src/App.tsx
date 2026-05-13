@@ -964,21 +964,21 @@ export default function App() {
     
     if (auth.currentUser && selectedProgramForDonation) {
         const uid = auth.currentUser.uid;
+        const valAmount = parseInt(donationAmount.replace(/\D/g, '')) || 0;
+        
+        const payload = {
+            date: new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' }),
+            program: selectedProgramForDonation.title,
+            amount: valAmount,
+            status: 'Berhasil',
+            method: selectedPaymentMethod === 'shopeepay' ? 'ShopeePay' : 
+                    selectedPaymentMethod === 'gopay' ? 'GoPay' : 
+                    selectedPaymentMethod === 'bsi' ? 'BSI Virtual Account' : 
+                    selectedPaymentMethod === 'bca' ? 'BCA Virtual Account' : selectedPaymentMethod,
+            createdAt: serverTimestamp()
+        };
+
         try {
-            const valAmount = parseInt(donationAmount.replace(/\D/g, '')) || 0;
-            
-            const payload = {
-                date: new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' }),
-                program: selectedProgramForDonation.title,
-                amount: valAmount,
-                status: 'Berhasil',
-                method: selectedPaymentMethod === 'shopeepay' ? 'ShopeePay' : 
-                        selectedPaymentMethod === 'gopay' ? 'GoPay' : 
-                        selectedPaymentMethod === 'bsi' ? 'BSI Virtual Account' : 
-                        selectedPaymentMethod === 'bca' ? 'BCA Virtual Account' : selectedPaymentMethod,
-                createdAt: serverTimestamp()
-            };
-            
             await addDoc(collection(db, 'users', uid, 'donations'), payload);
             
             // Simpan profil donatur
