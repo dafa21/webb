@@ -234,6 +234,30 @@ export default function QuranPage() {
         return title.charAt(0).toUpperCase() + title.slice(1) + (words.length > titleLen ? '...' : '');
     };
 
+    const getVerseTajweedRules = (html: string) => {
+        if (!html) return [];
+        
+        const rules: { name: string, color: string }[] = [];
+        const tajweedDefinitions = [
+            { name: 'Madd', color: '#8b5cf6', patterns: ['madda_normal', 'madda_permissible', 'madda_necessery', 'madda_necessary', 'madda_obligatory'] },
+            { name: 'Ghunnah', color: '#ec4899', patterns: ['ghunnah'] },
+            { name: 'Ikhfa', color: '#22c55e', patterns: ['ikhfa', 'ikhafa', 'ikhfa_shafawi', 'ikhafa_shafawi'] },
+            { name: 'Iqlab', color: '#3b82f6', patterns: ['iqlaab', 'iqlab'] },
+            { name: 'Idgham Bighunnah', color: '#f59e0b', patterns: ['idgham_with_ghunnah', 'idgham_ghunnah', 'idgham_shafawi', 'idgham_mutajanisayn', 'idgham_mutaqaribayn'] },
+            { name: 'Idgham Bilaghunnah', color: '#94a3b8', patterns: ['idgham_without_ghunnah', 'idgham_wo_ghunnah', 'idgham_bilaghunnah'] },
+            { name: 'Qalqalah', color: '#ef4444', patterns: ['qalaqah'] },
+        ];
+
+        tajweedDefinitions.forEach(def => {
+            const hasRule = def.patterns.some(pattern => html.includes(pattern));
+            if (hasRule) {
+                rules.push({ name: def.name, color: def.color });
+            }
+        });
+
+        return rules;
+    };
+
     return (
         <div className="pt-20 md:pt-28 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
             <div className="max-w-4xl mx-auto px-4">
@@ -379,7 +403,22 @@ export default function QuranPage() {
                                             </div>
                                             <div className="border-t border-slate-100 dark:border-slate-700/50 pt-4 mt-6">
                                                 <p className="text-sm font-medium text-primary-600 dark:text-primary-400 mb-2">{ayah.teksLatin}</p>
-                                                <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm md:text-base">{ayah.teksIndonesia}</p>
+                                                <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm md:text-base mb-4">{ayah.teksIndonesia}</p>
+                                                
+                                                {/* Tajweed Section */}
+                                                {ayah.teksTajweed && (
+                                                    <div className="mt-4 pt-4 border-t border-dashed border-slate-100 dark:border-slate-700/50">
+                                                        <h4 className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-400 dark:text-slate-500 mb-3">Hukum Tajwid Ayat Ini</h4>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {getVerseTajweedRules(ayah.teksTajweed).map(rule => (
+                                                                <div key={rule.name} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-700 text-[10px] font-bold shadow-sm">
+                                                                    <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.1)]" style={{ backgroundColor: rule.color }}></div>
+                                                                    <span className="text-slate-700 dark:text-slate-300 uppercase tracking-widest">{rule.name}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
