@@ -127,13 +127,38 @@ export default function QuranPage() {
             return;
         }
 
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = lang;
-        utterance.onend = () => setPlayingAudio(null);
-        utterance.onerror = () => setPlayingAudio(null);
-        
-        setPlayingAudio(audioId);
-        window.speechSynthesis.speak(utterance);
+        // Resume if paused
+        if (window.speechSynthesis.paused) {
+            window.speechSynthesis.resume();
+        }
+
+        setTimeout(() => {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang;
+            
+            // Try to find a voice that matches the language
+            const voices = window.speechSynthesis.getVoices();
+            let voice = voices.find(v => v.lang === lang); // Exact match
+            if (!voice) {
+                voice = voices.find(v => v.lang.startsWith(lang.split('-')[0])); // Language match
+            }
+            
+            if (voice) {
+                utterance.voice = voice;
+            }
+
+            utterance.pitch = 1;
+            utterance.rate = 0.9; // Slightly slower for better clarity
+            
+            utterance.onend = () => setPlayingAudio(null);
+            utterance.onerror = (event) => {
+                console.error('SpeechSynthesis Error:', event);
+                setPlayingAudio(null);
+            };
+            
+            setPlayingAudio(audioId);
+            window.speechSynthesis.speak(utterance);
+        }, 100);
     };
 
     // Cleanup audio on unmount
