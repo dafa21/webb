@@ -43,6 +43,11 @@ export default function QuranPage() {
     const [evaluationResults, setEvaluationResults] = useState<{ [key: number]: string }>({});
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
+    
+    // Refs for network-based TTS
+    const networkTTSChunksRef = useRef<string[]>([]);
+    const networkTTSCurrentRef = useRef<number>(0);
+    const networkTTSIdRef = useRef<string | null>(null);
 
     const activeWordRef = useRef<{ ayahNumber: number, wordIndex: number } | null>(null);
     const rqAnimRef = useRef<number | null>(null);
@@ -253,17 +258,78 @@ export default function QuranPage() {
         return voice;
     };
 
+    const stopNetworkTTS = () => {
+        const audioEl = document.getElementById('quran-audio') as HTMLAudioElement;
+        if (audioEl && networkTTSIdRef.current) {
+            audioEl.pause();
+            audioEl.onended = null;
+            audioEl.onerror = null;
+        }
+        networkTTSIdRef.current = null;
+    };
+
+    const playNetworkTTS = (text: string, lang: string, audioId: string) => {
+        const words = text.split(' ');
+        let chunks: string[] = [];
+        let currentChunk = '';
+        words.forEach(word => {
+            if (currentChunk.length + word.length > 180) {
+                if (currentChunk) chunks.push(currentChunk.trim());
+                currentChunk = word + ' ';
+            } else {
+                currentChunk += word + ' ';
+            }
+        });
+        if (currentChunk) chunks.push(currentChunk.trim());
+        
+        networkTTSChunksRef.current = chunks;
+        networkTTSCurrentRef.current = 0;
+        networkTTSIdRef.current = audioId;
+        
+        const playNextChunk = () => {
+            if (networkTTSIdRef.current !== audioId) return; // Stopped
+            if (networkTTSCurrentRef.current >= networkTTSChunksRef.current.length) {
+                setPlayingAudio(null);
+                networkTTSIdRef.current = null;
+                return;
+            }
+            
+            const chunk = networkTTSChunksRef.current[networkTTSCurrentRef.current];
+            const audioEl = document.getElementById('quran-audio') as HTMLAudioElement;
+            if (audioEl) {
+                audioEl.src = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${lang.split('-')[0]}&client=tw-ob&q=${encodeURIComponent(chunk)}`;
+                audioEl.onended = () => {
+                    networkTTSCurrentRef.current++;
+                    playNextChunk();
+                };
+                audioEl.onerror = () => {
+                    setPlayingAudio(null);
+                    networkTTSIdRef.current = null;
+                };
+                audioEl.play().catch(e => {
+                    console.error('Network TTS error:', e);
+                    setPlayingAudio(null);
+                    networkTTSIdRef.current = null;
+                });
+            }
+        };
+        
+        playNextChunk();
+    };
+
     const toggleSpeechAudio = (text: string, id: string, lang: 'ar-SA' | 'id-ID') => {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
         }
+        stopNetworkTTS();
         
         // Coba untuk memberhentikan audio Quran jika sedang berjalan
-        if (playingAudio && !playingAudio.startsWith('doa') && !playingAudio.startsWith('quran-trans')) {
+        if (playingAudio && !playingAudio.startsWith('doa') && !playingAudio.startsWith('quran-trans') && !playingAudio.startsWith('hadith')) {
             const audioEl = document.getElementById('quran-audio') as HTMLAudioElement;
             if (audioEl) {
                 audioEl.pause();
                 audioEl.onplay = null;
+                audioEl.onended = null;
             }
             if (rqAnimRef.current) {
                 cancelAnimationFrame(rqAnimRef.current);
@@ -280,23 +346,26 @@ export default function QuranPage() {
             setPlayingAudio(null);
         } else {
             setPlayingAudio(id);
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = lang;
-            utterance.rate = 0.85; // Diperlambat sedikit agar lebih jelas
-            
-            const bestVoice = getBestVoice(lang);
-            if (bestVoice) utterance.voice = bestVoice;
-            
-            utterance.onend = () => setPlayingAudio(null);
-            utterance.onerror = () => setPlayingAudio(null);
-            
-            window.speechSynthesis.speak(utterance);
+            if (lang === 'ar-SA') {
+                playNetworkTTS(text, lang, id);
+            } else {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = lang;
+                utterance.rate = 0.85; // Diperlambat sedikit agar lebih jelas
+                
+                const bestVoice = getBestVoice(lang);
+                if (bestVoice) utterance.voice = bestVoice;
+                
+                utterance.onend = () => setPlayingAudio(null);
+                utterance.onerror = () => setPlayingAudio(null);
+                
+                window.speechSynthesis.speak(utterance);
+            }
         }
     };
 
     const toggleHadithAudio = (text: string, id: number, lang: 'ar-SA' | 'id-ID' = 'ar-SA') => {
         const audioEl = document.getElementById('quran-audio') as HTMLAudioElement;
-        if (audioEl) audioEl.pause();
         
         if (!('speechSynthesis' in window)) {
             alert('Fitur suara tidak didukung di browser ini.');
@@ -304,6 +373,15 @@ export default function QuranPage() {
         }
         
         window.speechSynthesis.cancel();
+        stopNetworkTTS();
+        
+        if (playingAudio && !playingAudio.startsWith('doa') && !playingAudio.startsWith('quran-trans') && !playingAudio.startsWith('hadith')) {
+            if (audioEl) {
+                audioEl.pause();
+                audioEl.onplay = null;
+                audioEl.onended = null;
+            }
+        }
         
         const audioId = `hadith-${id}-${lang}`;
         if (playingAudio === audioId) {
@@ -311,33 +389,38 @@ export default function QuranPage() {
             return;
         }
 
-        // Resume if paused
-        if (window.speechSynthesis.paused) {
-            window.speechSynthesis.resume();
-        }
+        if (lang === 'ar-SA') {
+            setPlayingAudio(audioId);
+            playNetworkTTS(text, lang, audioId);
+        } else {
+            // Resume if paused
+            if (window.speechSynthesis.paused) {
+                window.speechSynthesis.resume();
+            }
 
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = lang;
-        utterance.rate = 0.85; // Diperlambat sedikit agar lebih jelas
-        
-        // Try to find a voice that matches the language
-        const bestVoice = getBestVoice(lang);
-        if (bestVoice) {
-            utterance.voice = bestVoice;
-        }
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang;
+            utterance.rate = 0.85; // Diperlambat sedikit agar lebih jelas
+            
+            // Try to find a voice that matches the language
+            const bestVoice = getBestVoice(lang);
+            if (bestVoice) {
+                utterance.voice = bestVoice;
+            }
 
-        utterance.pitch = 1;
-        utterance.rate = 0.9; // Slightly slower for better clarity
-        
-        utterance.onend = () => setPlayingAudio(null);
-        utterance.onerror = (event) => {
-            console.error('SpeechSynthesis Error:', event);
-            setPlayingAudio(null);
-        };
-        
-        setPlayingAudio(audioId);
-        // Small delay without setTimeout, just call directly
-        window.speechSynthesis.speak(utterance);
+            utterance.pitch = 1;
+            utterance.rate = 0.9; // Slightly slower for better clarity
+            
+            utterance.onend = () => setPlayingAudio(null);
+            utterance.onerror = (event) => {
+                console.error('SpeechSynthesis Error:', event);
+                setPlayingAudio(null);
+            };
+            
+            setPlayingAudio(audioId);
+            // Small delay without setTimeout, just call directly
+            window.speechSynthesis.speak(utterance);
+        }
     };
 
     // Cleanup audio on unmount
