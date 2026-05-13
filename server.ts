@@ -3,6 +3,10 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,6 +26,41 @@ async function startServer() {
   // Health check route - MUST BE BEFORE STATIC SERVING
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", env: process.env.NODE_ENV, port: PORT });
+  });
+
+  // Proxy endpoint for Talaqqi AI evaluation
+  app.post("/api/evaluate-talaqqi", async (req, res) => {
+    try {
+      const { prompt, audioBase64, mimeType } = req.body;
+      const apiKey = process.env.GEMINI_API_KEY;
+
+      if (!apiKey) {
+        return res.status(500).json({ error: "Gemini API key is not configured on server" });
+      }
+
+      if (!prompt || !audioBase64 || !mimeType) {
+        return res.status(400).json({ error: "Missing required fields: prompt, audioBase64, or mimeType" });
+      }
+
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+      const response = await model.generateContent([
+        prompt,
+        {
+          inlineData: {
+            mimeType: mimeType,
+            data: audioBase64
+          }
+        }
+      ]);
+
+      const feedback = response.response.text();
+      res.json({ feedback });
+    } catch (error) {
+      console.error("Evaluation Error:", error);
+      res.status(500).json({ error: error instanceof Error ? error.message : "Internal Server Error" });
+    }
   });
 
   // Vite middleware for development

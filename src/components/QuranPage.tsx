@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, Book, ArrowLeft, Search, Bookmark, AlignRight, FileText, ChevronRight, PlayCircle, Loader2, Mic, Square, Activity, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export default function QuranPage() {
     const navigate = useNavigate();
@@ -332,16 +331,11 @@ export default function QuranPage() {
 
     const evaluateAudio = async (ayahNumber: number, audioBlob: Blob, mimeType: string) => {
         try {
-            const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
-            if (!apiKey) throw new Error("Gemini API key is missing");
-            
-            const genAI = new GoogleGenerativeAI(apiKey);
-            
             const reader = new FileReader();
             reader.readAsDataURL(audioBlob);
             reader.onloadend = async () => {
                 const base64data = reader.result as string;
-                const base64Content = base64data.split(',')[1];
+                const audioBase64 = base64data.split(',')[1];
                 
                 const ayah = surahDetail?.ayat.find((a: any) => a.nomorAyat === ayahNumber);
                 if (!ayah) return;
@@ -349,19 +343,26 @@ export default function QuranPage() {
                 const prompt = `Kamu adalah Talaqqi AI, guru tahsin Al-Quran yang santai, ramah, dan memotivasi. Dengarkan rekaman ini: membaca surat ${surahDetail.namaLatin} ayat ${ayahNumber}. Ayat aslinya: ${ayah.teksArab} (${ayah.teksLatin}). Evaluasi bacaannya. Berikan pujian dulu, lalu koreksi makhraj atau mad/tajwidnya jika ada dengan menggunakan ejaan bahasa Indonesia yang mudah dibaca oleh text-to-speech. Jangan gunakan simbol rumit atau tanda kurung berlebihan. Jika bacaan sempurna, puji dengan tulus. Setelah koreksi, katakan 'Mari kita dengarkan bacaan yang benarnya berikut ini.'. Singkat saja, maksimal 2 paragraf pendek.`;
                 
                 try {
-                    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-                    const response = await model.generateContent([
-                        prompt,
-                        {
-                            inlineData: {
-                                mimeType: mimeType,
-                                data: base64Content
-                            }
-                        }
-                    ]);
+                    const response = await fetch('/api/evaluate-talaqqi', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            prompt,
+                            audioBase64,
+                            mimeType
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Gagal mengevaluasi bacaan');
+                    }
+
+                    const data = await response.json();
+                    const feedbackText = data.feedback || "Tidak dapat memberikan umpan balik saat ini.";
                     
-                    const responseText = response.response.text();
-                    const feedbackText = responseText || "Tidak dapat memberikan umpan balik saat ini.";
                     setEvaluationResults(prev => ({
                         ...prev,
                         [ayahNumber]: feedbackText
@@ -370,17 +371,17 @@ export default function QuranPage() {
                     speakFeedbackAndPlayCorrect(feedbackText, ayah.audio["05"], ayahNumber);
                     
                 } catch (e) {
-                    console.error("Gemini eval error", e);
+                    console.error("Evaluation error", e);
                     setEvaluationResults(prev => ({
                         ...prev,
-                        [ayahNumber]: "Gagal mengevaluasi bacaan. Coba rekam suara sekali lagi dengan volume lebih keras."
+                        [ayahNumber]: e instanceof Error ? e.message : "Gagal mengevaluasi bacaan. Coba rekam suara sekali lagi."
                     }));
                 } finally {
                     setEvaluatingAyah(null);
                 }
             };
         } catch (err) {
-            console.error('Error during evaluation:', err);
+            console.error('Error during evaluation process:', err);
             setEvaluatingAyah(null);
         }
     };
