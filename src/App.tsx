@@ -1323,47 +1323,6 @@ export default function App() {
           </div>
 
           <div className={`${isSearchOpen ? 'w-full md:w-auto' : ''} flex items-center gap-2 md:gap-3`}>
-            {/* Contextual Desktop Links */}
-            <div className={`hidden lg:flex transition-all duration-500 ease-out items-center justify-center mr-1 md:mr-2 xl:mr-4 ${
-                isScrolled 
-                  ? '' 
-                  : 'bg-white dark:bg-slate-800 px-4 xl:px-6 py-2 md:py-2.5 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700 rounded-full'
-              }`}>
-              <div className="flex items-center justify-center gap-3 lg:gap-4 xl:gap-6">
-                {[
-                  { name: 'Beranda', id: 'beranda' },
-                  { name: 'Program', id: 'program' },
-                  { name: "Qur'an", path: '/quran' },
-                  { name: 'Zakat', path: '/zakat' },
-                  { name: 'Qurban', path: '/qurban' },
-                  { name: 'Tentang Kami', id: 'tentang-kami' },
-                  { name: 'Layanan', id: 'layanan' },
-                  { name: 'Laporan', path: '/laporan' },
-                  { name: 'Artikel', id: 'artikel' }
-                ].map((item) => (
-                  <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }}
-                    key={item.name}
-                    onClick={() => {
-                        if (item.path) {
-                           navigate(item.path);
-                           window.scrollTo(0,0);
-                        } else {
-                           if (location.pathname !== '/') {
-                               navigate('/');
-                               setTimeout(() => document.getElementById(item.id!)?.scrollIntoView({ behavior: 'smooth' }), 100);
-                           } else {
-                               document.getElementById(item.id!)?.scrollIntoView({ behavior: 'smooth' });
-                           }
-                        }
-                    }}
-                    className="transition-all duration-300 font-semibold text-[13px] xl:text-sm text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 whitespace-nowrap"
-                  >
-                    {item.name}
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-
             <div className={`relative ${isSearchOpen ? 'w-full flex-1' : ''}`}>
               {isSearchOpen ? (
                 <motion.div
@@ -1407,11 +1366,11 @@ export default function App() {
               )}
             </div>
 
-            {/* Dark Mode Toggle */}
+            {/* Dark Mode Toggle - Hidden on desktop bar, available in menu */}
             <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }}
               onClick={() => setIsDarkMode(!isDarkMode)}
               aria-label={isDarkMode ? "Beralih ke Mode Terang" : "Beralih ke Mode Gelap"}
-              className={`transition-all duration-300 hidden sm:flex relative items-center justify-center rounded-full transition-all duration-300 ${isSearchOpen ? 'hidden sm:flex' : ''} ${
+              className={`transition-all duration-300 sm:hidden relative items-center justify-center rounded-full transition-all duration-300 ${isSearchOpen ? 'hidden' : ''} ${
                 isScrolled ? 'w-9 h-9 xl:w-10 xl:h-10 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200' : 'w-9 h-9 xl:w-10 xl:h-10 bg-white dark:bg-slate-800 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700 text-primary-500 hover:scale-105'
               }`}
             >
@@ -1446,8 +1405,8 @@ export default function App() {
               Donasi Sekarang
             </motion.button>
 
-            {/* Notifications Button */}
-            <div className={`relative ${isSearchOpen ? 'hidden md:block' : ''}`}>
+            {/* Notifications Button - Hidden on desktop bar, available in menu */}
+            <div className={`relative ${isSearchOpen ? 'hidden md:block' : ''} md:hidden`}>
               <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }} 
                 onClick={() => setNotificationsOpen(!notificationsOpen)}
                 aria-label="Notifikasi"
@@ -1497,7 +1456,7 @@ export default function App() {
             </div>
 
 
-            {/* Dashboard Donatur Button (Small) */}
+            {/* Dashboard Donatur Button - Hidden on desktop bar, available in menu */}
             <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }} 
               onClick={() => {
                 navigate('/history');
@@ -1505,7 +1464,7 @@ export default function App() {
               }}
               aria-label="Dashboard Donatur"
               title="Dashboard Donatur"
-              className={`transition-all duration-300 hidden md:flex relative items-center justify-center rounded-full transition-all duration-300 ${
+              className={`transition-all duration-300 hidden relative items-center justify-center rounded-full transition-all duration-300 ${
                 isScrolled ? 'w-10 h-10 md:w-11 md:h-11 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200' : 'w-10 h-10 md:w-11 md:h-11 bg-white dark:bg-slate-800 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700 text-primary-500 hover:scale-105'
               } transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95 overflow-hidden`}>
               <UserCircle className="w-5 h-5 flex-shrink-0" />
@@ -1517,10 +1476,11 @@ export default function App() {
               aria-label="Buka Menu Utama"
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-menu"
-              className={`transition-all duration-300 ${isSearchOpen ? 'hidden' : 'flex'} lg:hidden items-center justify-center rounded-full transition-all duration-300 ${
-                isScrolled ? 'w-10 h-10 md:w-11 md:h-11 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200' : 'w-10 h-10 md:w-11 md:h-11 bg-white dark:bg-slate-800 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700 text-primary-500 hover:scale-105'
+              className={`transition-all duration-300 ${isSearchOpen ? 'hidden' : 'flex'} items-center justify-center gap-2 rounded-full transition-all duration-300 ${
+                isScrolled ? 'px-3 md:px-4 h-10 md:h-11 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200' : 'px-4 md:px-5 h-10 md:h-11 bg-white dark:bg-slate-800 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700 text-primary-500 hover:scale-105'
               } transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}>
-              <Menu className="w-5 h-5" />
+              <span className="hidden sm:inline font-bold text-xs uppercase tracking-widest mt-0.5">Menu</span>
+              <Menu className="w-5 h-5 flex-shrink-0" />
             </motion.button>
           </div>
         </div>
@@ -1530,16 +1490,34 @@ export default function App() {
       {/* Mobile Menu */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div 
-            id="mobile-menu"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Menu navigasi mobile"
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            className="fixed inset-0 z-[60] bg-white dark:bg-slate-900 flex flex-col"
-          >
+          <>
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[55] lg:hidden"
+            />
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="fixed inset-0 bg-black/20 backdrop-blur-xs z-[55] hidden lg:block"
+            />
+            
+            <motion.div 
+              id="mobile-menu"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Menu navigasi"
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 right-0 w-full sm:w-80 md:w-96 z-[60] bg-white dark:bg-slate-900 shadow-2xl flex flex-col border-l border-slate-100 dark:border-slate-800"
+            >
             <div className="p-4 flex justify-between items-center bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
                <div className="flex items-center gap-2">
                  <img src="/logo-kecil (1).png" alt="Logo" className="h-8 object-contain dark:brightness-0 dark:invert dark:drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]" />
@@ -1646,7 +1624,8 @@ export default function App() {
               </div>
             </div>
           </motion.div>
-        )}
+        </>
+      )}
       </AnimatePresence>
 
       <Routes>
