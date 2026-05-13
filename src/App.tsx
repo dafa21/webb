@@ -1299,30 +1299,30 @@ export default function App() {
       <nav 
         aria-label="Navigasi Utama"
         className={`fixed left-0 right-0 z-50 transition-all duration-500 ease-in-out px-4 md:px-6 ${
-          isScrolled ? 'top-3 md:top-5' : 'top-5 md:top-8'
+          isScrolled ? 'top-2 md:top-4' : 'top-4 md:top-6'
         }`}
       >
         <div className={`max-w-7xl mx-auto flex items-center justify-between transition-all duration-500 ease-in-out rounded-full ${
           isScrolled 
-            ? 'bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/40 dark:border-slate-800/40 px-3 md:px-4 py-2.5 md:py-3' 
+            ? 'bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/40 dark:border-slate-800/40 px-2.5 md:px-3 py-2 md:py-2.5' 
             : 'bg-transparent px-0 py-0'
         }`}>
           {/* Logo Pill */}
           <div 
             className={`${isSearchOpen ? 'hidden md:flex' : 'flex'} items-center gap-2 cursor-pointer group rounded-full transition-all duration-500 ease-out ${
               isScrolled 
-                ? 'px-2'
-                : 'bg-white dark:bg-slate-800 px-4 md:px-5 py-2 md:py-2.5 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700' 
+                ? 'px-1.5'
+                : 'bg-white dark:bg-slate-800 px-3 md:px-4 py-1.5 md:py-2 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700' 
             }`}
             onClick={() => {
               navigate('/');
               window.scrollTo(0,0);
             }}
           >
-            <img src="/logo-kecil (1).png" alt="Logo" className={`h-8 md:h-10 object-contain transition-all duration-300 dark:brightness-0 dark:invert dark:drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]`} />
+            <img src="/logo-kecil (1).png" alt="Logo" className={`h-7 md:h-8 object-contain transition-all duration-300 dark:brightness-0 dark:invert dark:drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]`} />
           </div>
 
-          <div className={`${isSearchOpen ? 'w-full md:w-auto' : ''} flex items-center gap-2 md:gap-3`}>
+          <div className={`${isSearchOpen ? 'w-full md:w-auto' : ''} flex items-center gap-1.5 md:gap-2`}>
             <div className={`relative ${isSearchOpen ? 'w-full flex-1' : ''}`}>
               {isSearchOpen ? (
                 <motion.div
@@ -1347,10 +1347,10 @@ export default function App() {
                       setIsSearchOpen(false);
                       setSearchQuery('');
                     }}
-                    className={`transition-all duration-300 flex items-center justify-center rounded-full transition-all duration-300 w-10 h-10 md:w-11 md:h-11 shrink-0 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200`}
+                    className={`transition-all duration-300 flex items-center justify-center rounded-full transition-all duration-300 w-8 h-8 md:w-9 md:h-9 shrink-0 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200`}
                     aria-label="Tutup pencarian"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="w-4 h-4" />
                   </motion.button>
                 </motion.div>
               ) : (
@@ -1358,10 +1358,10 @@ export default function App() {
                   onClick={() => setIsSearchOpen(true)}
                   aria-label="Buka pencarian"
                   className={`transition-all duration-300 relative flex items-center justify-center rounded-full transition-all duration-300 ${
-                    isScrolled ? 'w-9 h-9 xl:w-10 xl:h-10 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200' : 'w-9 h-9 xl:w-10 xl:h-10 bg-white dark:bg-slate-800 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700 text-primary-500 hover:scale-105'
+                    isScrolled ? 'w-8 h-8 xl:w-9 xl:h-9 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200' : 'w-8 h-8 xl:w-9 xl:h-9 bg-white dark:bg-slate-800 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700 text-primary-500 hover:scale-105'
                   }`}
                 >
-                  <Search className="w-4 h-4 xl:w-5 xl:h-5" />
+                  <Search className="w-3.5 h-3.5 xl:w-4 xl:h-4" />
                 </motion.button>
               )}
             </div>
@@ -1370,11 +1370,11 @@ export default function App() {
             <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }}
               onClick={() => setIsDarkMode(!isDarkMode)}
               aria-label={isDarkMode ? "Beralih ke Mode Terang" : "Beralih ke Mode Gelap"}
-              className={`transition-all duration-300 sm:hidden relative items-center justify-center rounded-full transition-all duration-300 ${isSearchOpen ? 'hidden' : ''} ${
-                isScrolled ? 'w-9 h-9 xl:w-10 xl:h-10 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200' : 'w-9 h-9 xl:w-10 xl:h-10 bg-white dark:bg-slate-800 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700 text-primary-500 hover:scale-105'
+              className={`transition-all duration-300 sm:hidden relative flex items-center justify-center rounded-full ${isSearchOpen ? 'hidden' : ''} ${
+                isScrolled ? 'w-8 h-8 xl:w-9 xl:h-9 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200' : 'w-8 h-8 xl:w-9 xl:h-9 bg-white dark:bg-slate-800 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700 text-primary-500 hover:scale-105'
               }`}
             >
-              {isDarkMode ? <Sun className="w-4 h-4 xl:w-5 xl:h-5" /> : <Moon className="w-4 h-4 xl:w-5 xl:h-5" />}
+              {isDarkMode ? <Sun className="w-3.5 h-3.5 xl:w-4 xl:h-4" /> : <Moon className="w-3.5 h-3.5 xl:w-4 xl:h-4" />}
             </motion.button>
 
             {/* Shopping Bag / Kantung Donasi */}
@@ -1382,10 +1382,10 @@ export default function App() {
               onClick={() => setIsCartOpen(true)}
               aria-label={`Kantung Kebaikan dengan ${cartItems.length} titipan`}
               title="Kantung Kebaikan"
-              className={`transition-all duration-300 ${isSearchOpen ? 'hidden md:flex' : 'flex'} relative items-center justify-center rounded-full transition-all duration-300 ${ isScrolled ? 'w-9 h-9 xl:w-10 xl:h-10 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200' : 'w-9 h-9 xl:w-10 xl:h-10 bg-white dark:bg-slate-800 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700 text-primary-500 ' } transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95`} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <ShoppingBag className="w-4 h-4 xl:w-5 xl:h-5 flex-shrink-0" />
+              className={`transition-all duration-300 ${isSearchOpen ? 'hidden md:flex' : 'flex'} relative items-center justify-center rounded-full transition-all duration-300 ${ isScrolled ? 'w-8 h-8 xl:w-9 xl:h-9 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200' : 'w-8 h-8 xl:w-9 xl:h-9 bg-white dark:bg-slate-800 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700 text-primary-500 ' } transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95`} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <ShoppingBag className="w-3.5 h-3.5 xl:w-4 xl:h-4 flex-shrink-0" />
               {cartItems.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] xl:text-[10px] w-4 h-4 md:w-4 md:h-4 xl:w-5 xl:h-5 rounded-full flex items-center justify-center font-bold shadow-sm border border-white dark:border-slate-900 pointer-events-none">{cartItems.length}</span>
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] xl:text-[9px] w-3.5 h-3.5 md:w-3.5 md:h-3.5 xl:w-4 xl:h-4 rounded-full flex items-center justify-center font-bold shadow-sm border border-white dark:border-slate-900 pointer-events-none">{cartItems.length}</span>
               )}
             </motion.button>
 
@@ -1397,10 +1397,10 @@ export default function App() {
                 navigate('/donasi');
                 window.scrollTo(0,0);
               }}
-              className={`transition-all duration-300 hidden md:flex items-center justify-center gap-2 rounded-full font-bold text-xs xl:text-sm transition-all duration-300 ${
+              className={`transition-all duration-300 hidden md:flex items-center justify-center gap-2 rounded-full font-bold text-[10px] xl:text-[12px] transition-all duration-300 ${
               isScrolled 
-                ? 'bg-[#f29f05] text-white hover:bg-[#d98f04] px-4 xl:px-6 py-2 xl:py-2.5 shadow-md shadow-[#f29f05]/20' 
-                : 'bg-[#f29f05] text-white hover:bg-[#d98f04] shadow-lg shadow-[#f29f05]/20 px-4 xl:px-6 py-2 xl:py-2.5 border border-[#f29f05]'
+                ? 'bg-[#f29f05] text-white hover:bg-[#d98f04] px-3 xl:px-4 py-1.5 xl:py-2 shadow-md shadow-[#f29f05]/20' 
+                : 'bg-[#f29f05] text-white hover:bg-[#d98f04] shadow-lg shadow-[#f29f05]/20 px-3 xl:px-4 py-1.5 xl:py-2 border border-[#f29f05]'
             } hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95 whitespace-nowrap`}>
               Donasi Sekarang
             </motion.button>
@@ -1413,11 +1413,11 @@ export default function App() {
                 aria-expanded={notificationsOpen}
                 aria-haspopup="true"
                 aria-controls="notifications-dropdown"
-                className={`hidden md:flex relative items-center justify-center rounded-full transition-all duration-300 ${
-                  isScrolled ? 'w-10 h-10 md:w-11 md:h-11 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200' : 'w-10 h-10 md:w-11 md:h-11 bg-white dark:bg-slate-800 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700 text-primary-500 hover:scale-105'
+                className={`hidden md:flex relative flex items-center justify-center rounded-full transition-all duration-300 ${
+                  isScrolled ? 'w-8 h-8 xl:w-9 xl:h-9 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200' : 'w-8 h-8 xl:w-9 xl:h-9 bg-white dark:bg-slate-800 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700 text-primary-500 hover:scale-105'
                 } transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}>
-                <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white"></div>
-                <Bell className="w-5 h-5" />
+                <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-red-500 ring-2 ring-white"></div>
+                <Bell className="w-3.5 h-3.5 xl:w-4 xl:h-4" />
               </motion.button>
               
               {/* Notifications Dropdown */}
@@ -1464,10 +1464,10 @@ export default function App() {
               }}
               aria-label="Dashboard Donatur"
               title="Dashboard Donatur"
-              className={`transition-all duration-300 hidden relative items-center justify-center rounded-full transition-all duration-300 ${
-                isScrolled ? 'w-10 h-10 md:w-11 md:h-11 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200' : 'w-10 h-10 md:w-11 md:h-11 bg-white dark:bg-slate-800 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700 text-primary-500 hover:scale-105'
+              className={`transition-all duration-300 hidden relative flex items-center justify-center rounded-full ${
+                isScrolled ? 'w-8 h-8 xl:w-9 xl:h-9 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200' : 'w-8 h-8 xl:w-9 xl:h-9 bg-white dark:bg-slate-800 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700 text-primary-500 hover:scale-105'
               } transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95 overflow-hidden`}>
-              <UserCircle className="w-5 h-5 flex-shrink-0" />
+              <UserCircle className="w-3.5 h-3.5 xl:w-4 xl:h-4 flex-shrink-0" />
             </motion.button>
 
             {/* Hamburger Menu */}
@@ -1477,10 +1477,10 @@ export default function App() {
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-menu"
               className={`transition-all duration-300 ${isSearchOpen ? 'hidden' : 'flex'} items-center justify-center gap-2 rounded-full transition-all duration-300 ${
-                isScrolled ? 'px-3 md:px-4 h-10 md:h-11 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200' : 'px-4 md:px-5 h-10 md:h-11 bg-white dark:bg-slate-800 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700 text-primary-500 hover:scale-105'
+                isScrolled ? 'px-2.5 md:px-3 h-8 md:h-9 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200' : 'px-3 md:px-4 h-8 md:h-9 bg-white dark:bg-slate-800 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700 text-primary-500 hover:scale-105'
               } transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}>
-              <span className="hidden sm:inline font-bold text-xs uppercase tracking-widest mt-0.5">Menu</span>
-              <Menu className="w-5 h-5 flex-shrink-0" />
+              <span className="hidden sm:inline font-bold text-[10px] uppercase tracking-widest mt-0.5">Menu</span>
+              <Menu className="w-4 h-4 flex-shrink-0" />
             </motion.button>
           </div>
         </div>

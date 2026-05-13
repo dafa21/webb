@@ -643,30 +643,30 @@ export default function QuranPage() {
                 
                 {/* Header */}
                 {!selectedSurah && !selectedBook && (
-                    <div className="mb-8 text-center pt-4">
-                        <div className="w-16 h-16 mx-auto bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-2xl flex items-center justify-center mb-4">
-                            <BookOpen className="w-8 h-8" />
+                    <div className="mb-6 text-center pt-2">
+                        <div className="w-12 h-12 mx-auto bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-xl flex items-center justify-center mb-3">
+                            <BookOpen className="w-6 h-6" />
                         </div>
-                        <h1 className="text-3xl font-extrabold text-[#1799dc] mb-3">Qur'an & Hadits</h1>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base">Membaca dan merenungkan ayat suci serta riwayat nabi.</p>
+                        <h1 className="text-2xl font-extrabold text-[#1799dc] mb-1">Qur'an & Hadits</h1>
+                        <p className="text-slate-500 dark:text-slate-400 text-xs md:text-sm">Membaca dan merenungkan ayat suci serta riwayat nabi.</p>
                         
-                        <div className="flex justify-center mt-6">
+                        <div className="flex justify-center mt-4">
                             <div className="flex bg-white dark:bg-slate-800 rounded-full p-1 shadow-sm border border-slate-200 dark:border-slate-700">
                                 <button 
                                     onClick={() => setActiveTab('quran')}
-                                    className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${activeTab === 'quran' ? 'bg-[#1799dc] text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+                                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${activeTab === 'quran' ? 'bg-[#1799dc] text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
                                 >
                                     Al-Qur'an
                                 </button>
                                 <button 
                                     onClick={() => setActiveTab('hadits')}
-                                    className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${activeTab === 'hadits' ? 'bg-[#1799dc] text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+                                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${activeTab === 'hadits' ? 'bg-[#1799dc] text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
                                 >
                                     Hadits
                                 </button>
                                 <button 
                                     onClick={() => setActiveTab('doa')}
-                                    className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${activeTab === 'doa' ? 'bg-[#1799dc] text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+                                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${activeTab === 'doa' ? 'bg-[#1799dc] text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
                                 >
                                     Doa Harian
                                 </button>
@@ -733,13 +733,13 @@ export default function QuranPage() {
                                 <ArrowLeft className="w-5 h-5" /> Kembali
                             </button>
                             
-                            <div className="bg-gradient-to-br from-[#1799dc] to-[#2db2f5] rounded-3xl p-6 md:p-10 text-white shadow-xl shadow-[#1799dc]/20 mb-8 text-center relative overflow-hidden">
+                            <div className="bg-gradient-to-br from-[#1799dc] to-[#2db2f5] rounded-3xl p-5 md:p-8 text-white shadow-xl shadow-[#1799dc]/20 mb-6 text-center relative overflow-hidden">
                                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-2xl"></div>
                                 <div className="absolute bottom-0 left-0 w-40 h-40 bg-black/10 rounded-full -ml-20 -mb-20 blur-xl"></div>
                                 
-                                <h2 className="text-4xl md:text-5xl font-arabic font-bold mb-4 relative z-10">{selectedSurah.nama}</h2>
-                                <h1 className="text-2xl md:text-3xl font-extrabold mb-2 relative z-10">{selectedSurah.namaLatin}</h1>
-                                <p className="opacity-90 font-medium tracking-wide uppercase text-sm relative z-10">{selectedSurah.arti} &middot; {selectedSurah.jumlahAyat} Ayat &middot; {selectedSurah.tempatTurun}</p>
+                                <h2 className="text-3xl md:text-4xl font-arabic font-bold mb-3 relative z-10">{selectedSurah.nama}</h2>
+                                <h1 className="text-xl md:text-2xl font-extrabold mb-1 relative z-10">{selectedSurah.namaLatin}</h1>
+                                <p className="opacity-90 font-medium tracking-wide uppercase text-[10px] md:text-xs relative z-10">{selectedSurah.arti} &middot; {selectedSurah.jumlahAyat} Ayat &middot; {selectedSurah.tempatTurun}</p>
                             </div>
 
                             <div className="mb-8 flex flex-wrap gap-2 md:gap-3 justify-center text-[10px] md:text-xs font-medium">
