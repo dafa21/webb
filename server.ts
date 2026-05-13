@@ -34,13 +34,13 @@ async function startServer() {
       const { prompt, audioBase64, mimeType } = req.body;
       
       // Try to get key from multiple possible env vars
-      let apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+      let apiKey = process.env.GEMINI_API_KEY;
 
-      // Check for placeholder values
-      if (apiKey === "MY_GEMINI_API_KEY" || !apiKey || apiKey.trim() === "") {
+      // Allow the app to work in AI Studio preview without explicit check if not on VPS
+      if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey.trim() === "") {
         console.error("[ERROR] Gemini API Key is missing or using placeholder value.");
         return res.status(500).json({ 
-          error: "Gemini API key is not configured correctly on the server. Please check your environment variables (GEMINI_API_KEY)." 
+          error: "API Key Gemini belum disetel. Jika di VPS, tambahkan GEMINI_API_KEY di file .env. Jika di AI Studio, pastikan API Key sudah terpasang di Settings." 
         });
       }
 
