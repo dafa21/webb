@@ -178,68 +178,66 @@ export default function QuranPage() {
             }
         } else {
             setPlayingAudio(audioUrl);
-            setTimeout(() => {
-                const audioEl = document.getElementById('quran-audio') as HTMLAudioElement;
-                if (audioEl) {
-                    audioEl.src = audioUrl;
-                    audioEl.play().catch(console.error);
-                    audioEl.onended = () => {
-                        setPlayingAudio(null);
-                        if (activeWordRef.current) {
-                            const el = document.getElementById(`word-${activeWordRef.current.ayahNumber}-${activeWordRef.current.wordIndex}`);
-                            if (el) el.classList.remove('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
-                            activeWordRef.current = null;
-                        }
-                        if (rqAnimRef.current) {
-                            cancelAnimationFrame(rqAnimRef.current);
-                            rqAnimRef.current = null;
-                        }
-                    };
-                    
-                    if (ayahNumber && audioSegments) {
-                        const updateHighlight = () => {
-                            if (!audioEl || audioEl.paused) return;
-                            const currentTimeMs = audioEl.currentTime * 1000;
-                            let newActiveWord: { ayahNumber: number, wordIndex: number } | null = null;
-                            
-                            for (let i = 0; i < audioSegments.length; i++) {
-                                const seg = audioSegments[i];
-                                if (seg && seg.length >= 4) {
-                                    const startMs = seg[2];
-                                    const endMs = seg[3];
-                                    if (currentTimeMs >= startMs && currentTimeMs <= endMs) {
-                                        newActiveWord = { ayahNumber, wordIndex: seg[0] };
-                                        break;
-                                    }
-                                }
-                            }
-                            
-                            const prev = activeWordRef.current;
-                            if (newActiveWord?.wordIndex !== prev?.wordIndex || newActiveWord?.ayahNumber !== prev?.ayahNumber) {
-                                if (prev) {
-                                    const el = document.getElementById(`word-${prev.ayahNumber}-${prev.wordIndex}`);
-                                    if (el) el.classList.remove('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
-                                }
-                                if (newActiveWord) {
-                                    const el = document.getElementById(`word-${newActiveWord.ayahNumber}-${newActiveWord.wordIndex}`);
-                                    if (el) el.classList.add('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
-                                }
-                                activeWordRef.current = newActiveWord;
-                            }
-                            
-                            rqAnimRef.current = requestAnimationFrame(updateHighlight);
-                        };
-                        audioEl.onplay = () => {
-                            rqAnimRef.current = requestAnimationFrame(updateHighlight);
-                        };
-                        if (!audioEl.paused) {
-                            rqAnimRef.current = requestAnimationFrame(updateHighlight);
-                        }
-                    } else {
-                        audioEl.onplay = null;
+            const audioEl = document.getElementById('quran-audio') as HTMLAudioElement;
+            if (audioEl) {
+                audioEl.src = audioUrl;
+                audioEl.play().catch(console.error);
+                audioEl.onended = () => {
+                    setPlayingAudio(null);
+                    if (activeWordRef.current) {
+                        const el = document.getElementById(`word-${activeWordRef.current.ayahNumber}-${activeWordRef.current.wordIndex}`);
+                        if (el) el.classList.remove('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
+                        activeWordRef.current = null;
                     }
+                    if (rqAnimRef.current) {
+                        cancelAnimationFrame(rqAnimRef.current);
+                        rqAnimRef.current = null;
+                    }
+                };
+                
+                if (ayahNumber && audioSegments) {
+                    const updateHighlight = () => {
+                        if (!audioEl || audioEl.paused) return;
+                        const currentTimeMs = audioEl.currentTime * 1000;
+                        let newActiveWord: { ayahNumber: number, wordIndex: number } | null = null;
+                        
+                        for (let i = 0; i < audioSegments.length; i++) {
+                            const seg = audioSegments[i];
+                            if (seg && seg.length >= 4) {
+                                const startMs = seg[2];
+                                const endMs = seg[3];
+                                if (currentTimeMs >= startMs && currentTimeMs <= endMs) {
+                                    newActiveWord = { ayahNumber, wordIndex: seg[0] };
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        const prev = activeWordRef.current;
+                        if (newActiveWord?.wordIndex !== prev?.wordIndex || newActiveWord?.ayahNumber !== prev?.ayahNumber) {
+                            if (prev) {
+                                const el = document.getElementById(`word-${prev.ayahNumber}-${prev.wordIndex}`);
+                                if (el) el.classList.remove('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
+                            }
+                            if (newActiveWord) {
+                                const el = document.getElementById(`word-${newActiveWord.ayahNumber}-${newActiveWord.wordIndex}`);
+                                if (el) el.classList.add('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
+                            }
+                            activeWordRef.current = newActiveWord;
+                        }
+                        
+                        rqAnimRef.current = requestAnimationFrame(updateHighlight);
+                    };
+                    audioEl.onplay = () => {
+                        rqAnimRef.current = requestAnimationFrame(updateHighlight);
+                    };
+                    if (!audioEl.paused) {
+                        rqAnimRef.current = requestAnimationFrame(updateHighlight);
+                    }
+                } else {
+                    audioEl.onplay = null;
                 }
-            }, 50);
+            }
         }
     };
 
@@ -292,9 +290,7 @@ export default function QuranPage() {
             utterance.onend = () => setPlayingAudio(null);
             utterance.onerror = () => setPlayingAudio(null);
             
-            setTimeout(() => {
-                window.speechSynthesis.speak(utterance);
-            }, 50);
+            window.speechSynthesis.speak(utterance);
         }
     };
 
@@ -320,29 +316,28 @@ export default function QuranPage() {
             window.speechSynthesis.resume();
         }
 
-        setTimeout(() => {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = lang;
-            utterance.rate = 0.85; // Diperlambat sedikit agar lebih jelas
-            
-            // Try to find a voice that matches the language
-            const bestVoice = getBestVoice(lang);
-            if (bestVoice) {
-                utterance.voice = bestVoice;
-            }
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = lang;
+        utterance.rate = 0.85; // Diperlambat sedikit agar lebih jelas
+        
+        // Try to find a voice that matches the language
+        const bestVoice = getBestVoice(lang);
+        if (bestVoice) {
+            utterance.voice = bestVoice;
+        }
 
-            utterance.pitch = 1;
-            utterance.rate = 0.9; // Slightly slower for better clarity
-            
-            utterance.onend = () => setPlayingAudio(null);
-            utterance.onerror = (event) => {
-                console.error('SpeechSynthesis Error:', event);
-                setPlayingAudio(null);
-            };
-            
-            setPlayingAudio(audioId);
-            window.speechSynthesis.speak(utterance);
-        }, 100);
+        utterance.pitch = 1;
+        utterance.rate = 0.9; // Slightly slower for better clarity
+        
+        utterance.onend = () => setPlayingAudio(null);
+        utterance.onerror = (event) => {
+            console.error('SpeechSynthesis Error:', event);
+            setPlayingAudio(null);
+        };
+        
+        setPlayingAudio(audioId);
+        // Small delay without setTimeout, just call directly
+        window.speechSynthesis.speak(utterance);
     };
 
     // Cleanup audio on unmount
