@@ -56,14 +56,24 @@ export interface FirestoreErrorInfo {
 }
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
-  // Suppress verbose JSON dumps of rules errors in development environment to prevent confusion
-  // and handle gracefully. The backend rules for named databases in this environment might
-  // experience propagation delays.
-  const isPermissionError = error instanceof Error && error.message.includes('Missing or insufficient permissions');
-  
-  if (isPermissionError) {
-     console.warn(`[Mock Mode] Firestore security rules are actively preventing ${operationType} on ${path}. Using client-side state temporarily.`);
-  } else {
-     console.error(`Firestore ${operationType} error on ${path}:`, error instanceof Error ? error.message : String(error));
-  }
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId,
+      providerInfo: auth.currentUser?.providerData?.map(provider => ({
+        providerId: provider.providerId,
+        email: provider.email,
+      })) || []
+    },
+    operationType,
+    path
+  };
+
+  const errorString = JSON.stringify(errInfo);
+  console.error('Firestore Error: ', errorString);
+  throw new Error(errorString);
 }

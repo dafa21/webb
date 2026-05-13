@@ -1,0 +1,80 @@
+{
+  "entities": {
+    "AmaliyahRecord": {
+      "title": "Amaliyah Record",
+      "description": "Daily deeds tracked by the user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID of the user" },
+        "date": { "type": "string", "format": "date", "description": "Date of the record (YYYY-MM-DD)" },
+        "deeds": { 
+          "type": "object", 
+          "description": "Map of deed key to boolean status",
+          "properties": {
+            "shubuh": { "type": "boolean" },
+            "dzuhur": { "type": "boolean" },
+            "ashar": { "type": "boolean" },
+            "maghrib": { "type": "boolean" },
+            "isya": { "type": "boolean" },
+            "tahajjud": { "type": "boolean" },
+            "dhuha": { "type": "boolean" },
+            "tilawah": { "type": "boolean" },
+            "sedekah": { "type": "boolean" }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "date", "deeds"]
+    },
+    "UserSetting": {
+      "title": "User Setting",
+      "description": "User preferences and bookmarks",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "lastReadSurah": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "number" },
+            "name": { "type": "string" },
+            "ayah": { "type": "number" },
+            "timestamp": { "type": "string", "format": "date-time" }
+          }
+        }
+      },
+      "required": ["userId"]
+    },
+    "UserDonation": {
+      "title": "User Donation",
+      "description": "Record of a donation made by a user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "program": { "type": "string" },
+        "status": { "type": "string" },
+        "method": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "amount", "program", "status"]
+    }
+  },
+  "firestore": {
+    "amaliyah_records": {
+      "schema": "AmaliyahRecord",
+      "description": "Collection of daily deed records"
+    },
+    "user_settings": {
+      "schema": "UserSetting",
+      "description": "User specific configurations like last read Surah"
+    },
+    "users": {
+        "description": "User profiles and subcollections",
+        "donations": {
+            "schema": "UserDonation",
+            "description": "Track record of user contributions"
+        }
+    }
+  }
+}

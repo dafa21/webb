@@ -11,7 +11,7 @@ import {
   Globe, Tent, HandCoins, ShieldCheck, Sun, Moon, CheckCircle2, Award, Star, Milestone, Activity, Sunrise, HeartHandshake, Repeat,
   ArrowRight, PlayCircle, Phone, Mail, ShoppingBag, Bell, Image as ImageIcon, Search,
   Share2, Download, Sparkles, Calculator, Home, Wallet, Lock, Info, Component, ShoppingCart,
-  Loader2, LayoutGrid, BookOpen, AlertCircle, CheckCircle
+  Loader2, LayoutGrid, BookOpen, AlertCircle, CheckCircle, LayoutDashboard
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
@@ -31,6 +31,7 @@ import { ProgramDetailPage } from './components/ProgramDetailPage';
 import { InteractiveDonationCarousel } from './components/InteractiveDonationCarousel';
 import { PohonKebaikanInteractive } from './components/PohonKebaikanInteractive';
 import QuranPage from './components/QuranPage';
+import AmaliyahPage from './components/AmaliyahPage';
 
 // Types
 export interface Program {
@@ -1534,6 +1535,7 @@ export default function App() {
               {[
                 { name: 'Beranda', icon: Home, id: 'beranda' },
                 { name: 'Program', icon: HandHeart, id: 'program' },
+                { name: 'Amaliyah', icon: LayoutDashboard, path: '/amaliyah' },
                 { name: "Qur'an", icon: BookOpen, path: '/quran' },
                 { name: 'Zakat', icon: HandCoins, path: '/zakat' },
                 { name: 'Qurban', icon: Tent, path: '/qurban' },
@@ -2873,6 +2875,7 @@ export default function App() {
           </>
         } />
         <Route path="/quran" element={<QuranPage />} />
+        <Route path="/amaliyah" element={<AmaliyahPage />} />
         <Route path="/zakat" element={<ZakatPage />} />
         <Route path="/qurban" element={<QurbanPage onAddToCart={handleAddToCart} />} />
         <Route path="*" element={<Navigate to="/" />} />
@@ -2973,13 +2976,13 @@ export default function App() {
 
           <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }} 
             onClick={() => {
-              navigate('/donasi');
+              navigate('/amaliyah');
               window.scrollTo(0,0);
             }}
-            className="flex flex-col items-center justify-center gap-1 w-12 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95"
+            className={`transition-all duration-300 flex flex-col items-center justify-center gap-1 w-12 ${location.pathname === '/amaliyah' ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'} transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}
           >
-            <HandCoins className="w-5 h-5" strokeWidth={2} />
-            <span className="text-[9px] font-bold tracking-tight">Infak</span>
+            <LayoutDashboard className="w-5 h-5" strokeWidth={location.pathname === '/amaliyah' ? 2.5 : 2} />
+            <span className="text-[9px] font-bold tracking-tight">Amaliyah</span>
           </motion.button>
 
           <div className="relative flex flex-col items-center justify-end h-[42px] w-14">

@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Book, ArrowLeft, Search, Bookmark, AlignRight, AlignLeft, FileText, ChevronRight, PlayCircle, Play, Pause, Loader2, Mic, Square, Activity, Sparkles, Copy, Check } from 'lucide-react';
+import { BookOpen, Book, ArrowLeft, Search, Bookmark, BookmarkPlus, AlignRight, AlignLeft, FileText, ChevronRight, PlayCircle, Play, Pause, Loader2, Mic, Square, Activity, Sparkles, Copy, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { db, auth, OperationType, handleFirestoreError } from '../firebase';
+import { doc, getDoc, setDoc, serverTimestamp, getDocs, collection } from 'firebase/firestore';
 import doaData from '../data/doa.json';
 import dzikirData from '../data/dzikir.json';
 
@@ -42,6 +44,68 @@ export default function QuranPage() {
     const [selectedDzikir, setSelectedDzikir] = useState<any | null>(null);
     const [selectedDzikirCategory, setSelectedDzikirCategory] = useState<string>('Al-Ma\'tsurat Pagi');
     const [copiedId, setCopiedId] = useState<string | null>(null);
+    const [bookmark, setBookmark] = useState<any | null>(null);
+    const [isSavingBookmark, setIsSavingBookmark] = useState(false);
+
+    // Fetch bookmark on mount or auth change
+    useEffect(() => {
+        const fetchBookmark = async () => {
+            if (auth.currentUser) {
+                try {
+                    const docRef = doc(db, 'user_settings', auth.currentUser.uid);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        setBookmark(docSnap.data().lastRead);
+                    }
+                } catch (error) {
+                    handleFirestoreError(error, OperationType.GET, 'user_settings/' + auth.currentUser.uid);
+                }
+            }
+        };
+
+        const unsubscribe = auth.onAuthStateChanged((user) => {
+            if (user) {
+                fetchBookmark();
+            } else {
+                setBookmark(null);
+            }
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    const handleBookmark = async () => {
+        if (!auth.currentUser) {
+            alert("Silakan login untuk menyimpan penanda.");
+            return;
+        }
+
+        if (!selectedSurah) return;
+
+        setIsSavingBookmark(true);
+        try {
+            const lastRead = {
+                surahId: selectedSurah.number,
+                surahName: selectedSurah.name.transliteration.id,
+                ayahNumber: 1, // Defaulting to 1 for now, can be sophisticated later
+                timestamp: new Date().toISOString()
+            };
+
+            await setDoc(doc(db, 'user_settings', auth.currentUser.uid), {
+                userId: auth.currentUser.uid,
+                lastRead: lastRead,
+                updatedAt: serverTimestamp()
+            }, { merge: true });
+
+            setBookmark(lastRead);
+            alert(`Berhasil menandai Surat ${lastRead.surahName}`);
+        } catch (error) {
+            handleFirestoreError(error, OperationType.WRITE, 'user_settings/' + auth.currentUser.uid);
+            alert("Gagal menyimpan penanda.");
+        } finally {
+            setIsSavingBookmark(false);
+        }
+    };
 
     const handleCopy = (text: string, id: string) => {
         navigator.clipboard.writeText(text);
@@ -961,6 +1025,29 @@ export default function QuranPage() {
                     {/* QURAN TAB */}
                     {activeTab === 'quran' && !selectedSurah && (
                         <div>
+                            {bookmark && (
+                                <motion.div 
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="mb-8 p-4 bg-gradient-to-r from-[#1799dc]/10 to-[#2db2f5]/10 dark:from-[#1799dc]/20 dark:to-[#2db2f5]/20 rounded-2xl border border-[#1799dc]/20 dark:border-[#1799dc]/30 flex items-center justify-between group cursor-pointer"
+                                    onClick={() => {
+                                        const surah = surahs.find(s => s.nomor === bookmark.surahId);
+                                        if (surah) handleSelectSurah(surah);
+                                    }}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-[#1799dc] rounded-xl flex items-center justify-center text-white shadow-lg shadow-[#1799dc]/20">
+                                            <Bookmark className="w-5 h-5 fill-current" />
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-black text-[#1799dc] uppercase tracking-widest mb-0.5">Terakhir Dibaca</p>
+                                            <h4 className="font-bold text-slate-800 dark:text-slate-100">Surat {bookmark.surahName}</h4>
+                                        </div>
+                                    </div>
+                                    <ChevronRight className="w-5 h-5 text-[#1799dc] group-hover:translate-x-1 transition-transform" />
+                                </motion.div>
+                            )}
+
                             <div className="relative max-w-md mx-auto mb-8">
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                 <input 
@@ -1006,12 +1093,33 @@ export default function QuranPage() {
                     {/* SURAH DETAIL VIEW */}
                     {activeTab === 'quran' && selectedSurah && (
                         <div>
-                            <button 
-                                onClick={() => { setSelectedSurah(null); setSurahDetail(null); }}
-                                className="flex items-center gap-2 text-slate-500 hover:text-[#1799dc] mb-6 font-bold"
-                            >
-                                <ArrowLeft className="w-5 h-5" /> Kembali
-                            </button>
+                            <div className="flex items-center justify-between mb-6">
+                                <button 
+                                    onClick={() => { setSelectedSurah(null); setSurahDetail(null); }}
+                                    className="flex items-center gap-2 text-slate-500 hover:text-[#1799dc] font-bold"
+                                >
+                                    <ArrowLeft className="w-5 h-5" /> Kembali
+                                </button>
+                                
+                                <button 
+                                    onClick={handleBookmark}
+                                    disabled={isSavingBookmark}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                                        bookmark?.surahId === selectedSurah.number 
+                                        ? 'bg-[#1799dc] text-white shadow-md' 
+                                        : 'bg-white dark:bg-slate-800 text-[#1799dc] border border-[#1799dc]/20 hover:bg-[#1799dc] hover:text-white'
+                                    }`}
+                                >
+                                    {isSavingBookmark ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : bookmark?.surahId === selectedSurah.number ? (
+                                        <Bookmark className="w-4 h-4 fill-current" />
+                                    ) : (
+                                        <BookmarkPlus className="w-4 h-4" />
+                                    )}
+                                    {bookmark?.surahId === selectedSurah.number ? 'Tersimpan' : 'Tandai Surah'}
+                                </button>
+                            </div>
                             
                             <div className="bg-gradient-to-br from-[#1799dc] to-[#2db2f5] rounded-3xl p-5 md:p-8 text-white shadow-xl shadow-[#1799dc]/20 mb-6 text-center relative overflow-hidden">
                                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-2xl"></div>

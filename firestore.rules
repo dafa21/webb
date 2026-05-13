@@ -2,8 +2,95 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // 0. Global Safety Net
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitive Definition
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // 1. Amaliyah Records
+    match /amaliyah_records/{recordId} {
+      function isValidAmaliyahRecord(data) {
+        return data.userId is string &&
+               data.userId.size() <= 128 &&
+               data.date is string &&
+               data.deeds is map &&
+               data.deeds.keys().size() <= 25; // Slightly increased for safety
+      }
+
+      // Read access: Only the owner can read their own records
+      allow get: if isSignedIn() && (recordId.startsWith(request.auth.uid) || (resource != null && resource.data.userId == request.auth.uid));
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+
+      // Write access: Only the owner can create/update their own records
+      allow create: if isSignedIn() 
+                    && recordId.startsWith(request.auth.uid)
+                    && isValidAmaliyahRecord(incoming())
+                    && incoming().userId == request.auth.uid
+                    && incoming().createdAt == request.time;
+      
+      allow update: if isSignedIn()
+                    && recordId.startsWith(request.auth.uid)
+                    && isValidAmaliyahRecord(incoming())
+                    && incoming().userId == request.auth.uid
+                    && incoming().userId == existing().userId
+                    && (
+                      !('createdAt' in incoming()) || 
+                      !('createdAt' in existing()) || 
+                      incoming().createdAt == existing().createdAt
+                    )
+                    && incoming().updatedAt == request.time;
+      
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    // 2. User Settings
+    match /user_settings/{userId} {
+      function isValidUserSetting(data) {
+        return data.userId is string &&
+               data.userId == userId;
+      }
+
+      allow read: if isOwner(userId);
+      
+      allow create: if isOwner(userId)
+                    && isValidUserSetting(incoming())
+                    && incoming().updatedAt == request.time;
+      
+      allow update: if isOwner(userId)
+                    && isValidUserSetting(incoming())
+                    && incoming().updatedAt == request.time;
+    }
+
+    // 3. User Profiles & Donations
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /donations/{donationId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
+                      && incoming().userId == userId;
+      }
     }
   }
 }
