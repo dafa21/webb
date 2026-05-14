@@ -11,7 +11,7 @@ import {
   Globe, Tent, HandCoins, ShieldCheck, Sun, Moon, CheckCircle2, Award, Star, Milestone, Activity, Sunrise, HeartHandshake, Repeat,
   ArrowRight, PlayCircle, Phone, Mail, ShoppingBag, Bell, Image as ImageIcon, Search,
   Share2, Download, Sparkles, Calculator, Home, Wallet, Lock, Info, Component, ShoppingCart,
-  Loader2, LayoutGrid, BookOpen, AlertCircle, CheckCircle, LayoutDashboard
+  Loader2, LayoutGrid, BookOpen, AlertCircle, CheckCircle, LayoutDashboard, Clock
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
@@ -33,6 +33,7 @@ import { PohonKebaikanInteractive } from './components/PohonKebaikanInteractive'
 import QuranPage from './components/QuranPage';
 import AmaliyahPage from './components/AmaliyahPage';
 import { MasjidLocator } from './components/MasjidLocator';
+import SholatPage from './components/SholatPage';
 
 // Types
 export interface Program {
@@ -1572,6 +1573,7 @@ export default function App() {
                 { name: 'Zakat', icon: HandCoins, path: '/zakat' },
                 { name: 'Qurban', icon: Tent, path: '/qurban' },
                 { name: 'Cari Masjid', icon: MapPin, path: '/mosques' },
+                { name: 'Sholat & Kiblat', icon: Clock, path: '/sholat' },
                 { name: 'Tentang Kami', icon: Info, id: 'tentang-kami' },
                 { name: 'Layanan', icon: Component, id: 'layanan' },
                 { name: 'Laporan', icon: TrendingUp, path: '/laporan' },
@@ -1880,10 +1882,10 @@ export default function App() {
                   { icon: HandCoins, label: 'Zakat', color: 'from-emerald-400 to-emerald-500 text-white shadow-emerald-500/20', link: '/zakat' },
                   { icon: Heart, label: 'Infak/Sedekah', color: 'from-[#2db2f5] to-[#1799dc] text-white shadow-[#1799dc]/20', link: '#program' },
                   { icon: Tent, label: 'Qurban', color: 'from-[#febb22] to-[#f29f05] text-white shadow-[#f29f05]/20', link: '/qurban' },
+                  { icon: Clock, label: 'Waktu Sholat', color: 'from-amber-400 to-amber-500 text-white shadow-amber-500/20', link: '/sholat' },
                   { icon: Users, label: 'Kemanusiaan', color: 'from-rose-400 to-rose-500 text-white shadow-rose-500/20', link: '#program' },
                   { icon: Calculator, label: 'Kalkulator', color: 'from-purple-400 to-purple-500 text-white shadow-purple-500/20', link: '/zakat' },
-                  { icon: MapPin, label: 'Jemput Zakat', color: 'from-cyan-400 to-cyan-500 text-white shadow-cyan-500/20', link: '#layanan' },
-                  { icon: TrendingUp, label: 'Laporan', color: 'from-indigo-400 to-indigo-500 text-white shadow-indigo-500/20', link: '/laporan' },
+                  { icon: MapPin, label: 'Cari Masjid', color: 'from-cyan-400 to-cyan-500 text-white shadow-cyan-500/20', link: '/mosques' },
                   { icon: Component, label: 'Lainnya', color: 'from-slate-400 to-slate-500 text-white shadow-slate-500/20 text-xs tracking-wider', link: '#layanan' },
                ].map((menu, i) => (
                  <div 
@@ -2912,6 +2914,7 @@ export default function App() {
         <Route path="/zakat" element={<ZakatPage />} />
         <Route path="/qurban" element={<QurbanPage onAddToCart={handleAddToCart} />} />
         <Route path="/mosques" element={<MasjidLocator />} />
+        <Route path="/sholat" element={<SholatPage />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
 

@@ -82,6 +82,7 @@ export const MasjidLocator: React.FC = () => {
   const [searchStatus, setSearchStatus] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchingCity, setIsSearchingCity] = useState(false);
+  const [prayerTimes, setPrayerTimes] = useState<Record<string, string> | null>(null);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -233,6 +234,17 @@ export const MasjidLocator: React.FC = () => {
       
       setMosques(foundMosques);
       setSearchStatus(foundMosques.length > 0 ? `Ditemukan ${foundMosques.length} masjid` : 'Tidak ditemukan masjid di sekitar sini');
+      
+      // Fetch prayer times for this location
+      try {
+        const aladhanRes = await fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=20`);
+        const aladhanData = await aladhanRes.json();
+        if (aladhanData?.data?.timings) {
+          setPrayerTimes(aladhanData.data.timings);
+        }
+      } catch (e) {
+        console.error("Failed to fetch prayer times:", e);
+      }
     } catch (error) {
       console.error("Overpass error:", error);
       setSearchStatus('Gagal memuat data masjid');
@@ -331,6 +343,20 @@ export const MasjidLocator: React.FC = () => {
                   <div className="p-2 min-w-[150px]">
                     <h3 className="font-black text-slate-900 mb-1">{mosque.name}</h3>
                     <p className="text-[10px] text-slate-500 mb-3">{mosque.address}</p>
+                    
+                    {prayerTimes && (
+                      <div className="mb-3 bg-emerald-50 p-2 rounded-lg border border-emerald-100">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[9px] font-bold text-emerald-800 uppercase tracking-widest">Waktu Jum'at</span>
+                        </div>
+                        <span className="text-sm font-black text-emerald-600">{prayerTimes.Dhuhr} WIB</span>
+                        <div className="flex justify-between items-center mt-2 border-t border-emerald-100 pt-1">
+                          <span className="text-[8px] font-bold text-slate-500">Ashar: {prayerTimes.Asr}</span>
+                          <span className="text-[8px] font-bold text-slate-500">Maghrib: {prayerTimes.Maghrib}</span>
+                        </div>
+                      </div>
+                    )}
+                    
                     <a 
                       href={`https://www.google.com/maps/dir/?api=1&destination=${mosque.lat},${mosque.lon}`}
                       target="_blank"
