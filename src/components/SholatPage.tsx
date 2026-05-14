@@ -112,17 +112,33 @@ export default function SholatPage() {
 
   // Device orientation
   useEffect(() => {
+    let lastUpdate = 0;
     const handleOrientation = (e: DeviceOrientationEvent) => {
+      // Throttle updates slightly to reduce React renders (e.g., 30fps max)
+      const now = Date.now();
+      if (now - lastUpdate < 32) return;
+      lastUpdate = now;
+
       let heading = 0;
       if (e.webkitCompassHeading) {
         // iOS
         heading = e.webkitCompassHeading;
       } else if (e.alpha !== null) {
         // Android
-        // It's a bit tricky to get true north reliably without magnetometer fusion calibration on standard alpha
         heading = 360 - e.alpha; 
       }
-      setCompassHeading(heading);
+
+      setCompassHeading(prev => {
+        if (prev === 0) return heading; // initial
+        let diff = heading - prev;
+        // Adjust diff for wrap-around
+        if (diff > 180) diff -= 360;
+        else if (diff < -180) diff += 360;
+        
+        // Exponential moving average for smoothness
+        const smoothed = prev + diff * 0.2;
+        return (smoothed + 360) % 360;
+      });
     };
 
     window.addEventListener('deviceorientationabsolute', handleOrientation as EventListener);
@@ -141,11 +157,7 @@ export default function SholatPage() {
       (DeviceOrientationEvent as any).requestPermission()
         .then((permissionState: string) => {
           if (permissionState === 'granted') {
-            window.addEventListener('deviceorientation', (e) => {
-              if ((e as any).webkitCompassHeading) {
-                setCompassHeading((e as any).webkitCompassHeading);
-              }
-            });
+             // Permission granted, the existing event listener in useEffect will now start receiving data.
           }
         })
         .catch(console.error);

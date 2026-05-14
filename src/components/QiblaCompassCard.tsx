@@ -32,7 +32,7 @@ export const QiblaCompassCard: React.FC<QiblaCompassCardProps> = ({
        <div className="relative w-64 h-64 mx-auto my-4">
          {/* The Compass Base / Outer Ring */}
          <div 
-           className="absolute inset-0 rounded-full bg-slate-50 dark:bg-slate-800/50 shadow-[inset_0_2px_15px_-3px_rgba(0,0,0,0.1)] border-[8px] border-slate-100 dark:border-slate-700 flex items-center justify-center transition-transform duration-300 shadow-xl"
+           className="absolute inset-0 rounded-full bg-slate-50 dark:bg-slate-800/50 shadow-[inset_0_2px_15px_-3px_rgba(0,0,0,0.1)] border-[8px] border-slate-100 dark:border-slate-700 flex items-center justify-center shadow-xl"
            style={{ transform: `rotate(${-compassHeading}deg)` }}
          >
             {/* Tick marks (every 30 degrees) */}
