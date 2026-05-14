@@ -1150,19 +1150,9 @@ export default function App() {
   useEffect(() => {
     if (isZakatCalculatorOpen && !isFetchingGold) {
       setIsFetchingGold(true);
-      // Fetch current Gold Price from free API
-      fetch('https://logam-mulia-api.vercel.app/prices/antam')
-        .then(res => res.json())
-        .then(data => {
-            if (data && data.data && data.data[0] && data.data[0].harga) {
-                const fetchedPrice = data.data[0].harga.toString().replace(/\D/g, '');
-                if (fetchedPrice) setGoldPrice(fetchedPrice);
-            }
-        })
-        .catch(() => {
-          // Fallback if API fails
-        })
-        .finally(() => setIsFetchingGold(false));
+      // Hardcode gold price as the API is currently down causing Failed to fetch errors
+      setGoldPrice('1350000');
+      setIsFetchingGold(false);
     }
   }, [isZakatCalculatorOpen]);
 

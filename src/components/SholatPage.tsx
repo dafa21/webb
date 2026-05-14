@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { ChevronLeft, MapPin, Compass, Clock, Map as MapIcon, Loader2, Navigation, AlertCircle } from 'lucide-react';
+import { ChevronLeft, MapPin, Loader2, AlertCircle, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { PrayerCountdownCard } from './PrayerCountdownCard';
+import { PrayerScheduleCard } from './PrayerScheduleCard';
+import { QiblaCompassCard } from './QiblaCompassCard';
 
 export default function SholatPage() {
   const navigate = useNavigate();
@@ -197,12 +200,12 @@ export default function SholatPage() {
           <motion.button 
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => navigate(-1)} 
-            className="w-10 h-10 flex flex-col items-center justify-center bg-white/20 backdrop-blur-md rounded-full mt-4"
+            onClick={() => navigate('/')} 
+            className="w-10 h-10 flex flex-col items-center justify-center bg-white/20 backdrop-blur-md rounded-full mt-4 hover:bg-white/30 transition-colors shadow-sm cursor-pointer z-50 pointer-events-auto"
           >
             <ChevronLeft className="w-6 h-6" />
           </motion.button>
-          <div className="flex flex-col items-end mt-4">
+          <div className="flex flex-col items-end mt-4 z-50">
             <h1 className="text-xl font-black tracking-tight">Waktu Sholat</h1>
             <div className="flex items-center gap-1 opacity-90 text-[11px] font-medium bg-black/20 px-2 py-0.5 rounded-full">
               <MapPin className="w-3 h-3" />
@@ -229,120 +232,19 @@ export default function SholatPage() {
         ) : (
           <div className="space-y-6">
             
-            {/* Countdown Card */}
-            {nextPrayer && (
-              <div className="bg-gradient-to-br from-emerald-500 to-teal-500 rounded-3xl p-6 text-white shadow-xl shadow-emerald-500/20 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-10">
-                  <Clock className="w-32 h-32" />
-                </div>
-                <div className="relative z-10">
-                  <p className="text-emerald-100 font-medium text-sm mb-1">Panggilan Menuju Ilahi</p>
-                  <h2 className="text-3xl font-black capitalize mb-4">{nextPrayer.name}</h2>
-                  
-                  <div className="flex items-end gap-3 font-mono">
-                    <div className="flex flex-col">
-                      <span className="text-4xl font-black leading-none">{String(nextPrayer.hours).padStart(2, '0')}</span>
-                      <span className="text-[10px] uppercase tracking-widest text-emerald-200 mt-1">Jam</span>
-                    </div>
-                    <span className="text-4xl font-black leading-none pb-1">:</span>
-                    <div className="flex flex-col">
-                      <span className="text-4xl font-black leading-none">{String(nextPrayer.mins).padStart(2, '0')}</span>
-                      <span className="text-[10px] uppercase tracking-widest text-emerald-200 mt-1">Menit</span>
-                    </div>
-                    <div className="ml-auto flex flex-col items-end">
-                      <span className="text-sm font-bold text-emerald-100">Waktu {nextPrayer.name}</span>
-                      <span className="text-2xl font-black">{nextPrayer.time}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            <PrayerCountdownCard nextPrayer={nextPrayer} />
 
-            {/* Jadwal Hari Ini */}
-            <div className="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-slate-100 dark:border-slate-700">
-               <div className="flex justify-between items-center mb-4 pb-4 border-b border-slate-100 dark:border-slate-700">
-                 <h3 className="font-black text-slate-800 dark:text-white">Jadwal Hari Ini</h3>
-                 <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">{jadwal?.tanggal}</span>
-               </div>
-               
-               <div className="grid grid-cols-2 gap-3">
-                 {sholatList.map((s) => (
-                   <div 
-                    key={s.key} 
-                    className={`flex items-center justify-between p-3 rounded-2xl border ${nextPrayer?.name === s.key ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 dark:border-slate-700'}`}
-                   >
-                     <div className="flex items-center gap-2">
-                        <div className={`p-1.5 rounded-lg ${nextPrayer?.name === s.key ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
-                          <s.icon className="w-4 h-4" />
-                        </div>
-                        <span className={`text-sm font-bold capitalize ${nextPrayer?.name === s.key ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-300'}`}>{s.name}</span>
-                     </div>
-                     <span className={`text-sm font-black ${nextPrayer?.name === s.key ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-900 dark:text-white'}`}>
-                       {jadwal?.[s.key] || '--:--'}
-                     </span>
-                   </div>
-                 ))}
-               </div>
-               <p className="text-center text-[10px] text-slate-400 mt-4 font-medium uppercase tracking-widest">
-                 Waktu ditarik secara Real-time dari Kementerian Agama RI
-               </p>
-            </div>
+            <PrayerScheduleCard 
+              jadwal={jadwal} 
+              sholatList={sholatList} 
+              nextPrayerName={nextPrayer?.name} 
+            />
 
-            {/* Arah Kiblat */}
-            <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 text-center relative overflow-hidden">
-               <h3 className="font-black text-slate-800 dark:text-white mb-2 flex items-center justify-center gap-2">
-                 <Compass className="w-5 h-5 text-emerald-500" /> Kompas Kiblat
-               </h3>
-               
-               {typeof (DeviceOrientationEvent as any).requestPermission === 'function' && (
-                 <button onClick={requestCompassPermission} className="text-xs bg-slate-100 px-3 py-1 rounded-full mb-4">
-                   Izinkan Sensor Kompas
-                 </button>
-               )}
-               
-               <div className="text-sm text-slate-500 mb-6">
-                 Posisi Ka'bah (Kiblat) berada pada <span className="font-black text-emerald-600">{qiblaDegree ? qiblaDegree.toFixed(1) : '...'}°</span> dari Utara Sejati.
-               </div>
-
-               <div className="relative w-48 h-48 mx-auto">
-                 {/* The Compass Base */}
-                 <div 
-                   className="absolute inset-0 rounded-full border-4 border-slate-200 dark:border-slate-700 flex items-center justify-center transition-transform duration-300"
-                   style={{ transform: `rotate(${-compassHeading}deg)` }}
-                 >
-                    {/* Tick marks */}
-                    <div className="absolute top-2 font-black text-xs text-red-500">U</div>
-                    <div className="absolute bottom-2 font-black text-xs text-slate-400">S</div>
-                    <div className="absolute right-2 font-black text-xs text-slate-400">T</div>
-                    <div className="absolute left-2 font-black text-xs text-slate-400">B</div>
-                    
-                    {/* Kiblat Arrow / Target */}
-                    {qiblaDegree !== null && (
-                      <div 
-                        className="absolute inset-0 transition-transform duration-500 ease-out"
-                        style={{ transform: `rotate(${qiblaDegree}deg)` }}
-                      >
-                         <div className="absolute -top-4 w-full flex justify-center">
-                           <div className="bg-emerald-500 text-white rounded-full p-1.5 shadow-lg border-2 border-white">
-                             <Navigation className="w-5 h-5" fill="currentColor" />
-                           </div>
-                         </div>
-                      </div>
-                    )}
-                 </div>
-                 {/* Static center needle indicating phone's top */}
-                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <div className="w-0.5 h-12 bg-emerald-500/50 mb-2"></div>
-                    <div className="w-4 h-4 bg-slate-800 dark:bg-white rounded-full border-4 border-emerald-500 z-10 shadow-md"></div>
-                    <div className="w-0.5 h-12 bg-transparent mt-2"></div>
-                 </div>
-               </div>
-               
-               <p className="text-[10px] text-slate-400 mt-6 leading-relaxed">
-                 Pastikan Anda menjauh dari benda magnetik.<br/>
-                 Kompas dapat tidak akurat pada beberapa perangkat jika belum dikalibrasi (bentuk angka 8).
-               </p>
-            </div>
+            <QiblaCompassCard 
+              qiblaDegree={qiblaDegree} 
+              compassHeading={compassHeading} 
+              requestCompassPermission={requestCompassPermission} 
+            />
 
           </div>
         )}

@@ -4,14 +4,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, Info, Users, Clock, ArrowRight, Share2, UserCircle, ShoppingBag, Heart } from 'lucide-react';
 import { EXTENDED_PROGRAMS, Program } from '../App';
 
-import { DaiInteractive } from './DaiInteractive';
-import { MasjidInteractive } from './MasjidInteractive';
-import { SumurInteractive } from './SumurInteractive';
-import { PendidikanInteractive } from './PendidikanInteractive';
-import { QuranInteractive } from './QuranInteractive';
-import { PanganInteractive } from './PanganInteractive';
-import { PohonKebaikanInteractive } from './PohonKebaikanInteractive';
-
 const formatCurrencyForm = (val: string) => {
   if (!val) return '';
   const numberString = val.replace(/\D/g, '');
@@ -276,25 +268,6 @@ export const ProgramDetailPage = ({
                 <p>
                   {program.description}
                 </p>
-
-                {/* Interactive Simulasi Kebaikan Component */}
-                <div className="my-8 -mx-4 md:mx-0">
-                  {program.title.toLowerCase().includes('masjid') ? (
-                    <MasjidInteractive onAddToCart={onAddToCart} />
-                  ) : program.title.toLowerCase().includes('air') || program.title.toLowerCase().includes('sumur') ? (
-                    <SumurInteractive onAddToCart={onAddToCart} />
-                  ) : program.title.toLowerCase().includes('quran') || program.title.toLowerCase().includes('qur\'an') ? (
-                    <QuranInteractive onAddToCart={onAddToCart} />
-                  ) : program.title.toLowerCase().includes('pangan') || program.title.toLowerCase().includes('makanan') ? (
-                    <PanganInteractive onAddToCart={onAddToCart} />
-                  ) : program.title.toLowerCase().includes('beasiswa') || program.title.toLowerCase().includes('pendidikan') ? (
-                    <PendidikanInteractive onAddToCart={onAddToCart} />
-                  ) : program.title.toLowerCase().includes('dai') || program.title.toLowerCase().includes('dakwah') ? (
-                    <DaiInteractive onAddToCart={onAddToCart} />
-                  ) : (
-                    <PohonKebaikanInteractive totalDonation={program.collected} />
-                  )}
-                </div>
 
                 <p className="mt-4">
                   Kondisi geografis yang menantang dan infrastruktur yang terbatas seringkali menjadi penghalang bagi masuknya bantuan secara merata. Oleh karena itu, tim relawan lapangan kami telah memetakan dengan cermat titik-titik krusial yang paling membutuhkan. Mereka adalah keluarga prasejahtera, janda rentah, anak yatim dhuafa, kaum disabilitas, hingga para santri di pelosok negeri.
