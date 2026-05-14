@@ -34,7 +34,20 @@ interface Mosque {
   lon: number;
   name: string;
   address?: string;
+  distance?: number;
 }
+
+// Calculate distance in km
+const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const R = 6371; // km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+};
 
 // Map sub-components
 const MapEvents = ({ onMoveEnd }: { onMoveEnd: (lat: number, lng: number) => void }) => {
@@ -165,7 +178,7 @@ export const MasjidLocator: React.FC = () => {
         setUserLocation(newLoc);
         searchMosques(newLoc[0], newLoc[1]);
       } else {
-        setSearchStatus('Kota tidak ditemukan');
+        setSearchStatus('Lokasi tidak ditemukan');
       }
     } catch (err) {
       console.error("City search error:", err);
@@ -229,8 +242,9 @@ export const MasjidLocator: React.FC = () => {
         lat: el.lat,
         lon: el.lon,
         name: el.tags?.name || 'Masjid Tanpa Nama',
-        address: el.tags?.['addr:street'] || el.tags?.['addr:full'] || 'Alamat tidak tersedia'
-      }));
+        address: el.tags?.['addr:street'] || el.tags?.['addr:full'] || 'Alamat tidak tersedia',
+        distance: getDistance(lat, lon, el.lat, el.lon)
+      })).sort((a: Mosque, b: Mosque) => (a.distance || 0) - (b.distance || 0));
       
       setMosques(foundMosques);
       setSearchStatus(foundMosques.length > 0 ? `Ditemukan ${foundMosques.length} masjid` : 'Tidak ditemukan masjid di sekitar sini');
@@ -287,7 +301,7 @@ export const MasjidLocator: React.FC = () => {
              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
              <input 
                type="text" 
-               placeholder="Cari Kota (cth: Bandung, Aceh...)" 
+               placeholder="Cari Masjid atau Lokasi..." 
                value={searchQuery}
                onChange={(e) => setSearchQuery(e.target.value)}
                className="w-full pl-10 pr-24 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all shadow-sm"
@@ -342,7 +356,12 @@ export const MasjidLocator: React.FC = () => {
                 <Popup className="custom-popup">
                   <div className="p-2 min-w-[150px]">
                     <h3 className="font-black text-slate-900 mb-1">{mosque.name}</h3>
-                    <p className="text-[10px] text-slate-500 mb-3">{mosque.address}</p>
+                    <p className="text-[10px] text-slate-500 mb-1 leading-tight">{mosque.address}</p>
+                    {mosque.distance !== undefined && (
+                      <p className="text-[10px] font-bold text-emerald-600 mb-3 bg-emerald-50 inline-block px-1.5 py-0.5 rounded">
+                        Berjarak {(mosque.distance).toFixed(2)} km
+                      </p>
+                    )}
                     
                     {prayerTimes && (
                       <div className="mb-3 bg-emerald-50 p-2 rounded-lg border border-emerald-100">

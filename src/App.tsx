@@ -11,7 +11,7 @@ import {
   Globe, Tent, HandCoins, ShieldCheck, Sun, Moon, CheckCircle2, Award, Star, Milestone, Activity, Sunrise, HeartHandshake, Repeat,
   ArrowRight, PlayCircle, Phone, Mail, ShoppingBag, Bell, Image as ImageIcon, Search,
   Share2, Download, Sparkles, Calculator, Home, Wallet, Lock, Info, Component, ShoppingCart,
-  Loader2, LayoutGrid, BookOpen, AlertCircle, CheckCircle, LayoutDashboard, Clock
+  Loader2, LayoutGrid, BookOpen, AlertCircle, CheckCircle, LayoutDashboard, Clock, Compass, FileCheck2
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
@@ -34,6 +34,10 @@ import QuranPage from './components/QuranPage';
 import AmaliyahPage from './components/AmaliyahPage';
 import { MasjidLocator } from './components/MasjidLocator';
 import SholatPage from './components/SholatPage';
+import DonationHistory from './components/DonationHistory';
+import PengajuanBantuan from './components/PengajuanBantuan';
+
+import { SedekahSubuhCard } from './components/SedekahSubuhCard';
 
 // Types
 export interface Program {
@@ -936,7 +940,7 @@ export default function App() {
   useEffect(() => {
     if (isDonationSuccess && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
-      const prayerText = "Alhamdulillah. Jazakumullahu Khairan Sahabat Baik. Semoga Allah memberikan pahala atas apa yang engkau berikan, dan memberikan keberkahan atas apa yang engkau simpan, serta menjadikannya sebagai pembersih bagimu. Aamiin yaa robbal 'aalamiin.";
+      const prayerText = "Alhamdulillah. Jazakumullahu Khairan Sahabat Dakwah. Semoga Allah memberikan pahala atas apa yang engkau berikan, dan memberikan keberkahan atas apa yang engkau simpan, serta menjadikannya sebagai pembersih bagimu. Aamiin yaa robbal 'aalamiin.";
       const utterance = new SpeechSynthesisUtterance(prayerText);
       utterance.lang = 'id-ID';
       utterance.rate = 0.85;
@@ -1350,12 +1354,99 @@ export default function App() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                       type="text"
-                      placeholder="Cari program donasi..."
+                      placeholder="Cari fitur & program donasi..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className={`w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 shadow-sm transition-all text-slate-800 dark:text-slate-200`}
                       autoFocus
                     />
+                    
+                    {/* Global Search Dropdown */}
+                    <AnimatePresence>
+                      {searchQuery.trim().length > 0 && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 10 }}
+                          className="absolute w-full mt-2 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-[100] max-h-[400px] overflow-y-auto"
+                        >
+                          {(() => {
+                            const query = searchQuery.toLowerCase();
+                            
+                            const pages = [
+                              { title: 'Al-Quran', path: '/quran', icon: BookOpen },
+                              { title: 'Amaliyah', path: '/amaliyah', icon: Heart },
+                              { title: 'Zakat', path: '/zakat', icon: HandCoins },
+                              { title: 'Qurban', path: '/qurban', icon: Heart },
+                              { title: 'Locator Masjid', path: '/mosques', icon: MapPin },
+                              { title: 'Jadwal Sholat & Kiblat', path: '/sholat', icon: Compass },
+                              { title: 'Pengajuan Bantuan', path: '/pengajuan-bantuan', icon: FileCheck2 },
+                              { title: 'Riwayat Donasi', path: '/history', icon: HistoryIcon },
+                            ].filter(p => p.title.toLowerCase().includes(query));
+
+                            const progs = EXTENDED_PROGRAMS.filter(p => p.title.toLowerCase().includes(query) || p.category.toLowerCase().includes(query)).slice(0, 5);
+
+                            if (pages.length === 0 && progs.length === 0) {
+                              return <div className="p-4 text-center text-sm text-slate-500">Pencarian tidak ditemukan</div>;
+                            }
+
+                            return (
+                              <div className="py-2">
+                                {pages.length > 0 && (
+                                  <div className="mb-2">
+                                    <h4 className="px-4 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fitur Aplikasi</h4>
+                                    {pages.map((p, i) => {
+                                      const Icon = p.icon;
+                                      return (
+                                        <button 
+                                          key={i}
+                                          onClick={() => {
+                                            navigate(p.path);
+                                            setIsSearchOpen(false);
+                                            setSearchQuery('');
+                                            window.scrollTo(0,0);
+                                          }}
+                                          className="flex items-center w-full px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-left transition-colors"
+                                        >
+                                          <Icon className="w-4 h-4 mr-3 text-primary-500" />
+                                          <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{p.title}</span>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                                
+                                {progs.length > 0 && (
+                                  <div>
+                                    <h4 className="px-4 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Program Donasi</h4>
+                                    {progs.map((p) => (
+                                      <button 
+                                        key={p.id}
+                                        onClick={() => {
+                                          navigate(`/program/${p.id}`);
+                                          setIsSearchOpen(false);
+                                          setSearchQuery('');
+                                          window.scrollTo(0,0);
+                                        }}
+                                        className="flex items-center w-full px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-left transition-colors"
+                                      >
+                                        <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 mr-3">
+                                          <img src={p.image} alt={p.title} className="w-full h-full object-cover" />
+                                        </div>
+                                        <div className="overflow-hidden">
+                                          <h5 className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{p.title}</h5>
+                                          <p className="text-[10px] text-slate-500 capitalize">{p.category}</p>
+                                        </div>
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                   <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }}
                     onClick={() => {
@@ -1480,18 +1571,18 @@ export default function App() {
             </div>
 
 
-            {/* Dashboard Donatur Button - Hidden on desktop bar, available in menu */}
+            {/* Dashboard Donatur Button */}
             <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }} 
               onClick={() => {
                 navigate('/history');
                 window.scrollTo(0, 0);
               }}
-              aria-label="Dashboard Donatur"
-              title="Dashboard Donatur"
-              className={`transition-all duration-300 hidden relative flex items-center justify-center rounded-full ${
+              aria-label="Riwayat Donasi"
+              title="Riwayat Donasi"
+              className={`transition-all duration-300 ${isSearchOpen ? 'hidden md:flex' : 'hidden md:flex'} relative items-center justify-center rounded-full ${
                 isScrolled ? 'w-8 h-8 xl:w-9 xl:h-9 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200' : 'w-8 h-8 xl:w-9 xl:h-9 bg-white dark:bg-slate-800 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700 text-primary-500 hover:scale-105'
               } transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95 overflow-hidden`}>
-              <UserCircle className="w-3.5 h-3.5 xl:w-4 xl:h-4 flex-shrink-0" />
+              <HistoryIcon className="w-3.5 h-3.5 xl:w-4 xl:h-4 flex-shrink-0" />
             </motion.button>
 
             {/* Hamburger Menu */}
@@ -2163,6 +2254,9 @@ export default function App() {
       {/* Kategori Program Sedekah -> Dai Pengabdian */}
 
       <section id="layanan" className="bg-cream-100 dark:bg-slate-900 pt-32 pb-24 -mt-16 md:mt-0 md:pt-16 relative z-10 transition-colors duration-300">
+        <div className="max-w-4xl mx-auto px-4 mb-8">
+           <SedekahSubuhCard onAddToCart={handleAddToCart} />
+        </div>
         <InteractiveDonationCarousel onAddToCart={handleAddToCart} />
       </section>
 
@@ -2905,6 +2999,8 @@ export default function App() {
         <Route path="/qurban" element={<QurbanPage onAddToCart={handleAddToCart} />} />
         <Route path="/mosques" element={<MasjidLocator />} />
         <Route path="/sholat" element={<SholatPage />} />
+        <Route path="/history" element={<DonationHistory />} />
+        <Route path="/pengajuan-bantuan" element={<PengajuanBantuan />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
 
@@ -3259,7 +3355,7 @@ export default function App() {
                           ? 'Konfirmasi & Instruksi Pembayaran'
                           : selectedProgramForDonation.category === 'Qurban' 
                             ? 'Persembahan Terbaik, Kendaraan Syurga Anda 🐑' 
-                            : 'Mari Ukir Senyum untuk Mereka 🤍'}
+                            : 'Mari Tunaikan Kebaikan Hari Ini 🤍'}
                     </h3>
                     {!isDonationSuccess && !showPaymentInstructions && (
                       <p className="text-[10px] md:text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
@@ -3329,7 +3425,7 @@ export default function App() {
                       </div>
                       
                       <h4 className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 mb-1 leading-tight">Alhamdulillah!</h4>
-                      <p className="text-slate-800 dark:text-white font-bold text-lg mb-1">Jazakumullahu Khairan Sahabat Baik</p>
+                      <p className="text-slate-800 dark:text-white font-bold text-lg mb-1">Jazakumullahu Khairan Sahabat Dakwah</p>
                       
                       <div className="flex flex-col items-center gap-1 mb-4">
                         <p className="text-emerald-700 dark:text-emerald-400 font-arabic text-xl md:text-2xl mt-1 leading-relaxed text-center px-4">
@@ -3546,7 +3642,7 @@ export default function App() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nama Sahabat</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nama Sahabat Dakwah</label>
                       <input required value={donorName} onChange={(e) => setDonorName(e.target.value)} type="text" placeholder="Nama Anda" className="w-full px-3 py-2 bg-slate-50/50 rounded-xl border border-slate-200 text-sm font-medium" />
                     </div>
                     <div className="space-y-1">
@@ -3789,7 +3885,7 @@ export default function App() {
                       </span>
                     ) : (
                       <>
-                        {selectedProgramForDonation.category === 'Qurban' ? 'Bismillah, Siapkan Kendaraan Syurga Anda Sekarang' : 'Bismillah, Berikan Kasih Sayang'} 
+                        {selectedProgramForDonation.category === 'Qurban' ? 'Bismillah, Siapkan Kendaraan Syurga Anda Sekarang' : 'Bismillah, Tunaikan Sedekah'} 
                         <Heart className="w-5 h-5 fill-white/20 group-hover:scale-110 transition-transform" />
                       </>
                     )}

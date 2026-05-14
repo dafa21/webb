@@ -105,21 +105,25 @@
 /* Tajweed Colors */
 tajweed.ham_wasl, tajweed.slnt, .ham_wasl, .slnt { color: #94a3b8 !important; } /* slate-400 - Silent */
 tajweed.laam_shamsiyah, .laam_shamsiyah { color: #94a3b8 !important; }
-tajweed.madda_normal, .madda_normal { color: #8b5cf6 !important; } /* purple-500 */
-tajweed.madda_permissible, .madda_permissible { color: #7c3aed !important; } /* purple-600 */
-tajweed.madda_necessery, .madda_necessery { color: #6d28d9 !important; } /* purple-700 */
-tajweed.madda_necessary, .madda_necessary { color: #6d28d9 !important; } /* purple-700 */
-tajweed.madda_lazim, .madda_lazim { color: #8b5cf6 !important; } /* purple-500 */
-tajweed.madda_obligatory, .madda_obligatory { color: #6d28d9 !important; } 
-tajweed.qalaqah, .qalaqah { color: #ef4444 !important; } /* red-500 */
-tajweed.idhar, .idhar, tajweed.idzhar, .idzhar { color: inherit !important; font-weight: 500; }
+
+/* Mad */
+tajweed.madda_normal, .madda_normal { color: #06b6d4 !important; } /* cyan-500 */
+tajweed.madda_obligatory_mottasel, .madda_obligatory_mottasel, tajweed.madda_obligatory_mutassil, .madda_obligatory_mutassil { color: #3b82f6 !important; } /* blue-500 */
+tajweed.madda_obligatory_monfasel, .madda_obligatory_monfasel, tajweed.madda_obligatory_munfasil, .madda_obligatory_munfasil, tajweed.madda_permissible_munfasil, .madda_permissible_munfasil { color: #8b5cf6 !important; } /* violet-500 */
+tajweed.madda_permissible, .madda_permissible { color: #f43f5e !important; } /* rose-500 */
+tajweed.madda_necessery, .madda_necessery, tajweed.madda_necessary, .madda_necessary, tajweed.madda_lazim, .madda_lazim, tajweed.madda_obligatory, .madda_obligatory { color: #10b981 !important; } /* emerald-500 */
+
+/* Other Tajweed */
+tajweed.qalaqah, .qalaqah, tajweed.qalqalah, .qalqalah { color: #ef4444 !important; } /* red-500 */
+tajweed.idhar, .idhar, tajweed.idzhar, .idzhar, tajweed.idhar_shafawi, .idhar_shafawi, tajweed.idzhar_shafawi, .idzhar_shafawi { color: #0d9488 !important; } /* teal-600 */
+.dark tajweed.idhar, .dark .idhar, .dark tajweed.idzhar, .dark .idzhar, .dark tajweed.idhar_shafawi, .dark .idhar_shafawi, .dark tajweed.idzhar_shafawi, .dark .idzhar_shafawi { color: #2dd4bf !important; } /* teal-400 in dark mode */
 tajweed.ikhfa, .ikhfa, tajweed.ikhafa, .ikhafa { color: #22c55e !important; } /* green-500 */
-tajweed.ikhfa_shafawi, .ikhfa_shafawi, tajweed.ikhafa_shafawi, .ikhafa_shafawi { color: #22c55e !important; }
-tajweed.idgham_shafawi, .idgham_shafawi { color: #f59e0b !important; } /* amber-500 */
-tajweed.idgham_with_ghunnah, .idgham_with_ghunnah, tajweed.idgham_ghunnah, .idgham_ghunnah { color: #f59e0b !important; }
-tajweed.idgham_without_ghunnah, .idgham_without_ghunnah, tajweed.idgham_wo_ghunnah, .idgham_wo_ghunnah { color: #94a3b8 !important; } /* slate-400 */
-tajweed.idgham_mutajanisayn, .idgham_mutajanisayn { color: #f59e0b !important; }
-tajweed.idgham_mutaqaribayn, .idgham_mutaqaribayn { color: #f59e0b !important; }
-tajweed.iqlaab, .iqlaab, tajweed.iqlab, .iqlab { color: #3b82f6 !important; } /* blue-500 */
+tajweed.ikhfa_shafawi, .ikhfa_shafawi, tajweed.ikhafa_shafawi, .ikhafa_shafawi { color: #84cc16 !important; } /* lime-500 */
+tajweed.iqlab, .iqlab, tajweed.iqlaab, .iqlaab { color: #0284c7 !important; } /* sky-600 */
 tajweed.ghunnah, .ghunnah { color: #ec4899 !important; } /* pink-500 */
+
+tajweed.idgham_with_ghunnah, .idgham_with_ghunnah, tajweed.idgham_ghunnah, .idgham_ghunnah { color: #f59e0b !important; } /* amber-500 */
+tajweed.idgham_without_ghunnah, .idgham_without_ghunnah, tajweed.idgham_wo_ghunnah, .idgham_wo_ghunnah, tajweed.idgham_bilaghunnah, .idgham_bilaghunnah { color: #94a3b8 !important; } /* slate-400 */
+tajweed.idgham_shafawi, .idgham_shafawi, tajweed.idgham_mutajanisayn, .idgham_mutajanisayn, tajweed.idgham_mutaqaribayn, .idgham_mutaqaribayn { color: #ea580c !important; } /* orange-600 */
+
 tajweed.end, .end { color: #1799dc !important; margin-left: 0.5rem; margin-right: 0.5rem; font-weight: bold; }

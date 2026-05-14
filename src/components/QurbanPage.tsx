@@ -2577,7 +2577,7 @@ export const QurbanPage = ({ onAddToCart }: { onAddToCart?: (p: any, amt: string
 
                 <div className="text-center mb-4 space-y-1">
                   <h2 className="text-xl sm:text-2xl font-black text-emerald-600">Alhamdulillah!</h2>
-                  <h3 className="text-base font-black text-slate-900 dark:text-white">Jazakumullah Khairan {donorName || 'Sahabat Baik'}</h3>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">Jazakumullah Khairan {donorName || 'Sahabat Dakwah'}</h3>
                   <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed italic max-w-sm mx-auto mt-2">
                     "Terima kasih telah menitipkan pelita harapan. Ketulusan Sahabat hari ini adalah aliran kebahagiaan bagi mereka yang menanti, dan semoga menjadi doa-doa yang melangit."
                   </p>

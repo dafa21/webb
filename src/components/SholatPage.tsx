@@ -120,9 +120,9 @@ export default function SholatPage() {
       lastUpdate = now;
 
       let heading = 0;
-      if (e.webkitCompassHeading) {
+      if ((e as any).webkitCompassHeading) {
         // iOS
-        heading = e.webkitCompassHeading;
+        heading = (e as any).webkitCompassHeading;
       } else if (e.alpha !== null) {
         // Android
         heading = 360 - e.alpha; 

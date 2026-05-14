@@ -58,12 +58,39 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "amount", "program", "status"]
+    },
+    "BantuanRequest": {
+      "title": "Bantuan Request",
+      "description": "Request for financial or material assistance from Mustahik",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "nik": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "enum": ["Menunggu Verifikasi", "Sedang Disurvei", "Disetujui", "Proses Pencairan", "Ditolak"] },
+        "rejectReason": { "type": "string" },
+        "documents": { 
+          "type": "array",
+          "items": { "type": "string" } 
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "nik", "address", "category", "description", "status"]
     }
   },
   "firestore": {
     "amaliyah_records": {
       "schema": "AmaliyahRecord",
       "description": "Collection of daily deed records"
+    },
+    "bantuan_requests": {
+      "schema": "BantuanRequest",
+      "description": "Collection of assistance requests from mustahik"
     },
     "user_settings": {
       "schema": "UserSetting",
