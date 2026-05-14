@@ -397,11 +397,12 @@ export default function AmaliyahPage() {
       
       const prompt = `Analisis data spiritual berikut: Rata-rata keterisian amalan ${completionAvg}%. Kategori yang paling aktif saat ini berdasarkan distribusi radar: ${JSON.stringify(categoryDistributionData)}. Berikan 1 kalimat muhasabah (nasihat hati) yang sangat puitis, mendalam, dan memotivasi dalam bahasa Indonesia. Jangan pakai format markdown, langsung teks saja. Maksimal 20 kata.`;
       
-      const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      setAiMuhasabah(response.text());
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      const response = await ai.models.generateContent({
+        model: "gemini-1.5-flash",
+        contents: prompt
+      });
+      setAiMuhasabah(response.text || "Jadikan setiap helai nafasmu sebagai zikir yang tak terputus kepada-Nya.");
     } catch (error) {
       console.error("AI Error:", error);
       setAiMuhasabah("Jadikan setiap helai nafasmu sebagai zikir yang tak terputus kepada-Nya.");

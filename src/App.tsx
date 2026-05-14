@@ -32,6 +32,7 @@ import { InteractiveDonationCarousel } from './components/InteractiveDonationCar
 import { PohonKebaikanInteractive } from './components/PohonKebaikanInteractive';
 import QuranPage from './components/QuranPage';
 import AmaliyahPage from './components/AmaliyahPage';
+import { MasjidLocator } from './components/MasjidLocator';
 
 // Types
 export interface Program {
@@ -1570,6 +1571,7 @@ export default function App() {
                 { name: "Qur'an", icon: BookOpen, path: '/quran' },
                 { name: 'Zakat', icon: HandCoins, path: '/zakat' },
                 { name: 'Qurban', icon: Tent, path: '/qurban' },
+                { name: 'Cari Masjid', icon: MapPin, path: '/mosques' },
                 { name: 'Tentang Kami', icon: Info, id: 'tentang-kami' },
                 { name: 'Layanan', icon: Component, id: 'layanan' },
                 { name: 'Laporan', icon: TrendingUp, path: '/laporan' },
@@ -2909,6 +2911,7 @@ export default function App() {
         <Route path="/amaliyah" element={<AmaliyahPage />} />
         <Route path="/zakat" element={<ZakatPage />} />
         <Route path="/qurban" element={<QurbanPage onAddToCart={handleAddToCart} />} />
+        <Route path="/mosques" element={<MasjidLocator />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
 

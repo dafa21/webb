@@ -2084,6 +2084,7 @@ export const QurbanPage = ({ onAddToCart }: { onAddToCart?: (p: any, amt: string
                            
                            <div className="h-[180px] md:h-[220px] w-full rounded-2xl overflow-hidden shadow-lg border-2 border-white dark:border-slate-700 relative z-0">
                              <MapContainer 
+                               key={`impact-map-${impactData.year}-${impactData.location}`}
                                center={impactData.coordinates} 
                                zoom={10} 
                                style={{ height: '100%', width: '100%' }}
