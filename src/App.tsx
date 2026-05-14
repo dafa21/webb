@@ -951,23 +951,42 @@ export default function App() {
   const [qurbanAnimal, setQurbanAnimal] = useState('');
   const [qurbanProcessing, setQurbanProcessing] = useState('');
   const [qurbanForParents, setQurbanForParents] = useState(false);
-  const [donorName, setDonorName] = useState('');
-  const [donorEmail, setDonorEmail] = useState('');
+  const [donorName, setDonorName] = useState(localStorage.getItem('app_user_name') || '');
+  const [donorPhone, setDonorPhone] = useState(localStorage.getItem('app_user_phone') || '');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('shopeepay');
   const [paymentSearchQuery, setPaymentSearchQuery] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isTwibbonModalOpen, setIsTwibbonModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [profileNameInput, setProfileNameInput] = useState(localStorage.getItem('app_user_name') || '');
+  const [profilePhoneInput, setProfilePhoneInput] = useState(localStorage.getItem('app_user_phone') || '');
+
+  const saveProfile = () => {
+    localStorage.setItem('app_user_name', profileNameInput);
+    localStorage.setItem('app_user_phone', profilePhoneInput);
+    setDonorName(profileNameInput);
+    setDonorPhone(profilePhoneInput);
+    setIsProfileModalOpen(false);
+    alert('Profil berhasil disimpan');
+    window.location.reload(); // Reload to refresh contexts across app
+  };
 
   const finishDonation = async () => {
     setIsDonationSuccess(true);
     setShowPaymentInstructions(false);
     setCartItems([]);
     
-    if (auth.currentUser && selectedProgramForDonation) {
-        const uid = auth.currentUser.uid;
+    if (selectedProgramForDonation && donorPhone) {
+        const uid = donorPhone;
+        localStorage.setItem('app_user_phone', donorPhone);
+        if (donorName) {
+          localStorage.setItem('app_user_name', donorName);
+        }
+
         const valAmount = parseInt(donationAmount.replace(/\D/g, '')) || 0;
         
         const payload = {
+            userId: uid,
             date: new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' }),
             program: selectedProgramForDonation.title,
             amount: valAmount,
@@ -985,7 +1004,7 @@ export default function App() {
             // Simpan profil donatur
             await setDoc(doc(db, 'users', uid), {
                 name: donorName || 'Hamba Allah',
-                email: donorEmail || '',
+                phone: donorPhone || '',
                 updatedAt: serverTimestamp()
             }, { merge: true });
         } catch (error) {
@@ -1037,29 +1056,32 @@ export default function App() {
 
   useEffect(() => {
     let unsubSnap = () => {};
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        const q = query(collection(db, 'users', currentUser.uid, 'donations'), orderBy('createdAt', 'desc'));
-        unsubSnap = onSnapshot(q, (snapshot) => {
-          const history: any[] = [];
-          snapshot.forEach(doc => {
-            history.push({ 
-              id: doc.id, 
-              ...doc.data(), 
-              date: doc.data().date || new Date().toLocaleDateString('id-ID')
-            });
+    const savedPhone = localStorage.getItem('app_user_phone');
+    setUser(savedPhone ? { uid: savedPhone } : null);
+    
+    if (savedPhone) {
+      const q = query(
+        collection(db, 'users', savedPhone, 'donations'), 
+        orderBy('createdAt', 'desc')
+      );
+      unsubSnap = onSnapshot(q, (snapshot) => {
+        const history: any[] = [];
+        snapshot.forEach(doc => {
+          history.push({ 
+            id: doc.id, 
+            ...doc.data(), 
+            date: doc.data().date || new Date().toLocaleDateString('id-ID')
           });
-          setUserDonations(history);
-        }, (error) => {
-          handleFirestoreError(error, OperationType.LIST, `users/${currentUser.uid}/donations`);
         });
-      } else {
-        setUserDonations([]);
-      }
-    });
+        setUserDonations(history);
+      }, (error) => {
+        handleFirestoreError(error, OperationType.LIST, `users/${savedPhone}/donations`);
+      });
+    } else {
+      setUserDonations([]);
+    }
+    
     return () => {
-      unsubscribe();
       unsubSnap();
     };
   }, []);
@@ -1376,6 +1398,15 @@ export default function App() {
               }`}
             >
               {isDarkMode ? <Sun className="w-3.5 h-3.5 xl:w-4 xl:h-4" /> : <Moon className="w-3.5 h-3.5 xl:w-4 xl:h-4" />}
+            </motion.button>
+
+            {/* User Profile Button */}
+            <motion.button 
+              onClick={() => setIsProfileModalOpen(true)}
+              aria-label="Profil User"
+              title="Profil User"
+              className={`transition-all duration-300 ${isSearchOpen ? 'hidden md:flex' : 'flex'} relative items-center justify-center rounded-full transition-all duration-300 ${ isScrolled ? 'w-8 h-8 xl:w-9 xl:h-9 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200' : 'w-8 h-8 xl:w-9 xl:h-9 bg-white dark:bg-slate-800 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700 text-primary-500 ' } transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95`} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <UserCircle className="w-3.5 h-3.5 xl:w-4 xl:h-4 flex-shrink-0" />
             </motion.button>
 
             {/* Shopping Bag / Kantung Donasi */}
@@ -3020,6 +3051,80 @@ export default function App() {
       </div>
       )}
 
+      {/* Profile Modal */}
+      <AnimatePresence>
+        {isProfileModalOpen && (
+          <div 
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+            role="dialog"
+          >
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsProfileModalOpen(false)}
+              className="absolute inset-0"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+            >
+              <div className="p-4 md:p-6 bg-gradient-to-br from-primary-500 to-primary-600 dark:from-slate-800 dark:to-slate-900 flex items-center justify-between sticky top-0 z-10 relative overflow-hidden">
+                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent mix-blend-overlay"></div>
+                <h3 className="text-lg md:text-xl font-bold text-white relative z-10 flex items-center gap-2">
+                  <UserCircle className="w-5 h-5 md:w-6 md:h-6" />
+                  Profil Anda
+                </h3>
+                <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }} 
+                  onClick={() => setIsProfileModalOpen(false)}
+                  className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors relative z-10"
+                >
+                  <X className="w-5 h-5" />
+                </motion.button>
+              </div>
+
+              <div className="p-4 md:p-6 space-y-4 md:space-y-6 overflow-y-auto">
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Nama Lengkap</label>
+                  <input
+                    type="text"
+                    value={profileNameInput}
+                    onChange={(e) => setProfileNameInput(e.target.value)}
+                    placeholder="Nama Lengkap Anda"
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Nomor Telepon</label>
+                  <input
+                    type="tel"
+                    value={profilePhoneInput}
+                    onChange={(e) => setProfilePhoneInput(e.target.value)}
+                    placeholder="Contoh: 081234567890"
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500"
+                  />
+                  <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 pl-1">
+                    Nomor telepon dgunakan untuk riwayat donasi dan amaliyah/bacaan Qur'an.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-4 md:p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 sticky bottom-0">
+                <motion.button whileTap={{ scale: 0.98 }} whileHover={{ scale: 1.02 }}
+                  onClick={saveProfile}
+                  className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-primary-500/30 transition-all flex items-center justify-center gap-2"
+                >
+                  <CheckCircle className="w-5 h-5" />
+                  Simpan Profil
+                </motion.button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Cart Modal */}
       <AnimatePresence>
         {isCartOpen && (
@@ -3397,6 +3502,10 @@ export default function App() {
                   autoComplete="off"
                   onSubmit={async (e) => { 
                     e.preventDefault();
+                    if (!donorPhone || donorPhone.trim() === '') {
+                        alert("Mohon isi nomor telepon Anda.");
+                        return;
+                    }
                     setIsSubmitting(true);
                     
                     try {
@@ -3445,8 +3554,8 @@ export default function App() {
                       <input required value={donorName} onChange={(e) => setDonorName(e.target.value)} type="text" placeholder="Nama Anda" className="w-full px-3 py-2 bg-slate-50/50 rounded-xl border border-slate-200 text-sm font-medium" />
                     </div>
                     <div className="space-y-1">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Email (Opsional)</label>
-                      <input value={donorEmail} onChange={(e) => setDonorEmail(e.target.value)} type="email" placeholder="Untuk Laporan" className="w-full px-3 py-2 bg-slate-50/50 rounded-xl border border-slate-200 text-sm font-medium" />
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nomor Telepon</label>
+                      <input required value={donorPhone} onChange={(e) => setDonorPhone(e.target.value)} type="tel" placeholder="08xxxxxxxx" className="w-full px-3 py-2 bg-slate-50/50 rounded-xl border border-slate-200 text-sm font-medium" />
                     </div>
                   </div>
 

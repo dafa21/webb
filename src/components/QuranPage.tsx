@@ -51,14 +51,16 @@ export default function QuranPage() {
     useEffect(() => {
         const fetchBookmark = async () => {
             if (auth.currentUser) {
+                const phone = localStorage.getItem('app_user_phone');
+                const targetUid = phone || auth.currentUser.uid;
                 try {
-                    const docRef = doc(db, 'user_settings', auth.currentUser.uid);
+                    const docRef = doc(db, 'user_settings', targetUid);
                     const docSnap = await getDoc(docRef);
                     if (docSnap.exists()) {
                         setBookmark(docSnap.data().lastRead);
                     }
                 } catch (error) {
-                    handleFirestoreError(error, OperationType.GET, 'user_settings/' + auth.currentUser.uid);
+                    handleFirestoreError(error, OperationType.GET, 'user_settings/' + targetUid);
                 }
             }
         };
@@ -82,6 +84,9 @@ export default function QuranPage() {
 
         if (!selectedSurah) return;
 
+        const phone = localStorage.getItem('app_user_phone');
+        const targetUid = phone || auth.currentUser.uid;
+
         setIsSavingBookmark(true);
         try {
             const lastRead = {
@@ -91,8 +96,8 @@ export default function QuranPage() {
                 timestamp: new Date().toISOString()
             };
 
-            await setDoc(doc(db, 'user_settings', auth.currentUser.uid), {
-                userId: auth.currentUser.uid,
+            await setDoc(doc(db, 'user_settings', targetUid), {
+                userId: targetUid,
                 lastRead: lastRead,
                 updatedAt: serverTimestamp()
             }, { merge: true });
@@ -100,7 +105,7 @@ export default function QuranPage() {
             setBookmark(lastRead);
             alert(`Berhasil menandai Surat ${lastRead.surahName}`);
         } catch (error) {
-            handleFirestoreError(error, OperationType.WRITE, 'user_settings/' + auth.currentUser.uid);
+            handleFirestoreError(error, OperationType.WRITE, 'user_settings/' + targetUid);
             alert("Gagal menyimpan penanda.");
         } finally {
             setIsSavingBookmark(false);

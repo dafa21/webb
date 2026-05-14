@@ -16,9 +16,9 @@ export const ZakatPage = () => {
   
   // Payment State
   const [paymentMethod, setPaymentMethod] = useState('');
-  const [donorName, setDonorName] = useState('');
+  const [donorName, setDonorName] = useState(localStorage.getItem('app_user_name') || '');
   const [donorEmail, setDonorEmail] = useState('');
-  const [donorPhone, setDonorPhone] = useState('');
+  const [donorPhone, setDonorPhone] = useState(localStorage.getItem('app_user_phone') || '');
   const [paymentSearchQuery, setPaymentSearchQuery] = useState('');
 
   const calculateTotal = () => {
@@ -27,6 +27,13 @@ export const ZakatPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!donorPhone) {
+        alert("Nomor telepon kudu diisi.");
+        return;
+    }
+    localStorage.setItem('app_user_phone', donorPhone);
+    if (donorName) localStorage.setItem('app_user_name', donorName);
+    
     alert('Terima kasih. Anda akan dialihkan ke halaman pembayaran.');
   };
 

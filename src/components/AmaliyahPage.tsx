@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
+import { GoogleGenAI } from "@google/genai";
 import { 
   CheckCircle2, 
   Circle, 
   Calendar as CalendarIcon, 
   ChevronLeft, 
   ChevronRight, 
+  ChevronDown,
   History, 
   Trophy, 
   Sparkles,
@@ -23,7 +26,8 @@ import {
   Award,
   TrendingUp,
   LogIn,
-  Loader2
+  Loader2,
+  RefreshCcw
 } from 'lucide-react';
 import { 
   collection, 
@@ -46,33 +50,43 @@ import {
   Tooltip, 
   ResponsiveContainer,
   AreaChart,
-  Area
+  Area,
+  PieChart,
+  Pie,
+  Cell,
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Legend
 } from 'recharts';
 import { auth, db, OperationType, handleFirestoreError } from '../firebase';
-import { signInAnonymously } from 'firebase/auth';
 
 const DEEDS = [
   { id: 'shubuh', label: 'Shubuh', icon: <Sun className="w-5 h-5 text-amber-500" />, category: 'Wajib' },
-  { id: 'dzuhur', label: 'Dzuhur', icon: <CloudSun className="w-5 h-5 text-yellow-500" />, category: 'Wajib' },
+  { id: 'dzuhur', label: 'Dzuhur', icon: <Sun className="w-5 h-5 text-yellow-500" />, category: 'Wajib' },
   { id: 'ashar', label: 'Ashar', icon: <CloudSun className="w-5 h-5 text-orange-500" />, category: 'Wajib' },
   { id: 'maghrib', label: 'Maghrib', icon: <CloudMoon className="w-5 h-5 text-indigo-500" />, category: 'Wajib' },
   { id: 'isya', label: 'Isya', icon: <Moon className="w-5 h-5 text-slate-500" />, category: 'Wajib' },
   
-  { id: 'rawatib_shubuh', label: 'Qabliyah Shubuh', icon: <Sunrise className="w-5 h-5 text-amber-400" />, category: 'Rawatib' },
+  { id: 'qabliyah_shubuh', label: 'Qabliyah Shubuh', icon: <Sunrise className="w-5 h-5 text-amber-400" />, category: 'Rawatib' },
   { id: 'rawatib_dzuhur', label: 'Rawatib Dzuhur', icon: <Sun className="w-5 h-5 text-yellow-400" />, category: 'Rawatib' },
   { id: 'rawatib_maghrib', label: 'Ba\'diyah Maghrib', icon: <CloudMoon className="w-5 h-5 text-indigo-400" />, category: 'Rawatib' },
   { id: 'rawatib_isya', label: 'Ba\'diyah Isya', icon: <Moon className="w-5 h-5 text-slate-400" />, category: 'Rawatib' },
   
-  { id: 'tahajjud', label: 'Tahajjud & Witir', icon: <Moon className="w-5 h-5 text-indigo-600" />, category: 'Sunnah' },
+  { id: 'tahajjud', label: 'Tahajjud', icon: <Moon className="w-5 h-5 text-indigo-600" />, category: 'Sunnah' },
+  { id: 'witir', label: 'Witir', icon: <Sparkles className="w-5 h-5 text-yellow-500" />, category: 'Sunnah' },
   { id: 'dhuha', label: 'Dhuha', icon: <Sun className="w-5 h-5 text-yellow-300" />, category: 'Sunnah' },
   
   { id: 'dzikir_pagi', label: 'Dzikir Pagi', icon: <Sunrise className="w-5 h-5 text-orange-400" />, category: 'Dzikir' },
   { id: 'dzikir_petang', label: 'Dzikir Petang', icon: <Sunset className="w-5 h-5 text-indigo-500" />, category: 'Dzikir' },
-  { id: 'tilawah', label: 'Tilawah Qur\'an', icon: <BookOpen className="w-5 h-5 text-emerald-500" />, category: 'Qur\'an' },
-  { id: 'tadabbur', label: 'Tadabbur/Kajian', icon: <Heart className="w-5 h-5 text-pink-500" />, category: 'Ilmu' },
+  { id: 'sholawat', label: 'Sholawat', icon: <Heart className="w-5 h-5 text-rose-500" />, category: 'Dzikir' },
+  { id: 'istighfar', label: 'Istighfar', icon: <HeartPulse className="w-5 h-5 text-slate-400" />, category: 'Dzikir' },
   
-  { id: 'sedekah', label: 'Sedekah Harian', icon: <HandHeart className="w-5 h-5 text-rose-500" />, category: 'Infaq' },
-  { id: 'birrul_walidain', label: 'Birrul Walidain', icon: <HeartPulse className="w-5 h-5 text-red-500" />, category: 'Akhlak' },
+  { id: 'tilawah', label: 'Tilawah Qur\'an', icon: <BookOpen className="w-5 h-5 text-emerald-500" />, category: 'Ilmu' },
+  { id: 'sedekah', label: 'Sedekah', icon: <HandHeart className="w-5 h-5 text-rose-500" />, category: 'Amal' },
+  { id: 'birrul_walidain', label: 'Berbakti Orang Tua', icon: <HeartPulse className="w-5 h-5 text-red-500" />, category: 'Akhlak' },
 ];
 
 export default function AmaliyahPage() {
@@ -81,28 +95,36 @@ export default function AmaliyahPage() {
   const [todayDeeds, setTodayDeeds] = useState<Record<string, boolean>>({});
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(auth.currentUser);
+  const [user, setUser] = useState<{uid: string} | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('Semua');
+  const [historyCategoryFilter, setHistoryCategoryFilter] = useState<string>('Semua');
+  const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null);
 
+  const [isPhoneLoginHovered, setIsPhoneLoginHovered] = useState(false);
+  const [phoneInput, setPhoneInput] = useState('');
+  
+  // Custom sync with localStorage instead of using Firebase Auth
+  const getStoredPhone = () => localStorage.getItem('app_user_phone');
+  
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((u) => {
-      setUser(u);
-      if (!u) {
-        setLoading(false);
-      }
-    });
-    return () => unsubscribe();
+    // Check local storage instead of auth.onAuthStateChanged
+    const storedPhone = getStoredPhone();
+    if (storedPhone) {
+      setUser({ uid: storedPhone } as any);
+    }
+    setLoading(false);
   }, []);
 
-  const handleManualLogin = async () => {
+  const handleManualLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!phoneInput.trim()) return;
+    
     setLoading(true);
-    try {
-      await signInAnonymously(auth);
-    } catch (error) {
-      console.error("Login failed", error);
-    } finally {
-      setLoading(false);
-    }
+    const formattedPhone = phoneInput.trim();
+    localStorage.setItem('app_user_phone', formattedPhone);
+    setUser({ uid: formattedPhone } as any);
+    setLoading(false);
   };
 
   // Format date to YYYY-MM-DD
@@ -117,8 +139,10 @@ export default function AmaliyahPage() {
   // Subscribe to deeds for selected date
   useEffect(() => {
     if (!user) return;
+    const phone = localStorage.getItem('app_user_phone');
+    const targetUid = phone || user.uid;
 
-    const docId = `${user.uid}_${todayStr}`;
+    const docId = `${targetUid}_${todayStr}`;
     const docRef = doc(db, 'amaliyah_records', docId);
 
     const unsubscribe = onSnapshot(docRef, (snapshot) => {
@@ -129,7 +153,7 @@ export default function AmaliyahPage() {
       }
       setLoading(false);
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'amaliyah_records');
+      handleFirestoreError(error, OperationType.GET, 'amaliyah_records/' + docId);
       setLoading(false);
     });
 
@@ -139,10 +163,12 @@ export default function AmaliyahPage() {
   // Fetch history for streak and history view
   useEffect(() => {
     if (!user) return;
+    const phone = localStorage.getItem('app_user_phone');
+    const targetUid = phone || user.uid;
 
     const q = query(
       collection(db, 'amaliyah_records'),
-      where('userId', '==', user.uid),
+      where('userId', '==', targetUid),
       orderBy('date', 'desc'),
       limit(30)
     );
@@ -151,7 +177,7 @@ export default function AmaliyahPage() {
       const records = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setHistory(records);
     }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'amaliyah_records');
+      handleFirestoreError(error, OperationType.LIST, 'amaliyah_records/query:' + targetUid);
     });
 
     return () => unsubscribe();
@@ -159,6 +185,8 @@ export default function AmaliyahPage() {
 
   const toggleDeed = async (deedId: string) => {
     if (!user) return;
+    const phone = localStorage.getItem('app_user_phone');
+    const targetUid = phone || user.uid;
 
     setSavingId(deedId);
     
@@ -174,24 +202,16 @@ export default function AmaliyahPage() {
     // Optimistic update
     setTodayDeeds(newDeeds);
 
-    const docId = `${user.uid}_${todayStr}`;
+    const docId = `${targetUid}_${todayStr}`;
     const docRef = doc(db, 'amaliyah_records', docId);
 
     try {
       const data: any = {
-        userId: user.uid,
+        userId: targetUid,
         date: todayStr,
         deeds: newDeeds,
         updatedAt: serverTimestamp(),
       };
-
-      // Always include createdAt on write to ensure it exists, 
-      // but rules will prevent it from changing if it already exists.
-      // If we don't know if it's the first time for SURE (e.g. slow sync),
-      // we can try to get the existing document first OR use a safer rule.
-      if (isFirstTime) {
-        data.createdAt = serverTimestamp();
-      }
 
       await setDoc(docRef, data, { merge: true });
     } catch (error) {
@@ -259,9 +279,15 @@ export default function AmaliyahPage() {
     return { current, best };
   }, [history]);
 
-  const calculateCompletion = (deeds: Record<string, boolean>) => {
-    const checkedCount = Object.values(deeds).filter(Boolean).length;
-    return Math.round((checkedCount / DEEDS.length) * 100);
+  const calculateCompletion = (deeds: Record<string, boolean>, categoryFilter: string = 'Semua') => {
+    const relevantDeeds = categoryFilter === 'Semua' 
+      ? DEEDS 
+      : DEEDS.filter(d => d.category === categoryFilter);
+    
+    if (relevantDeeds.length === 0) return 0;
+    
+    const checkedCount = relevantDeeds.filter(d => deeds[d.id]).length;
+    return Math.round((checkedCount / relevantDeeds.length) * 100);
   };
 
   const chartData = React.useMemo(() => {
@@ -270,16 +296,201 @@ export default function AmaliyahPage() {
       .slice(-7)
       .map(record => ({
         date: new Date(record.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }),
-        completion: calculateCompletion(record.deeds)
+        completion: calculateCompletion(record.deeds, selectedCategory)
       }));
-  }, [history]);
+  }, [history, selectedCategory]);
+
+  const categoryDistributionData = React.useMemo(() => {
+    const categories = Array.from(new Set(DEEDS.map(d => d.category)));
+    
+    // For today or last entry
+    const currentDeeds = todayDeeds;
+    
+    return categories.map(cat => {
+      const catDeeds = DEEDS.filter(d => d.category === cat);
+      const completed = catDeeds.filter(d => currentDeeds[d.id]).length;
+      return {
+        subject: cat,
+        A: Math.round((completed / catDeeds.length) * 100),
+        fullMark: 100
+      };
+    });
+  }, [todayDeeds]);
+
+  const pieData = React.useMemo(() => {
+    const totalDeeds = DEEDS.length;
+    const completed = Object.values(todayDeeds).filter(Boolean).length;
+    const remaining = totalDeeds - completed;
+    
+    return [
+      { name: 'Selesai', value: completed, color: '#10b981' },
+      { name: 'Belum', value: remaining, color: '#e2e8f0' }
+    ];
+  }, [todayDeeds]);
+
+  const categoryStats = React.useMemo(() => {
+    const categories = Array.from(new Set(DEEDS.map(d => d.category)));
+    return categories.map(cat => {
+      const catDeeds = DEEDS.filter(d => d.category === cat);
+      const completedCount = catDeeds.filter(d => todayDeeds[d.id]).length;
+      return {
+        name: cat,
+        completed: completedCount,
+        total: catDeeds.length,
+        percentage: Math.round((completedCount / catDeeds.length) * 100)
+      };
+    });
+  }, [todayDeeds]);
+
+  const auraVisual = React.useMemo(() => {
+    const stats = categoryStats;
+    const colors: Record<string, string> = {
+      'Wajib': 'rgba(14, 165, 233, 0.5)', // Blue
+      'Sunnah': 'rgba(168, 85, 247, 0.5)', // Purple
+      'Zikir': 'rgba(16, 185, 129, 0.5)',  // Green
+      'Tilawah': 'rgba(245, 158, 11, 0.5)' // Amber
+    };
+
+    const activeColors = stats
+      .filter(s => s.percentage > 0)
+      .map(s => colors[s.name] || 'rgba(100, 116, 139, 0.2)');
+
+    return activeColors.length > 0 ? activeColors : ['rgba(226, 232, 240, 0.2)'];
+  }, [categoryStats]);
+
+  const [aiMuhasabah, setAiMuhasabah] = useState<string | null>(null);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [globalPrayers, setGlobalPrayers] = useState(128452);
+  const [sendingPrayer, setSendingPrayer] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setGlobalPrayers(prev => prev + Math.floor(Math.random() * 3));
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const sendPrayer = () => {
+    setSendingPrayer(true);
+    setTimeout(() => {
+      setGlobalPrayers(prev => prev + 1);
+      setSendingPrayer(false);
+      confetti({
+        particleCount: 40,
+        spread: 70,
+        origin: { y: 0.8 },
+        colors: ['#0ea5e9', '#8b5cf6', '#10b981']
+      });
+    }, 800);
+  };
+
+  const getAiMuhasabah = async () => {
+    if (history.length === 0 && Object.values(todayDeeds).filter(Boolean).length === 0) {
+      setAiMuhasabah("Langkahkan kakimu hari ini dengan basmalah, maka setiap jejakmu akan menjadi saksi kebaikan.");
+      return;
+    }
+    setIsAiLoading(true);
+    try {
+      const completionAvg = chartData.length > 0 
+        ? Math.round(chartData.reduce((acc, curr) => acc + curr.completion, 0) / chartData.length)
+        : 0;
+      
+      const prompt = `Analisis data spiritual berikut: Rata-rata keterisian amalan ${completionAvg}%. Kategori yang paling aktif saat ini berdasarkan distribusi radar: ${JSON.stringify(categoryDistributionData)}. Berikan 1 kalimat muhasabah (nasihat hati) yang sangat puitis, mendalam, dan memotivasi dalam bahasa Indonesia. Jangan pakai format markdown, langsung teks saja. Maksimal 20 kata.`;
+      
+      const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      setAiMuhasabah(response.text());
+    } catch (error) {
+      console.error("AI Error:", error);
+      setAiMuhasabah("Jadikan setiap helai nafasmu sebagai zikir yang tak terputus kepada-Nya.");
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
+  const Garden = () => {
+    return (
+      <div className="w-full h-40 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900/50 dark:to-slate-900/20 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 mt-8 relative overflow-hidden flex items-end justify-center px-10">
+        <div className="absolute top-6 left-8 flex items-center gap-2">
+          <div className="w-1 h-4 bg-emerald-500 rounded-full" />
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Taman Jiwa</p>
+            <p className="text-[8px] text-slate-400 opacity-60 font-medium">Visualisasi pertumbuhan amal hari ini</p>
+          </div>
+        </div>
+        
+        <div className="flex items-end gap-1.5 mb-4 group px-4">
+          {Array.from({ length: DEEDS.length }).map((_, i) => {
+            const isActive = Object.values(todayDeeds).filter(Boolean).length > i;
+            return (
+              <motion.div
+                key={i}
+                initial={{ height: 0 }}
+                animate={{ height: isActive ? (20 + (Math.sin(i) * 15) + Math.random() * 20) : 6 }}
+                className={`w-2 md:w-2.5 rounded-t-full relative transition-all duration-1000 ${
+                  isActive 
+                    ? 'bg-gradient-to-t from-emerald-600 via-emerald-400 to-emerald-300 shadow-[0_-4px_10px_rgba(16,185,129,0.2)]' 
+                    : 'bg-slate-200 dark:bg-slate-800'
+                }`}
+              >
+                {isActive && (
+                  <motion.div 
+                    animate={{ 
+                      scale: [0.8, 1.2, 0.8],
+                      opacity: [0.3, 0.6, 0.3]
+                    }}
+                    transition={{
+                      duration: 3 + Math.random() * 2,
+                      repeat: Infinity,
+                      delay: i * 0.1
+                    }}
+                    className="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-emerald-400 rounded-full blur-[6px]"
+                  />
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+        <div className="absolute bottom-0 left-0 w-full h-1 bg-emerald-500/10" />
+      </div>
+    );
+  };
+
+  const { totalPoints, levelName, pointsToNext } = React.useMemo(() => {
+    const historyPast = history.filter(r => r.date !== todayStr);
+    const pastDeedsCount = historyPast.reduce((acc, curr) => acc + Object.values(curr.deeds || {}).filter(Boolean).length, 0);
+    const currentDeedsCount = Object.values(todayDeeds).filter(Boolean).length;
+    const points = (pastDeedsCount + currentDeedsCount) * 10;
+    
+    let level = 'Mubtadi (Pemula)';
+    let nextLevelPoints = 500;
+    
+    if (points >= 5000) {
+      level = 'Muhsin (Sempurna)';
+      nextLevelPoints = points; // Max level
+    } else if (points >= 2000) {
+      level = 'Mukhlis (Ikhlas)';
+      nextLevelPoints = 5000;
+    } else if (points >= 500) {
+      level = 'Istiqomah (Konsisten)';
+      nextLevelPoints = 2000;
+    }
+    
+    return {
+      totalPoints: points,
+      levelName: level,
+      pointsToNext: points >= 5000 ? 0 : nextLevelPoints - points
+    }
+  }, [history, todayDeeds, todayStr]);
 
   const todayCompletion = calculateCompletion(todayDeeds);
 
   if (loading && !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <Loader2 className="w-8 h-8 animate-spin text-[#1799dc]" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
       </div>
     );
   }
@@ -292,19 +503,31 @@ export default function AmaliyahPage() {
           animate={{ opacity: 1, scale: 1 }}
           className="max-w-md w-full bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] shadow-xl text-center border border-slate-100 dark:border-slate-700"
         >
-          <div className="w-20 h-20 bg-[#1799dc]/10 rounded-3xl flex items-center justify-center mx-auto mb-6">
-            <LayoutDashboard className="w-10 h-10 text-[#1799dc]" />
+          <div className="w-20 h-20 bg-primary-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6">
+            <LayoutDashboard className="w-10 h-10 text-primary-500" />
           </div>
           <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-3">Mulai Amaliyah</h2>
           <p className="text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
-            Silakan masuk untuk mulai mencatat amaliyah harian Anda secara pribadi dan aman.
+            Masukkan nomor WA Anda untuk mulai mencatat amaliyah harian Anda secara pribadi dan aman.
           </p>
-          <button 
-            onClick={handleManualLogin}
-            className="w-full h-14 bg-[#1799dc] text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-[#1799dc]/30 hover:bg-[#2db2f5] active:scale-95 transition-all"
-          >
-            <LogIn className="w-5 h-5" /> Mulai Sekarang
-          </button>
+          <form onSubmit={handleManualLogin} className="space-y-4">
+            <input
+              type="tel"
+              placeholder="Contoh: 081234567890"
+              value={phoneInput}
+              onChange={(e) => setPhoneInput(e.target.value)}
+              className="w-full h-14 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 outline-none focus:border-primary-500 transition-colors text-slate-800 dark:text-white font-medium"
+              required
+            />
+            <motion.button 
+              type="submit"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full h-14 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-primary-500/30 hover:from-primary-600 hover:to-primary-700 transition-all font-medium"
+            >
+              <LogIn className="w-5 h-5" /> Mulai Sekarang
+            </motion.button>
+          </form>
         </motion.div>
       </div>
     );
@@ -324,19 +547,19 @@ export default function AmaliyahPage() {
           <div className="flex bg-white dark:bg-slate-800 rounded-2xl p-1 shadow-sm border border-slate-200 dark:border-slate-700 overflow-x-auto no-scrollbar">
             <button 
               onClick={() => setActiveView('today')}
-              className={`whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${activeView === 'today' ? 'bg-[#1799dc] text-white shadow-md shadow-[#1799dc]/20' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+              className={`whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${activeView === 'today' ? 'bg-primary-500 text-white shadow-md shadow-primary-500/20' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
             >
               <LayoutDashboard className="w-4 h-4" /> Today
             </button>
             <button 
               onClick={() => setActiveView('stats')}
-              className={`whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${activeView === 'stats' ? 'bg-[#1799dc] text-white shadow-md shadow-[#1799dc]/20' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+              className={`whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${activeView === 'stats' ? 'bg-primary-500 text-white shadow-md shadow-primary-500/20' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
             >
               <TrendingUp className="w-4 h-4" /> Stats
             </button>
             <button 
               onClick={() => setActiveView('history')}
-              className={`whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${activeView === 'history' ? 'bg-[#1799dc] text-white shadow-md shadow-[#1799dc]/20' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+              className={`whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${activeView === 'history' ? 'bg-primary-500 text-white shadow-md shadow-primary-500/20' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
             >
               <History className="w-4 h-4" /> History
             </button>
@@ -399,7 +622,7 @@ export default function AmaliyahPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="sm:col-span-2 lg:col-span-1 bg-gradient-to-br from-[#1799dc] to-[#2db2f5] p-6 rounded-3xl shadow-lg shadow-[#1799dc]/20 text-white"
+            className="sm:col-span-2 lg:col-span-1 bg-gradient-to-br from-primary-500 to-primary-600 p-6 rounded-3xl shadow-lg shadow-primary-500/20 text-white"
           >
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
@@ -409,8 +632,8 @@ export default function AmaliyahPage() {
             </div>
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-xl font-black">Muhsin</p>
-                <p className="text-[10px] opacity-80 font-bold uppercase">120 points to next level</p>
+                <p className="text-xl font-black">{levelName}</p>
+                <p className="text-[10px] opacity-80 font-bold uppercase">{pointsToNext > 0 ? `${pointsToNext} points to next level` : `${totalPoints} total points (Max)`}</p>
               </div>
               <Sparkles className="w-8 h-8 opacity-50" />
             </div>
@@ -427,20 +650,20 @@ export default function AmaliyahPage() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
               >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
-                  <div className="flex items-center gap-2">
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+                  <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto no-scrollbar pb-2 md:pb-0">
                     <button 
                       onClick={() => {
                         const d = new Date(currentDate);
                         d.setDate(d.getDate() - 1);
                         setCurrentDate(d);
                       }}
-                      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors active:scale-95"
+                      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors active:scale-95 shrink-0"
                     >
                       <ChevronLeft className="w-5 h-5 text-slate-500" />
                     </button>
-                    <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700">
-                      <CalendarIcon className="w-5 h-5 text-[#1799dc]" />
+                    <div className="flex items-center justify-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700 w-full md:w-auto shrink-0 min-w-max">
+                      <CalendarIcon className="w-5 h-5 text-primary-500" />
                       <span className="font-bold text-slate-700 dark:text-slate-200">
                         {currentDate.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })}
                         {formatDate(currentDate) === formatDate(new Date()) && " (Today)"}
@@ -455,70 +678,89 @@ export default function AmaliyahPage() {
                         }
                       }}
                       disabled={formatDate(currentDate) === formatDate(new Date())}
-                      className={`p-2 rounded-full transition-colors ${formatDate(currentDate) === formatDate(new Date()) ? 'opacity-20 cursor-not-allowed' : 'hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95'}`}
+                      className={`p-2 rounded-full transition-colors shrink-0 ${formatDate(currentDate) === formatDate(new Date()) ? 'opacity-20 cursor-not-allowed' : 'hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95'}`}
                     >
                       <ChevronRight className="w-5 h-5 text-slate-500" />
                     </button>
-                  </div>
-                  
-                  <div className="flex items-center gap-4">
-                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-slate-900/50 px-3 py-1.5 rounded-full border border-slate-100 dark:border-slate-800">
-                      {Object.values(todayDeeds).filter(Boolean).length} / {DEEDS.length} TERLAKSANA
-                    </span>
+                    
                     {formatDate(currentDate) !== formatDate(new Date()) && (
                       <button 
                         onClick={() => setCurrentDate(new Date())}
-                        className="text-xs font-bold text-[#1799dc] hover:underline"
+                        className="text-[11px] font-bold text-primary-500 hover:text-primary-600 transition-colors ml-2 bg-primary-50 px-3 py-1.5 rounded-full shrink-0"
                       >
                         Hari Ini
                       </button>
                     )}
                   </div>
+                  
+                  <div className="flex items-center md:justify-end gap-3 w-full md:w-auto">
+                     <span className="text-[10px] w-full md:w-auto text-center font-black text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-slate-900/50 px-3 py-1.5 rounded-full border border-slate-100 dark:border-slate-800 shrink-0">
+                      {Object.values(todayDeeds).filter(Boolean).length} / {DEEDS.length} TERLAKSANA
+                    </span>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-8 border-b border-slate-100 dark:border-slate-700 mb-8">
-                  {DEEDS.map((deed) => {
-                    const isActive = todayDeeds[deed.id];
-                    const isSaving = savingId === deed.id;
-                    
-                    return (
-                      <motion.button
-                        key={deed.id}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => toggleDeed(deed.id)}
-                        className={`group flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden ${
-                          isActive 
-                            ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/10 dark:border-emerald-900/30' 
-                            : 'bg-white dark:bg-slate-900/50 border-slate-100 dark:border-slate-700 hover:border-[#1799dc]/30'
-                        }`}
-                      >
-                        <div className="flex items-center gap-4 z-10">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors shadow-sm ${isActive ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-500'}`}>
-                            {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : deed.icon}
-                          </div>
-                          <div className="text-left">
-                            <h4 className={`font-bold transition-colors ${isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-200'}`}>{deed.label}</h4>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-500 transition-colors">{deed.category}</span>
-                          </div>
-                        </div>
-                        
-                        <div className={`transition-all duration-500 z-10 ${isActive ? 'scale-110 text-emerald-500' : 'text-slate-200 dark:text-slate-700 group-hover:text-[#1799dc]/30'}`}>
-                          {isActive ? <CheckCircle2 className="w-6 h-6 fill-emerald-50 dark:fill-emerald-900/20" /> : <Circle className="w-6 h-6" />}
-                        </div>
-                        
-                        {isActive && (
-                          <motion.div 
-                            layoutId={`active-bg-${deed.id}`}
-                            className="absolute inset-0 bg-emerald-500/5 dark:bg-emerald-500/10 pointer-events-none"
-                          />
-                        )}
-                      </motion.button>
-                    );
-                  })}
+                <div className="flex flex-col gap-8 pb-8 border-b border-slate-100 dark:border-slate-700 mb-8">
+                  {Object.entries(
+                    DEEDS.reduce((acc, deed) => {
+                      if (!acc[deed.category]) acc[deed.category] = [];
+                      acc[deed.category].push(deed);
+                      return acc;
+                    }, {} as Record<string, typeof DEEDS>)
+                  ).map(([category, categoryDeeds]) => (
+                    <div key={category}>
+                      <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        {category}
+                        <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800"></div>
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {categoryDeeds.map((deed) => {
+                          const isActive = todayDeeds[deed.id];
+                          const isSaving = savingId === deed.id;
+                          
+                          return (
+                            <motion.button
+                              key={deed.id}
+                              whileTap={{ scale: 0.98 }}
+                              whileHover={{ scale: 1.02 }}
+                              onClick={() => toggleDeed(deed.id)}
+                              className={`group flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden ${
+                                isActive 
+                                  ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/10 dark:border-emerald-900/30' 
+                                  : 'bg-white dark:bg-slate-900/50 border-slate-100 dark:border-slate-700 hover:border-primary-500/30 dark:hover:border-primary-500/30'
+                              }`}
+                            >
+                              <div className="flex items-center gap-4 z-10">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors shadow-sm ${isActive ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-500'}`}>
+                                  {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : deed.icon}
+                                </div>
+                                <div className="text-left">
+                                  <h4 className={`font-bold transition-colors ${isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-200'}`}>{deed.label}</h4>
+                                </div>
+                              </div>
+                              
+                              <div className={`transition-all duration-500 z-10 ${isActive ? 'scale-110 text-emerald-500' : 'text-slate-200 dark:text-slate-700 group-hover:text-primary-500/30 dark:group-hover:text-primary-500/30'}`}>
+                                {isActive ? <CheckCircle2 className="w-6 h-6 fill-emerald-50 dark:fill-emerald-900/20" /> : <Circle className="w-6 h-6" />}
+                              </div>
+                              
+                              {isActive && (
+                                <motion.div 
+                                  layoutId={`active-bg-${deed.id}`}
+                                  className="absolute inset-0 bg-emerald-500/5 dark:bg-emerald-500/10 pointer-events-none"
+                                />
+                              )}
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
+
+                <Garden />
 
                 <div className="bg-blue-50 dark:bg-blue-900/10 p-5 rounded-2xl border border-blue-100 dark:border-blue-900/30 flex items-start gap-4">
-                  <div className="w-10 h-10 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center flex-shrink-0 text-[#1799dc] shadow-sm">
+                  <div className="w-10 h-10 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center flex-shrink-0 text-primary-500 shadow-sm">
                     <Sparkles className="w-5 h-5" />
                   </div>
                   <div>
@@ -528,6 +770,35 @@ export default function AmaliyahPage() {
                     </p>
                   </div>
                 </div>
+
+                {/* Crazy Feature: Global Synergy */}
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="mt-8 relative overflow-hidden p-8 rounded-[2.5rem] bg-gradient-to-tr from-emerald-600 to-emerald-400 text-white shadow-xl shadow-emerald-500/20"
+                >
+                  <div className="absolute top-0 right-0 -mr-8 -mt-8 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
+                  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <HeartPulse className="w-5 h-5 text-white animate-pulse" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Global Synergy</span>
+                      </div>
+                      <h4 className="text-2xl font-black mb-1">{globalPrayers.toLocaleString()}</h4>
+                      <p className="text-xs font-medium opacity-80">Doa digital telah dipanjatkan hari ini</p>
+                    </div>
+                    <motion.button 
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={sendPrayer}
+                      disabled={sendingPrayer}
+                      className="px-8 py-4 bg-white text-emerald-600 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-black/10 hover:shadow-emerald-500/20 transition-all flex items-center gap-3 disabled:opacity-50"
+                    >
+                      {sendingPrayer ? <Loader2 className="w-4 h-4 animate-spin text-emerald-500" /> : <HandHeart className="w-4 h-4" />}
+                      Kirim Doa Digital
+                    </motion.button>
+                  </div>
+                </motion.div>
               </motion.div>
             ) : activeView === 'stats' ? (
               <motion.div 
@@ -535,82 +806,280 @@ export default function AmaliyahPage() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
+                className="space-y-8"
               >
-                <h3 className="text-xl font-black text-slate-800 dark:text-white mb-6 flex items-center gap-2">
-                  <TrendingUp className="w-6 h-6 text-[#1799dc]" /> Analisis Mingguan
-                </h3>
+                {/* Crazy Feature: Spiritual Aura & AI Muhasabah */}
+                <div className="relative overflow-hidden rounded-[3rem] bg-slate-950 text-white p-8 md:p-12 group shadow-2xl shadow-black/40">
+                  {/* Generative Aura Background */}
+                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    {auraVisual.map((color, i) => (
+                      <motion.div
+                        key={i}
+                        animate={{
+                          scale: [1, 1.4, 1],
+                          x: [0, 40, -40, 0],
+                          y: [0, -40, 40, 0],
+                          opacity: [0.2, 0.4, 0.2]
+                        }}
+                        transition={{
+                          duration: 15 + i * 3,
+                          repeat: Infinity,
+                          ease: "linear"
+                        }}
+                        className="absolute w-[400px] h-[400px] rounded-full blur-[120px]"
+                        style={{ 
+                          backgroundColor: color,
+                          left: `${10 + i * 20}%`,
+                          top: `${10 + i * 15}%`
+                        }}
+                      />
+                    ))}
+                  </div>
 
-                <div className="h-[250px] w-full mb-8">
-                  {chartData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={chartData}>
-                        <defs>
-                          <linearGradient id="colorComp" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#1799dc" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="#1799dc" stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#8884d820" />
-                        <XAxis 
-                          dataKey="date" 
-                          axisLine={false} 
-                          tickLine={false} 
-                          tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }}
-                          dy={10}
-                        />
-                        <YAxis 
-                          domain={[0, 100]} 
-                          axisLine={false} 
-                          tickLine={false} 
-                          tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }}
-                          tickFormatter={(val) => `${val}%`}
-                        />
-                        <Tooltip 
-                          contentStyle={{ 
-                            borderRadius: '16px', 
-                            border: 'none', 
-                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                            backgroundColor: '#fff',
-                            fontSize: '12px',
-                            fontWeight: 'bold'
-                          }}
-                        />
-                        <Area 
-                          type="monotone" 
-                          dataKey="completion" 
-                          stroke="#1799dc" 
-                          strokeWidth={3} 
-                          fillOpacity={1} 
-                          fill="url(#colorComp)" 
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                      <TrendingUp className="w-12 h-12 mb-3 opacity-10" />
-                      <p className="text-sm font-bold">Data grafik belum tersedia</p>
-                      <p className="text-[10px] uppercase font-black tracking-widest opacity-50">Isi amaliyah hari ini untuk melihat progres</p>
+                  <div className="relative z-10 max-w-2xl">
+                    <div className="flex items-center justify-between mb-10 md:mb-16">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.3em]">Global Presence</span>
+                        </div>
+                        <p className="text-[11px] font-bold text-slate-400 tracking-tight">
+                          <span className="text-white font-black">{globalPrayers.toLocaleString()}</span> orang beramal bersama
+                        </p>
+                      </div>
+                      <div className="w-14 h-14 rounded-2xl bg-white/5 backdrop-blur-xl flex items-center justify-center border border-white/10 shadow-inner">
+                        <Sparkles className="w-6 h-6 text-primary-400 drop-shadow-[0_0_8px_rgba(14,165,233,0.5)]" />
+                      </div>
                     </div>
-                  )}
+
+                    <div className="mb-12 md:mb-20">
+                      <h3 className="text-sm font-black text-primary-400 uppercase tracking-[0.4em] mb-6 opacity-80 flex items-center gap-3">
+                        <div className="w-8 h-px bg-primary-500/30" />
+                        AI Spirit Reflection
+                      </h3>
+                      <div className="min-h-[100px] md:min-h-[140px] flex items-center">
+                        {aiMuhasabah ? (
+                          <motion.p 
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="text-2xl md:text-4xl font-black text-white italic leading-[1.3] tracking-tight drop-shadow-sm"
+                          >
+                            <span className="text-primary-500 mr-2 text-5xl md:text-7xl opacity-30 select-none">"</span>
+                            {aiMuhasabah}
+                            <span className="text-primary-500 ml-2 text-5xl md:text-7xl opacity-30 select-none">"</span>
+                          </motion.p>
+                        ) : (
+                          <div className="space-y-4 w-full">
+                            <div className="h-4 w-4/5 bg-white/5 rounded-full animate-pulse" />
+                            <div className="h-4 w-3/5 bg-white/5 rounded-full animate-pulse" />
+                            <div className="h-4 w-1/2 bg-white/5 rounded-full animate-pulse opacity-50" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-4">
+                      <motion.button 
+                        whileHover={{ scale: 1.05, backgroundColor: '#0ea5e9', color: '#fff' }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={getAiMuhasabah}
+                        disabled={isAiLoading}
+                        className="px-8 py-4 rounded-2xl bg-white text-slate-900 font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-xl shadow-black/40 flex items-center gap-3 disabled:opacity-50"
+                      >
+                        {isAiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
+                        Minta Tips Langit
+                      </motion.button>
+                      <div className="flex -space-x-3 items-center ml-2">
+                        {[1, 2, 3].map(i => (
+                          <div key={i} className="w-8 h-8 rounded-full border-2 border-slate-900 bg-slate-800 flex items-center justify-center overflow-hidden">
+                            <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800" />
+                          </div>
+                        ))}
+                        <span className="ml-5 text-[10px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">Online Community</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Rata-rata Pekan Ini</p>
-                    <p className="text-2xl font-black text-slate-800 dark:text-white">
-                      {chartData.length > 0 
-                        ? Math.round(chartData.reduce((acc, curr) => acc + curr.completion, 0) / chartData.length) 
-                        : 0}%
-                    </p>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
+                    <TrendingUp className="w-6 h-6 text-primary-500" /> Analisis Spiritual
+                  </h3>
+                  <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                    {['Semua', ...Array.from(new Set(DEEDS.map(d => d.category)))].map(cat => (
+                      <button
+                        key={cat}
+                        onClick={() => setSelectedCategory(cat)}
+                        className={`whitespace-nowrap px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border ${
+                          selectedCategory === cat 
+                            ? 'bg-primary-500 text-white border-primary-500 shadow-md shadow-primary-500/20' 
+                            : 'bg-white dark:bg-slate-900 text-slate-400 border-slate-100 dark:border-slate-800'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
                   </div>
-                  <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Best Performance</p>
-                    <p className="text-2xl font-black text-slate-800 dark:text-white">
-                      {chartData.length > 0 
-                        ? Math.max(...chartData.map(d => d.completion)) 
-                        : 0}%
-                    </p>
+                </div>
+
+                {/* Progress Overview Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+                  {/* Line/Area Chart */}
+                  <div className="bg-slate-50 dark:bg-slate-900/30 p-6 rounded-3xl border border-slate-100 dark:border-slate-800">
+                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Progres Mingguan: {selectedCategory}</h4>
+                    <div className="h-[220px] w-full">
+                      {chartData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={chartData}>
+                            <defs>
+                              <linearGradient id="colorComp" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3}/>
+                                <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#8884d820" />
+                            <XAxis 
+                              dataKey="date" 
+                              axisLine={false} 
+                              tickLine={false} 
+                              tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }}
+                              dy={10}
+                            />
+                            <YAxis 
+                              domain={[0, 100]} 
+                              axisLine={false} 
+                              tickLine={false} 
+                              tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }}
+                              tickFormatter={(val) => `${val}%`}
+                            />
+                            <Tooltip 
+                              contentStyle={{ 
+                                borderRadius: '16px', 
+                                border: 'none', 
+                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                                backgroundColor: '#fff',
+                                fontSize: '12px',
+                                fontWeight: 'bold'
+                              }}
+                            />
+                            <Area 
+                              type="monotone" 
+                              dataKey="completion" 
+                              stroke="#0ea5e9" 
+                              strokeWidth={3} 
+                              fillOpacity={1} 
+                              fill="url(#colorComp)" 
+                              animationDuration={1500}
+                              animationEasing="ease-in-out"
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                          <TrendingUp className="w-12 h-12 mb-3 opacity-10" />
+                          <p className="text-sm font-bold">Data grafik belum tersedia</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
+
+                  {/* Distribution Diagram (Radar Chart) */}
+                  <div className="bg-slate-50 dark:bg-slate-900/30 p-6 rounded-3xl border border-slate-100 dark:border-slate-800">
+                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Distribusi Kategori (Hari Ini)</h4>
+                    <div className="h-[220px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RadarChart cx="50%" cy="50%" outerRadius="80%" data={categoryDistributionData}>
+                          <PolarGrid stroke="#e2e8f0" />
+                          <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fontWeight: 'bold', fill: '#64748b' }} />
+                          <Radar
+                            name="Pencapaian"
+                            dataKey="A"
+                            stroke="#8b5cf6"
+                            fill="#8b5cf6"
+                            fillOpacity={0.6}
+                          />
+                          <Tooltip 
+                             contentStyle={{ 
+                              borderRadius: '16px', 
+                              border: 'none', 
+                              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                              backgroundColor: '#fff',
+                              fontSize: '12px',
+                              fontWeight: 'bold'
+                            }}
+                          />
+                        </RadarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Stats Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                   {/* Breakdown by Category Status */}
+                   <div className="bg-white dark:bg-slate-800/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm">
+                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Detail Hari Ini</h4>
+                    <div className="space-y-4">
+                      {categoryStats.map(stat => (
+                        <div key={stat.name} className="flex flex-col gap-1">
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="font-bold text-slate-600 dark:text-slate-300">{stat.name}</span>
+                            <span className="font-black text-slate-400 uppercase tracking-tighter">{stat.completed}/{stat.total}</span>
+                          </div>
+                          <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              animate={{ width: `${stat.percentage}%` }}
+                              className={`h-full rounded-full ${
+                                stat.percentage === 100 ? 'bg-emerald-500' : 
+                                stat.percentage >= 50 ? 'bg-primary-500' : 'bg-slate-300 dark:bg-slate-700'
+                              }`}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Summary Cards */}
+                  <div className="flex flex-col gap-4">
+                    <div className="flex-1 p-6 rounded-3xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center text-emerald-500 shadow-sm">
+                        <TrendingUp className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-0.5">Rata-rata {selectedCategory === 'Semua' ? 'Pekan Ini' : selectedCategory}</p>
+                        <p className="text-3xl font-black text-slate-800 dark:text-white">
+                          {chartData.length > 0 
+                            ? Math.round(chartData.reduce((acc, curr) => acc + curr.completion, 0) / chartData.length) 
+                            : 0}%
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex-1 p-6 rounded-3xl bg-primary-50 dark:bg-primary-900/10 border border-primary-100 dark:border-primary-900/30 flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center text-primary-500 shadow-sm">
+                        <Award className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-primary-600 dark:text-primary-400 uppercase tracking-widest mb-0.5">Pencapaian Tertinggi</p>
+                        <p className="text-3xl font-black text-slate-800 dark:text-white">
+                          {chartData.length > 0 
+                            ? Math.max(...chartData.map(d => d.completion)) 
+                            : 0}%
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Motivational Quote */}
+                <div className="bg-slate-900 text-white p-6 rounded-3xl flex items-center justify-between gap-6 overflow-hidden relative">
+                  <div className="relative z-10">
+                    <p className="text-xs font-black text-primary-400 uppercase tracking-[0.2em] mb-2">Daily Motivation</p>
+                    <p className="text-lg font-bold leading-tight">"Setiap kabaikan yang kamu lakukan adalah investasi untuk masa depanmu."</p>
+                  </div>
+                  <Sparkles className="w-12 h-12 text-primary-500/30 flex-shrink-0 relative z-10" />
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500 rounded-full blur-[80px] opacity-20 -mr-16 -mt-16"></div>
                 </div>
               </motion.div>
             ) : (
@@ -620,59 +1089,162 @@ export default function AmaliyahPage() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
               >
-                <div className="space-y-4">
-                  {history.length === 0 ? (
-                    <div className="text-center py-20 text-slate-500">
-                      <History className="w-12 h-12 mx-auto mb-4 opacity-10" />
-                      <p>Belum ada riwayat amaliyah.</p>
-                      <p className="text-xs">Mulai catat kebaikan Anda hari ini!</p>
-                    </div>
-                  ) : (
-                    history.map((record) => {
-                      const completion = calculateCompletion(record.deeds);
-                      return (
-                        <div 
-                          key={record.id} 
-                          onClick={() => {
-                            setCurrentDate(new Date(record.date));
-                            setActiveView('today');
-                          }}
-                          className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700 hover:border-[#1799dc]/30 cursor-pointer group transition-all"
-                        >
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-3">
-                              <span className="font-bold text-slate-800 dark:text-slate-100 group-hover:text-[#1799dc] transition-colors">
-                                {new Date(record.date).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })}
-                              </span>
-                              <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold ${completion === 100 ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'}`}>
-                                {completion}% Terpenuhi
-                              </span>
-                            </div>
-                            <div className="flex -space-x-2">
-                              {DEEDS.filter(d => record.deeds[d.id]).slice(0, 5).map(d => (
-                                <div key={d.id} className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-50 dark:border-slate-900 flex items-center justify-center shadow-sm" title={d.label}>
-                                  <div className="scale-75">{d.icon}</div>
-                                </div>
-                              ))}
-                              {Object.values(record.deeds).filter(Boolean).length > 5 && (
-                                <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-slate-50 dark:border-slate-900 flex items-center justify-center text-[10px] font-bold">
-                                  +{Object.values(record.deeds).filter(Boolean).length - 5}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          
-                          <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                            <div 
-                              className={`h-full transition-all duration-500 rounded-full ${completion === 100 ? 'bg-emerald-500' : 'bg-[#1799dc]'}`}
-                              style={{ width: `${completion}%` }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
+                {/* History Filter Row */}
+                <div className="flex items-center justify-between mb-10 gap-4 overflow-x-auto no-scrollbar pb-4 -mx-1 px-1">
+                  <div className="flex gap-2.5">
+                    {['Semua', ...Array.from(new Set(DEEDS.map(d => d.category)))].map(cat => (
+                      <button
+                        key={cat}
+                        onClick={() => setHistoryCategoryFilter(cat)}
+                        className={`whitespace-nowrap px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border-2 ${
+                          historyCategoryFilter === cat 
+                            ? 'bg-slate-900 text-white border-slate-900 shadow-xl shadow-slate-900/20' 
+                            : 'bg-white dark:bg-slate-900/50 text-slate-400 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
+                {history.length === 0 ? (
+                  <div className="text-center py-20 text-slate-500">
+                    <History className="w-12 h-12 mx-auto mb-4 opacity-10" />
+                    <p>Belum ada riwayat amaliyah.</p>
+                    <p className="text-xs">Mulai catat kebaikan Anda hari ini!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {history
+                      .filter(record => {
+                        if (historyCategoryFilter === 'Semua') return true;
+                        const catDeeds = DEEDS.filter(d => d.category === historyCategoryFilter);
+                        return catDeeds.some(d => record.deeds[d.id]);
+                      })
+                      .map((record) => {
+                        const completion = calculateCompletion(record.deeds, historyCategoryFilter);
+                        const isExpanded = expandedHistoryId === record.id;
+                        
+                        const relevantDeeds = historyCategoryFilter === 'Semua' 
+                          ? DEEDS 
+                          : DEEDS.filter(d => d.category === historyCategoryFilter);
+                        
+                        const completedDeedsCount = relevantDeeds.filter(d => record.deeds[d.id]).length;
+
+                        return (
+                          <motion.div 
+                            layout
+                            key={record.id}
+                            className="bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-slate-100 dark:border-slate-700 overflow-hidden transition-all shadow-sm hover:shadow-md"
+                          >
+                            <div 
+                              onClick={() => setExpandedHistoryId(isExpanded ? null : record.id)}
+                              className="p-6 cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
+                            >
+                              <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                                <div className="flex items-center gap-5">
+                                  <div className="w-14 h-14 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center shadow-md text-slate-400 shrink-0 border border-slate-50 dark:border-slate-700">
+                                    <CalendarIcon className="w-6 h-6 text-primary-500" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-black text-slate-800 dark:text-white text-xl tracking-tight leading-none mb-2">
+                                      {new Date(record.date).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' })}
+                                    </h4>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <span className={`text-[9px] font-black uppercase tracking-[0.15em] px-2 py-1 rounded-md ${completion === 100 ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'}`}>
+                                        {completion}% {historyCategoryFilter}
+                                      </span>
+                                      <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em] bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
+                                        {completedDeedsCount} / {relevantDeeds.length} TERLAKSANA
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between md:justify-end gap-4">
+                                  <div className="flex -space-x-1.5 overflow-hidden">
+                                     {relevantDeeds.filter(d => record.deeds[d.id]).slice(0, 4).map(d => (
+                                      <div key={d.id} className="w-7 h-7 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-50 dark:border-slate-900 flex items-center justify-center shadow-sm" title={d.label}>
+                                        <div className="scale-75">{d.icon}</div>
+                                      </div>
+                                    ))}
+                                    {completedDeedsCount > 4 && (
+                                      <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-slate-50 dark:border-slate-900 flex items-center justify-center text-[8px] font-black">
+                                        +{completedDeedsCount - 4}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <motion.div 
+                                    animate={{ rotate: isExpanded ? 180 : 0 }}
+                                    className="text-slate-300 dark:text-slate-600"
+                                  >
+                                    <ChevronDown className="w-5 h-5" />
+                                  </motion.div>
+                                </div>
+                              </div>
+
+                              <div className="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <motion.div 
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${completion}%` }}
+                                  transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+                                  className={`h-full rounded-full ${completion === 100 ? 'bg-emerald-500' : 'bg-primary-500'}`}
+                                />
+                              </div>
+                            </div>
+
+                            <AnimatePresence>
+                              {isExpanded && (
+                                <motion.div 
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: 'auto', opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  className="px-6 pb-6"
+                                >
+                                  <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
+                                    <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Detail Amaliyah</h5>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                      {relevantDeeds.map(deed => {
+                                        const isDone = record.deeds[deed.id];
+                                        return (
+                                          <div 
+                                            key={deed.id} 
+                                            className={`flex items-center gap-2.5 p-2 rounded-xl border transition-colors ${
+                                              isDone 
+                                                ? 'bg-emerald-50/50 border-emerald-100 text-emerald-700 dark:bg-emerald-900/10 dark:border-emerald-900/20 dark:text-emerald-400' 
+                                                : 'bg-white/30 border-slate-100 text-slate-400 opacity-40 dark:bg-slate-900/30 dark:border-slate-800 dark:text-slate-600'
+                                            }`}
+                                          >
+                                            <div className="shrink-0 scale-75">
+                                              {deed.icon}
+                                            </div>
+                                            <span className="text-[11px] font-bold truncate">{deed.label}</span>
+                                            {isDone && <CheckCircle2 className="w-3.5 h-3.5 ml-auto text-emerald-500" />}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                    <div className="mt-8 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                                      <button 
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setCurrentDate(new Date(record.date));
+                                          setActiveView('today');
+                                        }}
+                                        className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary-500 hover:text-primary-600 transition-all bg-primary-50 dark:bg-primary-900/10 px-5 py-2.5 rounded-xl hover:shadow-lg hover:shadow-primary-500/10 active:scale-95"
+                                      >
+                                        <LayoutDashboard className="w-3.5 h-3.5" /> Lihat Detail Tanggal
+                                      </button>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </motion.div>
+                        );
+                      })}
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>

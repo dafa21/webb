@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, onAuthStateChanged, signInAnonymously, signOut } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { initializeFirestore, getFirestore, doc, getDocFromServer, collection, addDoc, getDocs, query, where, orderBy, setDoc } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
@@ -24,16 +24,9 @@ async function testConnection() {
 }
 testConnection();
 
-// Auto sign-in anonymously
-signInAnonymously(auth).catch((error) => {
-  console.error("Anonymous auth error:", error);
-});
-
 export const logout = async () => {
   try {
     await signOut(auth);
-    // After sign out, sign in anonymously again to keep the auto-account feature
-    await signInAnonymously(auth);
   } catch (error) {
     console.error("Logout error", error);
   }
