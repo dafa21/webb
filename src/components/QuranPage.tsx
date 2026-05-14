@@ -18,7 +18,7 @@ const RECITERS = [
 export default function QuranPage() {
     const navigate = useNavigate();
     const [selectedReciter, setSelectedReciter] = useState<string>("05");
-    const [activeTab, setActiveTab] = useState<'quran' | 'hadits' | 'doa' | 'dzikir'>('quran');
+    const [activeTab, setActiveTab] = useState<'quran' | 'hadits' | 'doa' | 'dzikir' | 'kisahnabi'>('quran');
     
     const [quranViewMode, setQuranViewMode] = useState<'list' | 'mushaf'>('list');
     const [mushafPageIdx, setMushafPageIdx] = useState(0);
@@ -1060,7 +1060,7 @@ export default function QuranPage() {
 
     const toArabicNumber = (n: number) => n.toString().replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d as any]);
 
-    const changeTab = (tab: 'quran' | 'hadits' | 'doa' | 'dzikir') => {
+    const changeTab = (tab: 'quran' | 'hadits' | 'doa' | 'dzikir' | 'kisahnabi') => {
         setActiveTab(tab);
         setSelectedDoa(null);
         setSelectedDzikir(null);
@@ -1709,17 +1709,55 @@ export default function QuranPage() {
                                                 <X className="w-4 h-4" />
                                             </button>
                                             
-                                            <div className="mb-4 pr-10">
+                                            <div className="mb-4 pr-10 overflow-y-auto max-h-[60vh] custom-scrollbar scroll-smooth p-2 -m-2">
                                                 <span className="inline-block px-3 py-1 bg-[#1799dc]/10 text-[#1799dc] font-bold text-xs rounded-full border border-[#1799dc]/20 mb-3">
                                                     Surat {selectedSurah.namaLatin} : Ayat {ayah.nomorAyat}
                                                 </span>
-                                                <p className="text-slate-700 dark:text-slate-200 text-sm md:text-base leading-relaxed font-semibold">
-                                                    {ayah.teksIndonesia}
-                                                </p>
+                                                
+                                                <div className="my-4 text-right">
+                                                    {ayah.quranComWords ? (
+                                                        <p className="font-arabic text-2xl md:text-3xl leading-[2.2] md:leading-[2.5] text-slate-800 dark:text-slate-100" dir="rtl">
+                                                            {ayah.quranComWords.filter((w: any) => w.char_type_name !== 'end').map((word: any, wIndex: number) => {
+                                                                return (
+                                                                    <span key={word.id || wIndex}>
+                                                                        <span 
+                                                                            id={`word-modal-${ayah.nomorAyat}-${wIndex}`}
+                                                                            className={`inline transition-colors duration-200`}
+                                                                            dangerouslySetInnerHTML={{ __html: word.text_uthmani_tajweed || word.text_uthmani || word.text }}
+                                                                        />
+                                                                        {" "}
+                                                                    </span>
+                                                                );
+                                                            })}
+                                                        </p>
+                                                    ) : ayah.teksTajweed ? (
+                                                        <p 
+                                                            className={`font-arabic text-2xl md:text-3xl leading-[2.2] transition-colors duration-300 text-slate-800 dark:text-slate-100`}
+                                                            dangerouslySetInnerHTML={{ __html: ayah.teksTajweed }} 
+                                                            dir="rtl"
+                                                        />
+                                                    ) : (
+                                                        <p className={`font-arabic text-2xl md:text-3xl leading-[2.2] transition-colors duration-300 text-slate-800 dark:text-slate-100`} dir="rtl">{ayah.teksArab}</p>
+                                                    )}
+                                                </div>
+
+                                                <div className="border-t border-slate-100 dark:border-slate-800 pt-4 mt-4">
+                                                    <p className="text-sm font-medium mb-2 text-[#1799dc] dark:text-[#38bdf8]">{ayah.teksLatin}</p>
+                                                    <p className="text-slate-700 dark:text-slate-200 text-sm md:text-base leading-relaxed font-semibold mb-4">
+                                                        {ayah.teksIndonesia}
+                                                    </p>
+                                                </div>
+
                                                 {ayah.tafsir && (
-                                                    <div className="mt-4">
+                                                    <div className="mb-4">
                                                         <button
-                                                            onClick={() => setOpenTafsirAyah(openTafsirAyah === ayah.nomorAyat ? null : ayah.nomorAyat)}
+                                                            onClick={async () => {
+                                                                if (openTafsirAyah === ayah.nomorAyat) {
+                                                                    setOpenTafsirAyah(null);
+                                                                } else {
+                                                                    setOpenTafsirAyah(ayah.nomorAyat);
+                                                                }
+                                                            }}
                                                             className="flex items-center gap-2 text-sm font-medium text-[#b08d57] hover:text-[#8b6d3a] transition-colors"
                                                         >
                                                             <Book className="w-4 h-4" />
@@ -1734,7 +1772,7 @@ export default function QuranPage() {
                                                                     exit={{ opacity: 0, height: 0, marginTop: 0 }}
                                                                     className="overflow-hidden"
                                                                 >
-                                                                    <div className="bg-[#b08d57]/5 dark:bg-[#b08d57]/10 rounded-xl p-4 border border-[#b08d57]/20 max-h-48 overflow-y-auto custom-scrollbar">
+                                                                    <div className="bg-[#b08d57]/5 dark:bg-[#b08d57]/10 rounded-xl p-4 border border-[#b08d57]/20">
                                                                         <h4 className="font-bold text-slate-800 dark:text-slate-100 mb-2 flex items-center gap-2 text-sm">
                                                                             <BookOpen className="w-4 h-4 text-[#b08d57]" />
                                                                             Tafsir & Asbabun Nuzul (Kemenag RI)
@@ -1746,6 +1784,39 @@ export default function QuranPage() {
                                                                 </motion.div>
                                                             )}
                                                         </AnimatePresence>
+                                                    </div>
+                                                )}
+
+                                                {/* Tajweed Section */}
+                                                {(ayah.teksTajweed || ayah.teksArab || ayah.quranComWords) && (
+                                                    <div className="mt-4 pt-4 border-t border-dashed border-slate-200 dark:border-slate-700/50">
+                                                        <div className="flex items-center gap-2 mb-3">
+                                                            <div className="w-1.5 h-4 bg-[#1799dc] rounded-full"></div>
+                                                            <h4 className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500 dark:text-slate-400">Tajwid & Cara Baca</h4>
+                                                        </div>
+                                                        <div className="flex flex-col gap-2">
+                                                            {getVerseTajweedRules(
+                                                                (ayah.teksTajweed || '') + 
+                                                                (ayah.teksArab || '') + 
+                                                                (ayah.quranComWords?.map((w:any) => w.text_uthmani_tajweed || '').join(' ') || '')
+                                                            ).map(rule => (
+                                                                <div 
+                                                                    key={rule.name} 
+                                                                    className="flex items-start gap-3 p-2.5 rounded-2xl bg-slate-50/50 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-700/40 hover:border-[#1799dc]/30 transition-colors"
+                                                                >
+                                                                    <div className="w-2.5 h-2.5 rounded-full mt-1 shrink-0 shadow-sm" style={{ backgroundColor: rule.color }}></div>
+                                                                    <div className="flex-1">
+                                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{rule.name}</span>
+                                                                            {rule.transliteration && (
+                                                                                <span className="text-[10px] px-2 py-0.5 rounded border border-[#1799dc]/20 text-[#1799dc] bg-[#1799dc]/5 font-medium">{rule.transliteration}</span>
+                                                                            )}
+                                                                        </div>
+                                                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{rule.description}</p>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>
