@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Book, ArrowLeft, Search, Bookmark, BookmarkPlus, AlignRight, AlignLeft, FileText, ChevronRight, ChevronLeft, ChevronDown, PlayCircle, Play, Pause, Loader2, Mic, Square, Activity, Sparkles, Copy, Check, X } from 'lucide-react';
+import { BookOpen, Book, ArrowLeft, Search, Bookmark, BookmarkPlus, AlignRight, AlignLeft, FileText, ChevronRight, ChevronLeft, ChevronDown, PlayCircle, Play, Pause, Loader2, Mic, Square, Activity, Sparkles, Copy, Check, X, MapPin, Volume2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { db, auth, OperationType, handleFirestoreError } from '../firebase';
 import { doc, getDoc, setDoc, serverTimestamp, getDocs, collection } from 'firebase/firestore';
@@ -57,6 +57,12 @@ export default function QuranPage() {
     const [searchDzikir, setSearchDzikir] = useState('');
     const [selectedDzikir, setSelectedDzikir] = useState<any | null>(null);
     const [selectedDzikirCategory, setSelectedDzikirCategory] = useState<string>('Al-Ma\'tsurat Pagi');
+    // Kisah Nabi State
+    const [kisahNabis, setKisahNabis] = useState<any[]>([]);
+    const [loadingKisah, setLoadingKisah] = useState(false);
+    const [searchKisah, setSearchKisah] = useState('');
+    const [selectedKisah, setSelectedKisah] = useState<any | null>(null);
+
     const [copiedId, setCopiedId] = useState<string | null>(null);
     const [bookmark, setBookmark] = useState<any | null>(null);
     const [isSavingBookmark, setIsSavingBookmark] = useState(false);
@@ -105,7 +111,7 @@ export default function QuranPage() {
         try {
             const surahNameStr = selectedSurah.namaLatin || (selectedSurah.name && selectedSurah.name.transliteration ? selectedSurah.name.transliteration.id : "Surat");
             const lastRead = {
-                surahId: selectedSurah.number,
+                surahId: selectedSurah.nomor,
                 surahName: surahNameStr,
                 ayahNumber: ayahNumber,
                 timestamp: new Date().toISOString()
@@ -246,6 +252,23 @@ export default function QuranPage() {
                 setDzikirs(dzikirData);
                 setLoadingDzikirs(false);
             }, 300);
+        }
+    }, [activeTab]);
+
+    // Fetch Kisah Nabi
+    useEffect(() => {
+        if (activeTab === 'kisahnabi' && kisahNabis.length === 0) {
+            setLoadingKisah(true);
+            fetch('https://islamic-api-zhirrr.vercel.app/api/kisahnabi')
+                .then(res => res.json())
+                .then(data => {
+                    setKisahNabis(data);
+                    setLoadingKisah(false);
+                })
+                .catch(err => {
+                    console.error("Failed to fetch kisah nabi:", err);
+                    setLoadingKisah(false);
+                });
         }
     }, [activeTab]);
 
@@ -1107,8 +1130,8 @@ export default function QuranPage() {
                         <h1 className="text-2xl font-extrabold text-[#1799dc] mb-1">Qur'an & Hadits</h1>
                         <p className="text-slate-500 dark:text-slate-400 text-xs md:text-sm">Membaca dan merenungkan ayat suci serta riwayat nabi.</p>
                         
-                        <div className="flex justify-center mt-4">
-                            <div className="flex bg-white dark:bg-slate-800 rounded-full p-1 shadow-sm border border-slate-200 dark:border-slate-700">
+                        <div className="flex justify-center mt-4 w-full">
+                            <div className="flex flex-wrap justify-center gap-1 bg-white dark:bg-slate-800 rounded-2xl md:rounded-full p-1 shadow-sm border border-slate-200 dark:border-slate-700 max-w-full">
                                 <button 
                                     onClick={() => changeTab('quran')}
                                     className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${activeTab === 'quran' ? 'bg-[#1799dc] text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
@@ -1132,6 +1155,12 @@ export default function QuranPage() {
                                     className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${activeTab === 'dzikir' ? 'bg-[#1799dc] text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
                                 >
                                     Dzikir
+                                </button>
+                                <button 
+                                    onClick={() => changeTab('kisahnabi')}
+                                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${activeTab === 'kisahnabi' ? 'bg-[#1799dc] text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+                                >
+                                    Kisah Nabi
                                 </button>
                             </div>
                         </div>
@@ -1259,19 +1288,19 @@ export default function QuranPage() {
                                     onClick={handleBookmark}
                                     disabled={isSavingBookmark}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                                        bookmark?.surahId === selectedSurah.number 
+                                        bookmark?.surahId === selectedSurah.nomor 
                                         ? 'bg-[#1799dc] text-white shadow-md' 
                                         : 'bg-white dark:bg-slate-800 text-[#1799dc] border border-[#1799dc]/20 hover:bg-[#1799dc] hover:text-white'
                                     }`}
                                 >
                                     {isSavingBookmark ? (
                                         <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : bookmark?.surahId === selectedSurah.number ? (
+                                    ) : bookmark?.surahId === selectedSurah.nomor ? (
                                         <Bookmark className="w-4 h-4 fill-current" />
                                     ) : (
                                         <BookmarkPlus className="w-4 h-4" />
                                     )}
-                                    {bookmark?.surahId === selectedSurah.number ? 'Tersimpan' : 'Tandai Surah'}
+                                    {bookmark?.surahId === selectedSurah.nomor ? 'Tersimpan' : 'Tandai Surah'}
                                 </button>
                             </div>
                             
@@ -1387,16 +1416,16 @@ export default function QuranPage() {
                                                     </button>
                                                     <button 
                                                         onClick={() => handleBookmark(ayah.nomorAyat)}
-                                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${bookmark?.surahId === selectedSurah.number && bookmark?.ayahNumber === ayah.nomorAyat ? 'bg-[#b08d57] text-white shadow-md shadow-[#b08d57]/20' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-[#b08d57]'}`}
+                                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${bookmark?.surahId === selectedSurah.nomor && bookmark?.ayahNumber === ayah.nomorAyat ? 'bg-[#b08d57] text-white shadow-md shadow-[#b08d57]/20' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-[#b08d57]'}`}
                                                         title="Tandai Ayat Ini"
                                                     >
-                                                        {bookmark?.surahId === selectedSurah.number && bookmark?.ayahNumber === ayah.nomorAyat ? <Bookmark className="w-5 h-5 fill-current" /> : <BookmarkPlus className="w-5 h-5" />}
+                                                        {bookmark?.surahId === selectedSurah.nomor && bookmark?.ayahNumber === ayah.nomorAyat ? <Bookmark className="w-5 h-5 fill-current" /> : <BookmarkPlus className="w-5 h-5" />}
                                                     </button>
                                                 </div>
                                                 <div className="flex-1 ml-6 text-right">
                                                     {ayah.quranComWords ? (
                                                         <p className="font-arabic text-3xl md:text-4xl leading-[2.2] md:leading-[2.5] text-slate-800 dark:text-slate-100" dir="rtl">
-                                                            {ayah.quranComWords.map((word: any, wIndex: number) => {
+                                                            {ayah.quranComWords.filter((w: any) => w.char_type_name !== 'end').map((word: any, wIndex: number) => {
                                                                 return (
                                                                     <span key={word.id || wIndex}>
                                                                         <span 
@@ -1576,19 +1605,19 @@ export default function QuranPage() {
                                                         </>
                                                     )}
 
-                                                    <div className="font-arabic text-[28px] sm:text-3xl md:text-4xl leading-[2.2] sm:leading-[2.4] md:leading-[2.5] text-[#2c241b] dark:text-[#f7fafc] text-justify relative z-10" dir="rtl" style={{ textJustify: 'inter-word', textAlignLast: 'center' }}>
+                                                    <div className="font-arabic text-[30px] sm:text-[34px] md:text-[40px] leading-[2.1] sm:leading-[2.2] md:leading-[2.3] text-[#2c241b] dark:text-[#f7fafc] text-right relative z-10" dir="rtl">
                                                         {mushafPages[mushafPageIdx]?.map((ayah: any) => {
                                                             const currentAudioUrl = (selectedReciter === "05" && ayah.quranComAudio) ? "https://verses.quran.com/" + ayah.quranComAudio.url : ayah.audio[selectedReciter];
                                                             const isAyahPlaying = playingAudio === currentAudioUrl || playingAudio === ayah.audio[selectedReciter];
                                                             return (
                                                             <span 
                                                                 key={ayah.nomorAyat} 
-                                                                className={`inline transition-colors duration-300 cursor-pointer rounded px-0.5 outline-none ${activeAyahAction === ayah.nomorAyat || isAyahPlaying ? 'bg-[#b08d57]/20 dark:bg-[#b08d57]/30 ring-2 ring-[#b08d57]/40' : 'hover:bg-black/5 dark:hover:bg-white/10'}`} 
+                                                                className={`inline transition-colors duration-300 cursor-pointer rounded outline-none ${activeAyahAction === ayah.nomorAyat || isAyahPlaying ? 'bg-[#b08d57]/20 dark:bg-[#b08d57]/30 ring-2 ring-[#b08d57]/40 z-10 relative' : 'hover:bg-black/5 dark:hover:bg-white/10'}`} 
                                                                 onClick={() => setActiveAyahAction(activeAyahAction === ayah.nomorAyat ? null : ayah.nomorAyat)}
                                                             >
                                                                 {ayah.quranComWords ? (
                                                                     <>
-                                                                        {ayah.quranComWords.map((word: any, wIndex: number) => (
+                                                                        {ayah.quranComWords.filter((w: any) => w.char_type_name !== 'end').map((word: any, wIndex: number) => (
                                                                             <span key={wIndex}>
                                                                                 <span dangerouslySetInnerHTML={{ __html: word.text_uthmani_tajweed || word.text_uthmani || word.text }} />
                                                                                 {" "}
@@ -1600,9 +1629,9 @@ export default function QuranPage() {
                                                                 ) : (
                                                                     <span>{ayah.teksArab + " "}</span>
                                                                 )}
-                                                                <span className="inline-flex flex-col items-center justify-center align-middle relative mx-1 mt-1 mb-1.5 text-[#b08d57] transition-colors leading-none">
+                                                                <span className="inline-flex items-center justify-center align-middle relative mx-1 text-[#b08d57] transition-colors leading-none">
                                                                     <span className="text-3xl sm:text-4xl lg:text-5xl font-normal opacity-90" style={{fontFamily: 'system-ui', lineHeight: 1}}>۝</span>
-                                                                    <span className="absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs lg:text-sm font-bold font-sans" style={{fontFeatureSettings: '"tnum"'}} dir="ltr">
+                                                                    <span className="absolute inset-0 flex items-center justify-center text-[10px] sm:text-[11px] lg:text-[13px] font-bold font-sans pt-1" style={{fontFeatureSettings: '"tnum"'}} dir="ltr">
                                                                         {toArabicNumber(ayah.nomorAyat)}
                                                                     </span>
                                                                 </span>
@@ -2256,6 +2285,144 @@ export default function QuranPage() {
                                                     Tidak ada dzikir yang cocok dengan pencarian Anda di kategori ini.
                                                 </div>
                                             )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === 'kisahnabi' && (
+                        <div>
+                            {selectedKisah ? (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.5, ease: "easeOut" }}
+                                >
+                                    <button 
+                                        onClick={() => {
+                                            setSelectedKisah(null);
+                                            stopNetworkTTS();
+                                        }}
+                                        className="flex items-center gap-2 text-slate-500 hover:text-[#1799dc] mb-6 transition-colors font-bold group"
+                                    >
+                                        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                                        Kembali ke Daftar Kisah
+                                    </button>
+
+                                    <div className="bg-white dark:bg-slate-800 p-6 md:p-12 rounded-[3.5rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-700 overflow-hidden relative">
+                                        <div className="absolute top-0 right-0 w-64 h-64 bg-[#1799dc]/5 blur-[80px] -mr-32 -mt-32 rounded-full"></div>
+                                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#8b5cf6]/5 blur-[80px] -ml-32 -mb-32 rounded-full"></div>
+                                        
+                                        <div className="relative z-10">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 pb-8 border-b border-slate-50 dark:border-slate-700/50">
+                                                <div className="flex-1">
+                                                    <div className="flex flex-wrap items-center gap-3 mb-4 text-[10px] md:text-xs">
+                                                        <span className="px-3 py-1 bg-[#1799dc]/10 text-[#1799dc] rounded-full font-black uppercase tracking-widest">
+                                                            Lahir: {selectedKisah.thn_kelahiran || '-'} SM
+                                                        </span>
+                                                        <span className="px-3 py-1 bg-amber-500/10 text-amber-600 rounded-full font-black uppercase tracking-widest">
+                                                            Usia: {selectedKisah.usia || '-'} Tahun
+                                                        </span>
+                                                    </div>
+                                                    <h2 className="font-black text-slate-800 dark:text-slate-100 text-3xl md:text-5xl leading-tight tracking-tight mb-3">
+                                                        {selectedKisah.name}
+                                                    </h2>
+                                                    {selectedKisah.tmp && (
+                                                        <p className="text-slate-500 dark:text-slate-400 font-medium text-lg flex items-center gap-2">
+                                                            <MapPin className="w-5 h-5 text-[#1799dc]" />
+                                                            Turun wahyu di {selectedKisah.tmp}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <button 
+                                                    onClick={() => toggleSpeechAudio(selectedKisah.description, `kisah-${selectedKisah.name}`, 'id-ID')}
+                                                    className={`shrink-0 w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 ${playingAudio === `kisah-${selectedKisah.name}` ? 'bg-[#8b5cf6] text-white shadow-2xl shadow-[#8b5cf6]/40 scale-110' : 'bg-[#8b5cf6]/10 text-[#8b5cf6] hover:bg-[#8b5cf6] hover:text-white active:scale-95'}`}
+                                                    title="Mulai Cerita"
+                                                >
+                                                    {playingAudio === `kisah-${selectedKisah.name}` ? (
+                                                        <div className="flex items-center gap-1">
+                                                            <div className="w-1.5 h-6 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                                            <div className="w-1.5 h-8 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                                            <div className="w-1.5 h-6 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                                                        </div>
+                                                    ) : (
+                                                        <Volume2 className="w-8 h-8 ml-0.5" />
+                                                    )}
+                                                </button>
+                                            </div>
+
+                                            <div className="prose prose-slate dark:prose-invert prose-lg md:prose-xl max-w-none prose-headings:font-bold prose-a:text-[#1799dc]">
+                                                <p className="text-slate-700 dark:text-slate-300 leading-loose whitespace-pre-wrap font-medium">
+                                                    {selectedKisah.description}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ) : (
+                                <div>
+                                    <div className="mb-8 relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <Search className="h-5 w-5 text-slate-400" />
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={searchKisah}
+                                            onChange={(e) => setSearchKisah(e.target.value)}
+                                            placeholder="Cari nabi atau rasul..."
+                                            className="w-full pl-11 pr-4 py-4 md:py-5 border-none rounded-3xl bg-white dark:bg-slate-800 shadow-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1799dc]/50 transition-all font-medium text-sm md:text-base outline-none"
+                                        />
+                                    </div>
+
+                                    {loadingKisah ? (
+                                        <div className="flex justify-center items-center py-20">
+                                            <Loader2 className="w-8 h-8 animate-spin text-[#1799dc]" />
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            <AnimatePresence mode="popLayout">
+                                                {kisahNabis
+                                                    .filter(k => k.name.toLowerCase().includes(searchKisah.toLowerCase()))
+                                                    .map((kisah, idx) => (
+                                                    <motion.button 
+                                                        key={idx}
+                                                        layout
+                                                        initial={{ opacity: 0, y: 10 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        exit={{ opacity: 0, scale: 0.95 }}
+                                                        onClick={() => {
+                                                            setSelectedKisah(kisah);
+                                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                        }}
+                                                        className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm hover:shadow-md hover:border-[#1799dc] border border-slate-100 dark:border-slate-700 transition-all text-left flex flex-col justify-between group h-full"
+                                                    >
+                                                        <div>
+                                                            <div className="flex items-center gap-3 mb-4 text-[10px]">
+                                                                <span className="px-2.5 py-1 bg-[#1799dc]/10 text-[#1799dc] rounded-full font-black uppercase tracking-widest shrink-0">
+                                                                    {kisah.usia} Thn
+                                                                </span>
+                                                                <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-full font-bold uppercase tracking-widest truncate">
+                                                                    {kisah.tmp || '-'}
+                                                                </span>
+                                                            </div>
+                                                            <h3 className="font-black text-xl text-slate-800 dark:text-slate-100 group-hover:text-[#1799dc] transition-colors mb-3">
+                                                                {kisah.name}
+                                                            </h3>
+                                                            <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-3 leading-relaxed">
+                                                                {kisah.description}
+                                                            </p>
+                                                        </div>
+                                                        <div className="mt-6 flex justify-end">
+                                                            <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center group-hover:bg-[#1799dc] transition-colors">
+                                                                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-white" />
+                                                            </div>
+                                                        </div>
+                                                    </motion.button>
+                                                ))}
+                                            </AnimatePresence>
                                         </div>
                                     )}
                                 </div>
