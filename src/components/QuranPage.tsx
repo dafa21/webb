@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Book, ArrowLeft, Search, Bookmark, BookmarkPlus, AlignRight, AlignLeft, FileText, ChevronRight, ChevronLeft, ChevronDown, PlayCircle, Play, Pause, Loader2, Mic, Square, Activity, Sparkles, Copy, Check, X, MapPin, Volume2 } from 'lucide-react';
+import { BookOpen, Book, ArrowLeft, Search, Bookmark, BookmarkPlus, AlignRight, AlignLeft, FileText, ChevronRight, ChevronLeft, ChevronDown, PlayCircle, Play, Pause, Loader2, Mic, Square, Activity, Sparkles, Copy, Check, X, MapPin, Volume2, BrainCircuit, Eye, CheckCircle2, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { db, auth, OperationType, handleFirestoreError } from '../firebase';
 import { doc, getDoc, setDoc, serverTimestamp, getDocs, collection } from 'firebase/firestore';
@@ -18,12 +18,15 @@ const RECITERS = [
 export default function QuranPage() {
     const navigate = useNavigate();
     const [selectedReciter, setSelectedReciter] = useState<string>("05");
-    const [activeTab, setActiveTab] = useState<'quran' | 'hadits' | 'doa' | 'dzikir' | 'kisahnabi'>('quran');
+    const [activeTab, setActiveTab] = useState<'quran' | 'hadits' | 'doa' | 'dzikir' | 'kisahnabi' | 'tahfidz'>('quran');
     
-    const [quranViewMode, setQuranViewMode] = useState<'list' | 'mushaf'>('list');
-    const [mushafPageIdx, setMushafPageIdx] = useState(0);
+    const [quranViewMode, setQuranViewMode] = useState<'list' | 'mushaf' | 'tahfidz'>('list');
+    const [tahfidzStep, setTahfidzStep] = useState<'IDLE' | 'SHEIKH' | 'USER' | 'CHECK'>('IDLE');
+    const [tahfidzAyahIdx, setTahfidzAyahIdx] = useState(0);
     const [touchStartX, setTouchStartX] = useState<number | null>(null);
     const [activeAyahAction, setActiveAyahAction] = useState<any | null>(null);
+    const [mushafPageIdx, setMushafPageIdx] = useState(0);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
 
     // Quran State
     const [surahs, setSurahs] = useState<any[]>([]);
@@ -271,6 +274,22 @@ export default function QuranPage() {
                 });
         }
     }, [activeTab]);
+
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        const handleEnded = () => {
+            if (quranViewMode === 'tahfidz') {
+                if (tahfidzStep === 'SHEIKH') {
+                    setTahfidzStep('USER');
+                }
+            }
+        };
+
+        audio.addEventListener('ended', handleEnded);
+        return () => audio.removeEventListener('ended', handleEnded);
+    }, [quranViewMode, tahfidzStep]);
 
     const handleSelectSurah = (surah: any) => {
         setSelectedSurah(surah);
@@ -936,6 +955,11 @@ export default function QuranPage() {
     };
 
     const startRecording = async (ayahNumber: number) => {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert('Perangkat Anda tidak mendukung perekaman audio atau sedang dalam mode tidak aman (Non-HTTPS).');
+            return;
+        }
+
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             // Coba format yang didukung browser
@@ -960,7 +984,11 @@ export default function QuranPage() {
             setRecordingAyah(ayahNumber);
         } catch (err) {
             console.error('Error accessing microphone:', err);
-            alert('Tidak dapat mengakses mikrofon. Pastikan Anda telah memberikan izin.');
+            if (err instanceof DOMException && err.name === 'NotAllowedError') {
+                alert('Akses mikrofon ditolak. Mohon aktifkan izin mikrofon di pengaturan browser Anda, atau coba buka aplikasi di Tab Baru jika sedang menggunakan pratinjau editor.');
+            } else {
+                alert('Tidak dapat mengakses mikrofon: ' + (err instanceof Error ? err.message : String(err)));
+            }
         }
     };
 
@@ -1118,7 +1146,7 @@ export default function QuranPage() {
 
     return (
         <div className="pt-20 md:pt-28 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
-            <audio id="quran-audio" className="hidden" />
+            <audio ref={audioRef} id="quran-audio" className="hidden" />
             <div className="max-w-4xl mx-auto px-4">
                 
                 {/* Header */}
@@ -1261,6 +1289,16 @@ export default function QuranPage() {
                                         className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${quranViewMode === 'mushaf' ? 'bg-[#1799dc] text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
                                     >
                                         Mushaf
+                                    </button>
+                                    <button 
+                                        onClick={() => {
+                                            setQuranViewMode('tahfidz');
+                                            setTahfidzStep('IDLE');
+                                            setTahfidzAyahIdx(0);
+                                        }}
+                                        className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${quranViewMode === 'tahfidz' ? 'bg-[#1799dc] text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+                                    >
+                                        Tahfidz
                                     </button>
                                 </div>
                                 
@@ -1572,7 +1610,7 @@ export default function QuranPage() {
                                         );
                                     })}
                                 </div>
-                                ) : (
+                                ) : quranViewMode === 'mushaf' ? (
                                     <div 
                                         className="bg-[#fcfaf5] dark:bg-[#1a202c] rounded-3xl shadow-lg shadow-black/5 border border-[#e8dccb] dark:border-[#2d3748] relative min-h-[500px] overflow-hidden"
                                         onTouchStart={handleTouchStart}
@@ -1681,6 +1719,180 @@ export default function QuranPage() {
                                                     {def.name}
                                                 </span>
                                             ))}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 md:p-10 shadow-xl border border-slate-100 dark:border-slate-700">
+                                        <div className="max-w-3xl mx-auto">
+                                            <div className="text-center mb-8">
+                                                <div className="w-16 h-16 bg-[#1799dc]/10 text-[#1799dc] rounded-full flex items-center justify-center mx-auto mb-4">
+                                                    <BrainCircuit className="w-8 h-8" />
+                                                </div>
+                                                <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Mode Sambung Ayat</h3>
+                                                <p className="text-slate-500 dark:text-slate-400 mt-2">Belajar menghafal dengan mendengarkan Syeikh lalu menyambung ayat berikutnya.</p>
+                                            </div>
+
+                                            {tahfidzStep === 'IDLE' ? (
+                                                <div className="text-center py-10">
+                                                    <button 
+                                                        onClick={() => {
+                                                            setTahfidzAyahIdx(0);
+                                                            setTahfidzStep('SHEIKH');
+                                                            const firstAyah = surahDetail.ayat[0];
+                                                            const audioUrl = (selectedReciter === "05" && firstAyah.quranComAudio) ? "https://verses.quran.com/" + firstAyah.quranComAudio.url : firstAyah.audio[selectedReciter];
+                                                            toggleAudio(audioUrl, firstAyah.nomorAyat, firstAyah.quranComAudio?.segments);
+                                                        }}
+                                                        className="px-10 py-5 bg-[#1799dc] hover:bg-[#1688c5] text-white rounded-2xl font-bold text-xl shadow-lg shadow-[#1799dc]/20 transition-all transform hover:scale-105"
+                                                    >
+                                                        Mulai Hafalan
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-10">
+                                                    {/* Current Context */}
+                                                    <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-700 relative overflow-hidden">
+                                                        <div className="absolute top-0 left-0 w-1 h-full bg-[#1799dc]"></div>
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-[#1799dc] mb-3 block">Ayat Terakhir Diputar</span>
+                                                        <p className="font-arabic text-3xl md:text-4xl leading-[2.2] text-right text-slate-800 dark:text-slate-100 mb-4" dir="rtl">
+                                                            {surahDetail.ayat[tahfidzAyahIdx].teksArab}
+                                                        </p>
+                                                        <div className="flex justify-between items-end">
+                                                            <div className="flex-1">
+                                                                <p className="text-xs font-bold text-[#1799dc] mb-1">{surahDetail.ayat[tahfidzAyahIdx].teksLatin}</p>
+                                                                <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{surahDetail.ayat[tahfidzAyahIdx].teksIndonesia}</p>
+                                                            </div>
+                                                            <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center font-bold text-[#1799dc] shadow-sm border border-slate-100 dark:border-slate-700">
+                                                                {surahDetail.ayat[tahfidzAyahIdx].nomorAyat}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Next Verse Prompt */}
+                                                    <div className="text-center py-6">
+                                                        {tahfidzStep === 'SHEIKH' ? (
+                                                            <div className="flex flex-col items-center">
+                                                                <div className="w-12 h-12 bg-[#1799dc]/10 text-[#1799dc] rounded-full flex items-center justify-center mb-4 animate-pulse">
+                                                                    <Volume2 className="w-6 h-6" />
+                                                                </div>
+                                                                <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100">Syekh sedang membacakan...</h4>
+                                                                <p className="text-sm text-slate-500 mt-2">Simak dan perhatikan bacaannya.</p>
+                                                            </div>
+                                                        ) : tahfidzStep === 'USER' ? (
+                                                            <div className="flex flex-col items-center">
+                                                                <div className="w-12 h-12 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mb-4">
+                                                                    <Mic className="w-6 h-6" />
+                                                                </div>
+                                                                <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100">Sekarang Giliran Anda!</h4>
+                                                                <p className="text-sm text-slate-500 mt-2 mb-8">Sambunglah ayat ke-{surahDetail.ayat[tahfidzAyahIdx + 1]?.nomorAyat || 'selanjutnya'}.</p>
+                                                                
+                                                                <div className="flex flex-col md:flex-row gap-4 w-full max-w-sm">
+                                                                    <button 
+                                                                        onClick={() => {
+                                                                            setTahfidzStep('CHECK');
+                                                                            const nextAyah = surahDetail.ayat[tahfidzAyahIdx + 1];
+                                                                            if (nextAyah) {
+                                                                                const audioUrl = (selectedReciter === "05" && nextAyah.quranComAudio) ? "https://verses.quran.com/" + nextAyah.quranComAudio.url : nextAyah.audio[selectedReciter];
+                                                                                toggleAudio(audioUrl, nextAyah.nomorAyat, nextAyah.quranComAudio?.segments);
+                                                                            }
+                                                                        }}
+                                                                        className="flex-1 py-4 bg-[#1799dc] hover:bg-[#1688c5] text-white rounded-2xl font-black shadow-lg shadow-[#1799dc]/20 transition-all flex items-center justify-center gap-2"
+                                                                    >
+                                                                        <Eye className="w-5 h-5" />
+                                                                        Cek Hafalan
+                                                                    </button>
+                                                                    <button 
+                                                                        onClick={() => {
+                                                                            const nextAyah = surahDetail.ayat[tahfidzAyahIdx + 1];
+                                                                            if (nextAyah) {
+                                                                                startRecording(nextAyah.nomorAyat);
+                                                                            }
+                                                                        }}
+                                                                        className={`flex-1 py-4 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-black rounded-2xl transition-all flex items-center justify-center gap-2 ${recordingAyah ? 'bg-red-50 text-red-500 border-red-200' : 'hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+                                                                    >
+                                                                        {recordingAyah ? <Square className="w-4 h-4" /> : <Mic className="w-5 h-5" />}
+                                                                        {recordingAyah ? 'Berhenti' : 'Rekam Bacaan'}
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex flex-col items-center">
+                                                                <div className="w-12 h-12 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mb-4">
+                                                                    <CheckCircle2 className="w-6 h-6" />
+                                                                </div>
+                                                                <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100">Koreksi Bacaan</h4>
+                                                                <p className="text-sm text-slate-500 mt-2 mb-6">Berikut adalah ayat yang Anda baca tadi.</p>
+                                                                
+                                                                <div className="w-full bg-green-50/50 dark:bg-green-900/10 p-6 rounded-3xl border border-green-100 dark:border-green-900/30 mb-8">
+                                                                    <p className="font-arabic text-3xl md:text-4xl leading-[2.2] text-right text-slate-800 dark:text-slate-100 mb-4" dir="rtl">
+                                                                        {surahDetail.ayat[tahfidzAyahIdx + 1]?.teksArab}
+                                                                    </p>
+                                                                    <p className="text-sm font-bold text-green-600 mb-1">{surahDetail.ayat[tahfidzAyahIdx + 1]?.teksLatin}</p>
+                                                                    <p className="text-sm text-slate-600 dark:text-slate-400">{surahDetail.ayat[tahfidzAyahIdx + 1]?.teksIndonesia}</p>
+                                                                    
+                                                                    {evaluationResults[surahDetail.ayat[tahfidzAyahIdx + 1]?.nomorAyat] && (
+                                                                        <div className="mt-6 p-4 bg-white dark:bg-slate-800 rounded-2xl border border-green-200 dark:border-green-800/30 text-left">
+                                                                            <div className="flex items-center gap-2 mb-2 text-[#1799dc]">
+                                                                                <Sparkles className="w-4 h-4" />
+                                                                                <span className="text-xs font-black uppercase tracking-wider">Analisis Talaqqi AI</span>
+                                                                            </div>
+                                                                            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                                                                {evaluationResults[surahDetail.ayat[tahfidzAyahIdx + 1]?.nomorAyat]}
+                                                                            </p>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+
+                                                                <div className="flex gap-4 w-full max-w-sm">
+                                                                    <button 
+                                                                        onClick={() => {
+                                                                            if (tahfidzAyahIdx + 1 < surahDetail.ayat.length - 1) {
+                                                                                setTahfidzAyahIdx(tahfidzAyahIdx + 1);
+                                                                                setTahfidzStep('USER');
+                                                                            } else {
+                                                                                setTahfidzStep('IDLE');
+                                                                                setTahfidzAyahIdx(0);
+                                                                            }
+                                                                        }}
+                                                                        className="flex-1 py-4 bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900 rounded-2xl font-black shadow-lg transition-all flex items-center justify-center gap-2"
+                                                                    >
+                                                                        Lanjut Ayat Berikutnya
+                                                                        <ArrowRight className="w-5 h-5" />
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Progress */}
+                                                    <div className="pt-6 border-t border-slate-100 dark:border-slate-700">
+                                                        <div className="flex justify-between items-center mb-2">
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Progres Hafalan</span>
+                                                            <span className="text-[10px] font-black text-[#1799dc]">{Math.round(((tahfidzAyahIdx + 1) / surahDetail.ayat.length) * 100)}%</span>
+                                                        </div>
+                                                        <div className="w-full h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                                            <div 
+                                                                className="h-full bg-[#1799dc] transition-all duration-500" 
+                                                                style={{ width: `${((tahfidzAyahIdx + 1) / surahDetail.ayat.length) * 100}%` }}
+                                                            ></div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="flex justify-center">
+                                                        <button 
+                                                            onClick={() => {
+                                                                setTahfidzStep('IDLE');
+                                                                setTahfidzAyahIdx(0);
+                                                                if (audioRef.current) audioRef.current.pause();
+                                                                setPlayingAudio(null);
+                                                            }}
+                                                            className="text-xs font-bold text-red-500 hover:text-red-600 transition-colors flex items-center gap-2"
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                            Berhenti Berlatih
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 )

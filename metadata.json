@@ -1,9 +1,8 @@
 {
-  "name": "Laznas Dewan Dakwah - Digital Donation Platform",
-  "description": "Modern Islamic donation platform for Laznas Dewan Dakwah, designed for trust, ease of use, and spiritual engagement.",
+  "name": "Qur'an Memorize (Sambung Ayat)",
+  "description": "A focused Al-Qur'an companion app designed to help users memorize verses through an interactive Sambung Ayat mode and high-quality Sheikh audio.",
   "requestFramePermissions": [
-    "microphone",
-    "geolocation"
+    "microphone"
   ],
   "majorCapabilities": []
 }
