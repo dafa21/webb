@@ -45,8 +45,11 @@ export default function QuranPage() {
     }, [location.search]);
     
     const [quranViewMode, setQuranViewMode] = useState<'list' | 'mushaf' | 'tahfidz'>('list');
+    const [filterJuz, setFilterJuz] = useState<number | ''>('');
+    const [filterPage, setFilterPage] = useState<number | ''>('');
     const [tahfidzStep, setTahfidzStep] = useState<'IDLE' | 'SHEIKH' | 'USER' | 'CHECK'>('IDLE');
     const [tahfidzAyahIdx, setTahfidzAyahIdx] = useState(0);
+    const [tahfidzLevel, setTahfidzLevel] = useState<'urut' | 'potongan' | 'acak'>('urut');
     const [touchStartX, setTouchStartX] = useState<number | null>(null);
     const [activeAyahAction, setActiveAyahAction] = useState<any | null>(null);
     const [mushafPageIdx, setMushafPageIdx] = useState(0);
@@ -333,6 +336,7 @@ export default function QuranPage() {
                     return {
                         ...ayah,
                         pageNumber: verseInfo?.page_number,
+                        juzNumber: verseInfo?.juz_number,
                         teksTajweed: verseInfo?.text_uthmani_tajweed,
                         quranComWords: verseInfo?.words,
                         quranComAudio: verseInfo?.audio,
@@ -978,6 +982,13 @@ export default function QuranPage() {
         return rules;
     };
 
+    const getPotonganAyat = (text: string) => {
+        if (!text) return '';
+        const words = text.split(' ');
+        if (words.length <= 3) return words[0];
+        return words.slice(0, Math.ceil(words.length / 3)).join(' ');
+    };
+
     const startRecording = async (ayahNumber: number) => {
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
         if (!SpeechRecognition) {
@@ -1025,11 +1036,12 @@ export default function QuranPage() {
 
                 setEvaluationResults(prev => ({
                     ...prev,
-                    [ayahNumber]: `(Speech API Terdeteksi: "${transcript}")\n\n${feedback}`
+                    [ayahNumber]: feedback
                 }));
                 
                 if (ayah) {
-                    speakFeedbackAndPlayCorrect(feedback, ayah.audio[selectedReciter], ayahNumber);
+                    const audioUrl = (selectedReciter === "05" && ayah.quranComAudio) ? "https://verses.quran.com/" + ayah.quranComAudio.url : ayah.audio[selectedReciter];
+                    toggleAudio(audioUrl, ayah.nomorAyat, ayah.quranComAudio?.segments);
                 }
                 setEvaluatingAyah(null);
             };
@@ -1177,11 +1189,16 @@ export default function QuranPage() {
 
     const mushafPages = React.useMemo(() => {
         if (!surahDetail?.ayat) return [];
-        const hasPageNumbers = surahDetail.ayat.some((a: any) => a.pageNumber);
+        
+        const filteredAyahList = surahDetail.ayat.filter((a: any) => 
+            (!filterJuz || a.juzNumber === filterJuz) && (!filterPage || a.pageNumber === filterPage)
+        );
+
+        const hasPageNumbers = filteredAyahList.some((a: any) => a.pageNumber);
         
         if (hasPageNumbers) {
             const pagesMap = new Map();
-            surahDetail.ayat.forEach((ayah: any) => {
+            filteredAyahList.forEach((ayah: any) => {
                 const num = ayah.pageNumber || 1;
                 if (!pagesMap.has(num)) {
                     pagesMap.set(num, []);
@@ -1193,12 +1210,12 @@ export default function QuranPage() {
                         .map(e => e[1]);
         } else {
             const chunks = [];
-            for (let i = 0; i < surahDetail.ayat.length; i += 8) {
-                chunks.push(surahDetail.ayat.slice(i, i + 8));
+            for (let i = 0; i < filteredAyahList.length; i += 8) {
+                chunks.push(filteredAyahList.slice(i, i + 8));
             }
             return chunks;
         }
-    }, [surahDetail]);
+    }, [surahDetail, filterJuz, filterPage]);
 
     useEffect(() => {
         setMushafPageIdx(0);
@@ -1483,6 +1500,45 @@ export default function QuranPage() {
                                 )}
                             </AnimatePresence>
 
+                            {quranViewMode !== 'tahfidz' && surahDetail && (
+                                <div className="flex flex-wrap gap-3 mb-6">
+                                    <div className="flex bg-white dark:bg-slate-800 rounded-xl p-1 shadow-sm border border-slate-200 dark:border-slate-700 w-full sm:w-auto relative">
+                                        <select
+                                            title="Filter Juz"
+                                            value={filterJuz}
+                                            onChange={(e) => setFilterJuz(e.target.value === '' ? '' : Number(e.target.value))}
+                                            className="bg-transparent text-xs font-bold text-slate-600 dark:text-slate-300 w-full pl-3 pr-8 py-2 focus:outline-none appearance-none cursor-pointer"
+                                            style={{ minWidth: '120px' }}
+                                        >
+                                            <option value="">Semua Juz</option>
+                                            {Array.from(new Set(surahDetail.ayat.map((a: any) => a.juzNumber))).filter(Boolean).map(juz => (
+                                                <option key={juz as number} value={juz as number}>Juz {juz as number}</option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                            <ChevronDown className="w-4 h-4" />
+                                        </div>
+                                    </div>
+                                    <div className="flex bg-white dark:bg-slate-800 rounded-xl p-1 shadow-sm border border-slate-200 dark:border-slate-700 w-full sm:w-auto relative">
+                                        <select
+                                            title="Filter Halaman"
+                                            value={filterPage}
+                                            onChange={(e) => setFilterPage(e.target.value === '' ? '' : Number(e.target.value))}
+                                            className="bg-transparent text-xs font-bold text-slate-600 dark:text-slate-300 w-full pl-3 pr-8 py-2 focus:outline-none appearance-none cursor-pointer"
+                                            style={{ minWidth: '150px' }}
+                                        >
+                                            <option value="">Semua Halaman</option>
+                                            {Array.from(new Set(surahDetail.ayat.map((a: any) => a.pageNumber))).filter(Boolean).map(page => (
+                                                <option key={page as number} value={page as number}>Halaman {page as number}</option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                            <ChevronDown className="w-4 h-4" />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             {loadingSurahDetail ? (
                                 <div className="flex justify-center items-center py-20">
                                     <Loader2 className="w-8 h-8 animate-spin text-[#1799dc]" />
@@ -1490,7 +1546,24 @@ export default function QuranPage() {
                             ) : surahDetail ? (
                                 quranViewMode === 'list' ? (
                                 <div className="space-y-8">
-                                    {surahDetail.ayat.map((ayah: any) => {
+                                    {(() => {
+                                        const filteredAyat = surahDetail.ayat.filter((a: any) => (!filterJuz || a.juzNumber === filterJuz) && (!filterPage || a.pageNumber === filterPage));
+                                        
+                                        if (filteredAyat.length === 0) {
+                                            return (
+                                                <div className="text-center py-10 bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700">
+                                                    <p className="text-slate-500 dark:text-slate-400">Tidak ada ayat yang cocok dengan filter saat ini.</p>
+                                                    <button 
+                                                        onClick={() => { setFilterJuz(''); setFilterPage(''); }}
+                                                        className="mt-4 px-4 py-2 bg-[#1799dc] text-white rounded-lg text-sm font-bold"
+                                                    >
+                                                        Hapus Filter
+                                                    </button>
+                                                </div>
+                                            );
+                                        }
+
+                                        return filteredAyat.map((ayah: any) => {
                                         const currentAudioUrl = (selectedReciter === "05" && ayah.quranComAudio) ? "https://verses.quran.com/" + ayah.quranComAudio.url : ayah.audio[selectedReciter];
                                         const segments = ayah.quranComAudio ? ayah.quranComAudio.segments : undefined;
                                         const isAyahPlaying = playingAudio === currentAudioUrl || playingAudio === ayah.audio[selectedReciter];
@@ -1695,7 +1768,8 @@ export default function QuranPage() {
                                             </div>
                                         </div>
                                         );
-                                    })}
+                                    })
+                                    })()}
                                 </div>
                                 ) : quranViewMode === 'mushaf' ? (
                                     <div 
@@ -1706,7 +1780,7 @@ export default function QuranPage() {
                                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')] opacity-[0.03] dark:opacity-5 pointer-events-none mix-blend-multiply dark:mix-blend-lighten rounded-3xl z-0"></div>
                                         
                                         <AnimatePresence mode="popLayout" initial={false}>
-                                            {mushafPages.length > 0 && (
+                                            {mushafPages.length > 0 ? (
                                                 <motion.div 
                                                     key={mushafPageIdx}
                                                     initial={{ opacity: 0, x: 20 }}
@@ -1766,6 +1840,16 @@ export default function QuranPage() {
                                                         })}
                                                     </div>
                                                 </motion.div>
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center w-full h-full py-20 relative z-10">
+                                                    <p className="text-slate-500 dark:text-slate-400 font-medium">Tidak ada ayat di halaman/juz ini.</p>
+                                                    <button 
+                                                        onClick={() => { setFilterJuz(''); setFilterPage(''); }}
+                                                        className="mt-4 px-4 py-2 bg-[#b08d57] text-white rounded-lg text-sm font-bold"
+                                                    >
+                                                        Hapus Filter
+                                                    </button>
+                                                </div>
                                             )}
                                         </AnimatePresence>
 
@@ -1820,39 +1904,85 @@ export default function QuranPage() {
                                             </div>
 
                                             {tahfidzStep === 'IDLE' ? (
-                                                <div className="text-center py-10">
-                                                    <button 
-                                                        onClick={() => {
-                                                            setTahfidzAyahIdx(0);
-                                                            setTahfidzStep('SHEIKH');
-                                                            const firstAyah = surahDetail.ayat[0];
-                                                            const audioUrl = (selectedReciter === "05" && firstAyah.quranComAudio) ? "https://verses.quran.com/" + firstAyah.quranComAudio.url : firstAyah.audio[selectedReciter];
-                                                            toggleAudio(audioUrl, firstAyah.nomorAyat, firstAyah.quranComAudio?.segments);
-                                                        }}
-                                                        className="px-10 py-5 bg-[#1799dc] hover:bg-[#1688c5] text-white rounded-2xl font-bold text-xl shadow-lg shadow-[#1799dc]/20 transition-all transform hover:scale-105"
-                                                    >
-                                                        Mulai Hafalan
-                                                    </button>
+                                                <div className="py-6">
+                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                                                        <button 
+                                                            onClick={() => setTahfidzLevel('urut')}
+                                                            className={`p-4 rounded-2xl border-2 text-left transition-all ${tahfidzLevel === 'urut' ? 'border-[#1799dc] bg-[#1799dc]/5 ring-4 ring-[#1799dc]/20' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'}`}
+                                                        >
+                                                            <div className="flex items-center gap-2 mb-2">
+                                                                <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-xs">1</span>
+                                                                <h4 className="font-bold text-slate-800 dark:text-slate-100">Gantian Ayat</h4>
+                                                            </div>
+                                                            <p className="text-xs text-slate-500 dark:text-slate-400">Syeikh membaca, lalu giliran Anda membaca ayat berikutnya berurutan.</p>
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => setTahfidzLevel('potongan')}
+                                                            className={`p-4 rounded-2xl border-2 text-left transition-all ${tahfidzLevel === 'potongan' ? 'border-[#1799dc] bg-[#1799dc]/5 ring-4 ring-[#1799dc]/20' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'}`}
+                                                        >
+                                                            <div className="flex items-center gap-2 mb-2">
+                                                                <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-xs">2</span>
+                                                                <h4 className="font-bold text-slate-800 dark:text-slate-100">Potongan Ayat</h4>
+                                                            </div>
+                                                            <p className="text-xs text-slate-500 dark:text-slate-400">Menebak lanjutan dari potongan bagian ayat yang hilang.</p>
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => setTahfidzLevel('acak')}
+                                                            className={`p-4 rounded-2xl border-2 text-left transition-all ${tahfidzLevel === 'acak' ? 'border-[#1799dc] bg-[#1799dc]/5 ring-4 ring-[#1799dc]/20' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'}`}
+                                                        >
+                                                            <div className="flex items-center gap-2 mb-2">
+                                                                <span className="w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-xs">3</span>
+                                                                <h4 className="font-bold text-slate-800 dark:text-slate-100">Acak (Per Juz)</h4>
+                                                            </div>
+                                                            <p className="text-xs text-slate-500 dark:text-slate-400">Diuji menyambung ayat secara acak sempurna. Simulasi tes tahfidz juz.</p>
+                                                        </button>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <button 
+                                                            onClick={() => {
+                                                                if (tahfidzLevel === 'acak' || tahfidzLevel === 'potongan') {
+                                                                    // Random ayat to start
+                                                                    const randIdx = Math.floor(Math.random() * (surahDetail.ayat.length - 1));
+                                                                    setTahfidzAyahIdx(randIdx);
+                                                                    setTahfidzStep('SHEIKH');
+                                                                    const firstAyah = surahDetail.ayat[randIdx];
+                                                                    const audioUrl = (selectedReciter === "05" && firstAyah.quranComAudio) ? "https://verses.quran.com/" + firstAyah.quranComAudio.url : firstAyah.audio[selectedReciter];
+                                                                    toggleAudio(audioUrl, firstAyah.nomorAyat, firstAyah.quranComAudio?.segments);
+                                                                } else {
+                                                                    setTahfidzAyahIdx(0);
+                                                                    setTahfidzStep('SHEIKH');
+                                                                    const firstAyah = surahDetail.ayat[0];
+                                                                    const audioUrl = (selectedReciter === "05" && firstAyah.quranComAudio) ? "https://verses.quran.com/" + firstAyah.quranComAudio.url : firstAyah.audio[selectedReciter];
+                                                                    toggleAudio(audioUrl, firstAyah.nomorAyat, firstAyah.quranComAudio?.segments);
+                                                                }
+                                                            }}
+                                                            className="px-10 py-5 bg-[#1799dc] hover:bg-[#1688c5] text-white rounded-2xl font-bold text-xl shadow-lg shadow-[#1799dc]/20 transition-all transform hover:scale-105 inline-flex items-center gap-3"
+                                                        >
+                                                            Mulai Hafalan <ChevronRight className="w-6 h-6" />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             ) : (
                                                 <div className="space-y-10">
                                                     {/* Current Context */}
-                                                    <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-700 relative overflow-hidden">
-                                                        <div className="absolute top-0 left-0 w-1 h-full bg-[#1799dc]"></div>
-                                                        <span className="text-[10px] font-black uppercase tracking-widest text-[#1799dc] mb-3 block">Ayat Terakhir Diputar</span>
-                                                        <p className="font-arabic text-3xl md:text-4xl leading-[2.2] text-right text-slate-800 dark:text-slate-100 mb-4" dir="rtl">
-                                                            {surahDetail.ayat[tahfidzAyahIdx].teksArab}
-                                                        </p>
-                                                        <div className="flex justify-between items-end">
-                                                            <div className="flex-1">
-                                                                <p className="text-xs font-bold text-[#1799dc] mb-1">{surahDetail.ayat[tahfidzAyahIdx].teksLatin}</p>
-                                                                <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{surahDetail.ayat[tahfidzAyahIdx].teksIndonesia}</p>
-                                                            </div>
-                                                            <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center font-bold text-[#1799dc] shadow-sm border border-slate-100 dark:border-slate-700">
-                                                                {surahDetail.ayat[tahfidzAyahIdx].nomorAyat}
+                                                    {tahfidzStep === 'SHEIKH' && (
+                                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-700 relative overflow-hidden">
+                                                            <div className="absolute top-0 left-0 w-1 h-full bg-[#1799dc]"></div>
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-[#1799dc] mb-3 block">Ayat Terakhir Diputar</span>
+                                                            <p className="font-arabic text-3xl md:text-4xl leading-[2.2] text-right text-slate-800 dark:text-slate-100 mb-4" dir="rtl">
+                                                                {surahDetail.ayat[tahfidzAyahIdx].teksArab}
+                                                            </p>
+                                                            <div className="flex justify-between items-end">
+                                                                <div className="flex-1">
+                                                                    <p className="text-xs font-bold text-[#1799dc] mb-1">{surahDetail.ayat[tahfidzAyahIdx].teksLatin}</p>
+                                                                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{surahDetail.ayat[tahfidzAyahIdx].teksIndonesia}</p>
+                                                                </div>
+                                                                <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center font-bold text-[#1799dc] shadow-sm border border-slate-100 dark:border-slate-700">
+                                                                    {surahDetail.ayat[tahfidzAyahIdx].nomorAyat}
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                    )}
 
                                                     {/* Next Verse Prompt */}
                                                     <div className="text-center py-6">
@@ -1870,7 +2000,39 @@ export default function QuranPage() {
                                                                     <Mic className="w-6 h-6" />
                                                                 </div>
                                                                 <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100">Sekarang Giliran Anda!</h4>
-                                                                <p className="text-sm text-slate-500 mt-2 mb-8">Sambunglah ayat ke-{surahDetail.ayat[tahfidzAyahIdx + 1]?.nomorAyat || 'selanjutnya'}.</p>
+                                                                <p className="text-sm text-slate-500 mt-2 mb-8">
+                                                                    {tahfidzLevel === 'potongan' ? 
+                                                                        `Teruskan potongan awal ayat ${surahDetail.ayat[tahfidzAyahIdx + 1]?.nomorAyat} berikut hingga selesai:` : 
+                                                                        `Sambunglah ayat ke-${surahDetail.ayat[tahfidzAyahIdx + 1]?.nomorAyat || 'selanjutnya'}.`
+                                                                    }
+                                                                </p>
+                                                                
+                                                                {tahfidzLevel === 'potongan' && (
+                                                                    <div className="relative bg-amber-50 dark:bg-amber-900/20 p-6 rounded-2xl border border-amber-100 dark:border-amber-500/30 mb-8 w-full group">
+                                                                        <div className="absolute top-4 left-4">
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    const ayah = surahDetail.ayat[tahfidzAyahIdx + 1];
+                                                                                    if (ayah) {
+                                                                                        const audioUrl = (selectedReciter === "05" && ayah.quranComAudio) ? "https://verses.quran.com/" + ayah.quranComAudio.url : ayah.audio[selectedReciter];
+                                                                                        toggleAudio(audioUrl, ayah.nomorAyat, ayah.quranComAudio?.segments);
+                                                                                    }
+                                                                                }}
+                                                                                className="w-10 h-10 bg-amber-200 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center hover:bg-amber-300 dark:hover:bg-amber-800 transition-colors shadow-sm"
+                                                                                title="Putar Audio"
+                                                                            >
+                                                                                {playingAudio === surahDetail.ayat[tahfidzAyahIdx + 1]?.nomorAyat ? (
+                                                                                    <Square className="w-4 h-4" fill="currentColor" />
+                                                                                ) : (
+                                                                                    <Volume2 className="w-5 h-5" fill="currentColor" />
+                                                                                )}
+                                                                            </button>
+                                                                        </div>
+                                                                        <p className="font-arabic text-3xl leading-[2.2] text-center text-slate-800 dark:text-slate-200 ml-14" dir="rtl">
+                                                                            {getPotonganAyat(surahDetail.ayat[tahfidzAyahIdx + 1]?.teksArab)} ...
+                                                                        </p>
+                                                                    </div>
+                                                                )}
                                                                 
                                                                 <div className="flex flex-col md:flex-row gap-4 w-full max-w-sm">
                                                                     <button 
@@ -1913,8 +2075,27 @@ export default function QuranPage() {
                                                                 <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100">Koreksi Bacaan</h4>
                                                                 <p className="text-sm text-slate-500 mt-2 mb-6">Berikut adalah ayat yang Anda baca tadi.</p>
                                                                 
-                                                                <div className="w-full bg-green-50/50 dark:bg-green-900/10 p-6 rounded-3xl border border-green-100 dark:border-green-900/30 mb-8">
-                                                                    <p className="font-arabic text-3xl md:text-4xl leading-[2.2] text-right text-slate-800 dark:text-slate-100 mb-4" dir="rtl">
+                                                                <div className="w-full bg-green-50/50 dark:bg-green-900/10 p-6 rounded-3xl border border-green-100 dark:border-green-900/30 mb-8 relative hover:border-green-300 transition-colors group">
+                                                                    <div className="absolute top-4 left-4">
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                const ayah = surahDetail.ayat[tahfidzAyahIdx + 1];
+                                                                                if (ayah) {
+                                                                                    const audioUrl = (selectedReciter === "05" && ayah.quranComAudio) ? "https://verses.quran.com/" + ayah.quranComAudio.url : ayah.audio[selectedReciter];
+                                                                                    toggleAudio(audioUrl, ayah.nomorAyat, ayah.quranComAudio?.segments);
+                                                                                }
+                                                                            }}
+                                                                            className="w-10 h-10 bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center hover:bg-green-200 dark:hover:bg-green-800 transition-colors shadow-sm"
+                                                                            title="Putar Audio"
+                                                                        >
+                                                                            {playingAudio === surahDetail.ayat[tahfidzAyahIdx + 1]?.nomorAyat ? (
+                                                                                <Square className="w-4 h-4" fill="currentColor" />
+                                                                            ) : (
+                                                                                <Play className="w-4 h-4 ml-1" fill="currentColor" />
+                                                                            )}
+                                                                        </button>
+                                                                    </div>
+                                                                    <p className="font-arabic text-3xl md:text-4xl leading-[2.2] text-right text-slate-800 dark:text-slate-100 mb-4 ml-14" dir="rtl">
                                                                         {surahDetail.ayat[tahfidzAyahIdx + 1]?.teksArab}
                                                                     </p>
                                                                     <p className="text-sm font-bold text-green-600 mb-1">{surahDetail.ayat[tahfidzAyahIdx + 1]?.teksLatin}</p>
@@ -1936,17 +2117,31 @@ export default function QuranPage() {
                                                                 <div className="flex gap-4 w-full max-w-sm">
                                                                     <button 
                                                                         onClick={() => {
-                                                                            if (tahfidzAyahIdx + 1 < surahDetail.ayat.length - 1) {
-                                                                                setTahfidzAyahIdx(tahfidzAyahIdx + 1);
-                                                                                setTahfidzStep('USER');
+                                                                            if (tahfidzLevel === 'acak' || tahfidzLevel === 'potongan') {
+                                                                                const randIdx = Math.floor(Math.random() * (surahDetail.ayat.length - 1));
+                                                                                setTahfidzAyahIdx(randIdx);
+                                                                                setTahfidzStep('SHEIKH');
+                                                                                const firstAyah = surahDetail.ayat[randIdx];
+                                                                                const audioUrl = (selectedReciter === "05" && firstAyah.quranComAudio) ? "https://verses.quran.com/" + firstAyah.quranComAudio.url : firstAyah.audio[selectedReciter];
+                                                                                toggleAudio(audioUrl, firstAyah.nomorAyat, firstAyah.quranComAudio?.segments);
                                                                             } else {
-                                                                                setTahfidzStep('IDLE');
-                                                                                setTahfidzAyahIdx(0);
+                                                                                if (tahfidzAyahIdx + 2 < surahDetail.ayat.length) {
+                                                                                    // Syeikh reads the NEXT NEXT verse (because we just did +1)
+                                                                                    const nextSheikhIdx = tahfidzAyahIdx + 2;
+                                                                                    setTahfidzAyahIdx(nextSheikhIdx);
+                                                                                    setTahfidzStep('SHEIKH');
+                                                                                    const nextAyah = surahDetail.ayat[nextSheikhIdx];
+                                                                                    const audioUrl = (selectedReciter === "05" && nextAyah.quranComAudio) ? "https://verses.quran.com/" + nextAyah.quranComAudio.url : nextAyah.audio[selectedReciter];
+                                                                                    toggleAudio(audioUrl, nextAyah.nomorAyat, nextAyah.quranComAudio?.segments);
+                                                                                } else {
+                                                                                    setTahfidzStep('IDLE');
+                                                                                    setTahfidzAyahIdx(0);
+                                                                                }
                                                                             }
                                                                         }}
                                                                         className="flex-1 py-4 bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900 rounded-2xl font-black shadow-lg transition-all flex items-center justify-center gap-2"
                                                                     >
-                                                                        Lanjut Ayat Berikutnya
+                                                                        {tahfidzLevel === 'acak' || tahfidzLevel === 'potongan' ? 'Soal Berikutnya' : 'Gantian Berikutnya'}
                                                                         <ArrowRight className="w-5 h-5" />
                                                                     </button>
                                                                 </div>
