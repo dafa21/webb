@@ -1,6 +1,0 @@
-{
-  "firestore": {
-    "database": "ai-studio-laznasdewandakwa-9b084a1f-1f89-4e49-8847-d34550a09d3b",
-    "rules": "firestore.rules"
-  }
-}
