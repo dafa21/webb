@@ -127,3 +127,27 @@ tajweed.idgham_without_ghunnah, .idgham_without_ghunnah, tajweed.idgham_wo_ghunn
 tajweed.idgham_shafawi, .idgham_shafawi, tajweed.idgham_mutajanisayn, .idgham_mutajanisayn, tajweed.idgham_mutaqaribayn, .idgham_mutaqaribayn { color: #ea580c !important; } /* orange-600 */
 
 tajweed.end, .end { color: #1799dc !important; margin-left: 0.5rem; margin-right: 0.5rem; font-weight: bold; }
+
+/* Google Translate Customization */
+.goog-te-banner-frame {
+    display: none !important;
+} 
+body {
+    top: 0px !important; 
+}
+
+.skiptranslate > iframe.goog-te-banner-frame {
+    display: none !important;
+}
+
+#google_translate_element {
+   position: absolute;
+   width: 1px;
+   height: 1px;
+   padding: 0;
+   margin: -1px;
+   overflow: hidden;
+   clip: rect(0, 0, 0, 0);
+   white-space: nowrap;
+   border-width: 0;
+}

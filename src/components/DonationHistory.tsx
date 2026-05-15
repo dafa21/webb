@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
-import { ArrowLeft, Clock, Search, HistoryIcon, CheckCircle2, ChevronRight, Download } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ArrowLeft, Clock, Search, HistoryIcon, CheckCircle2, ChevronRight, Download, UserCircle, Edit2, Save, X } from 'lucide-react';
 
 const mockDonationHistory = [
   {
@@ -13,38 +13,34 @@ const mockDonationHistory = [
     method: "Qris",
     impact: "Dana Anda difokuskan untuk pipanisasi sepanjang 1km di Desa Suka Maju yang mengalir ke 50 KK."
   },
-  {
-    id: "TRX-09821",
-    date: "25 Sya'ban 1447 H / 14 Feb 2026",
-    program: "Darurat Pangan Gaza, Palestina",
-    amount: 500000,
-    status: "Berhasil",
-    method: "Bank Transfer",
-    impact: "Telah disalurkan dalam bentuk 2 paket gandum dan susu bayi di pengungsian Rafah."
-  },
-  {
-    id: "TRX-08211",
-    date: "10 Rajab 1447 H / 01 Jan 2026",
-    program: "Zakat Penghasilan",
-    amount: 1500000,
-    status: "Berhasil",
-    method: "Virtual Account",
-    impact: "Disalurkan untuk program pemberdayaan 3 mustahik binaan (Modal Usaha Ayam Petelur)."
-  },
-  {
-    id: "TRX-11002",
-    date: "14 Ramadhan 1447 H / 04 Mar 2026",
-    program: "Sedekah Berbuka Puasa Yatim",
-    amount: 150000,
-    status: "Pending",
-    method: "ShopeePay",
-    impact: ""
-  }
+// ...
 ];
 
 export const DonationHistory: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Semua');
+
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileName, setProfileName] = useState(localStorage.getItem('app_user_name') || '');
+  const [profilePhone, setProfilePhone] = useState(localStorage.getItem('app_user_phone') || '');
+  const [inputName, setInputName] = useState(profileName);
+  const [inputPhone, setInputPhone] = useState(profilePhone);
+
+  const saveProfile = () => {
+    localStorage.setItem('app_user_name', inputName);
+    localStorage.setItem('app_user_phone', inputPhone);
+    setProfileName(inputName);
+    setProfilePhone(inputPhone);
+    setIsEditingProfile(false);
+    alert('Profil berhasil disimpan');
+    window.location.reload();
+  };
+
+  const cancelEdit = () => {
+    setInputName(profileName);
+    setInputPhone(profilePhone);
+    setIsEditingProfile(false);
+  };
 
   const filteredHistory = mockDonationHistory.filter(item => {
     if (activeTab === 'Semua') return true;
@@ -55,19 +51,88 @@ export const DonationHistory: React.FC = () => {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-24 pb-12 transition-colors duration-300">
       <div className="max-w-4xl mx-auto px-4">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 mb-8">
             <button 
               onClick={() => navigate(-1)}
-              className="w-10 h-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
+              className="w-10 h-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm shrink-0"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-2xl font-black text-slate-900 dark:text-white">Riwayat Donasi</h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Jejak kebaikan Anda yang mengukir senyum meraka</p>
+              <h1 className="text-2xl font-black text-slate-900 dark:text-white">Akun & Riwayat</h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Kelola profil dan jejak kebaikan Anda</p>
             </div>
-          </div>
+        </div>
+
+        {/* Profile Card */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 mb-8 overflow-hidden relative">
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-[#1799dc]"></div>
+            
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 shrink-0 border border-slate-200 dark:border-slate-700">
+                        <UserCircle className="w-10 h-10" />
+                    </div>
+                    
+                    {!isEditingProfile ? (
+                        <div>
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">
+                                {profileName || 'Hamba Allah'}
+                            </h2>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+                                {profilePhone || 'Belum ada nomor telepon'}
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="flex-1 space-y-3 w-full max-w-sm">
+                            <div>
+                                <input
+                                    type="text"
+                                    value={inputName}
+                                    onChange={(e) => setInputName(e.target.value)}
+                                    placeholder="Nama Lengkap"
+                                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1799dc]/50 transition-colors dark:text-white"
+                                />
+                            </div>
+                            <div>
+                                <input
+                                    type="tel"
+                                    value={inputPhone}
+                                    onChange={(e) => setInputPhone(e.target.value)}
+                                    placeholder="Nomor Telepon"
+                                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1799dc]/50 transition-colors dark:text-white"
+                                />
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className="flex items-center gap-2 md:self-start">
+                    {!isEditingProfile ? (
+                        <button 
+                            onClick={() => setIsEditingProfile(true)}
+                            className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-bold transition-colors"
+                        >
+                            <Edit2 className="w-4 h-4" /> Edit Profil
+                        </button>
+                    ) : (
+                        <>
+                            <button 
+                                onClick={cancelEdit}
+                                className="p-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-xl transition-colors"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                            <button 
+                                onClick={saveProfile}
+                                className="flex items-center gap-1.5 px-4 py-2.5 bg-[#1799dc] hover:bg-[#1588c4] text-white rounded-xl text-sm font-bold transition-colors shadow-lg shadow-[#1799dc]/20"
+                            >
+                                <Save className="w-4 h-4" /> Simpan
+                            </button>
+                        </>
+                    )}
+                </div>
+            </div>
         </div>
 
         {/* Filters */}

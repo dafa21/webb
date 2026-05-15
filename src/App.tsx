@@ -930,6 +930,52 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+
+  const getInitialLang = () => {
+    const match = document.cookie.match(/googtrans=\/auto\/([a-zA-Z-]+)/) || document.cookie.match(/googtrans=\/id\/([a-zA-Z-]+)/);
+    return match ? match[1] : 'id';
+  };
+  const [currentLang, setCurrentLang] = useState(getInitialLang());
+
+  const LANGUAGES = [
+    { code: 'id', name: 'Bahasa Indonesia', flag: '🇮🇩' },
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'es', name: 'Español', flag: '🇪🇸' },
+    { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+    { code: 'zh-CN', name: '中文 (简体)', flag: '🇨🇳' },
+    { code: 'ja', name: '日本語', flag: '🇯🇵' },
+    { code: 'ko', name: '한국어', flag: '🇰🇷' },
+    { code: 'ms', name: 'Bahasa Melayu', flag: '🇲🇾' },
+    { code: 'th', name: 'ไทย', flag: '🇹🇭' },
+    { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
+  ];
+
+  const handleLanguageChange = (langCode: string) => {
+    setCurrentLang(langCode);
+    setIsLangMenuOpen(false);
+
+    if (langCode === 'id') {
+      document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
+      document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`;
+    } else {
+      document.cookie = `googtrans=/id/${langCode}; path=/;`;
+      document.cookie = `googtrans=/id/${langCode}; path=/; domain=${window.location.hostname};`;
+      document.cookie = `googtrans=/id/${langCode}; path=/; domain=.${window.location.hostname};`;
+    }
+
+    const select = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
+    if (select) {
+      select.value = langCode;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    } else {
+      setTimeout(() => {
+        window.location.reload();
+      }, 300);
+    }
+  };
+
   const [prayers, setPrayers] = useState(INITIAL_PRAYERS);
   const [newPrayerMessage, setNewPrayerMessage] = useState('');
   const [isGeneratingPrayer, setIsGeneratingPrayer] = useState(false);
@@ -1276,6 +1322,28 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    // Initialize Google Translate only once
+    const addGoogleTranslateScript = () => {
+      if (document.getElementById('google-translate-script')) return;
+      
+      (window as any).googleTranslateElementInit = () => {
+        new (window as any).google.translate.TranslateElement({
+          pageLanguage: 'id',
+          includedLanguages: 'en,es,ar,zh-CN,id,ja,ko,ms,my,th,vi,fr,de,tr',
+          layout: (window as any).google.translate.TranslateElement.InlineLayout.SIMPLE
+        }, 'google_translate_element');
+      };
+      
+      const script = document.createElement('script');
+      script.id = 'google-translate-script';
+      script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      script.async = true;
+      document.body.appendChild(script);
+    };
+    addGoogleTranslateScript();
+  }, []);
+
+  useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
@@ -1470,6 +1538,63 @@ export default function App() {
                   <Search className="w-3.5 h-3.5 xl:w-4 xl:h-4" />
                 </motion.button>
               )}
+            </div>
+
+            {/* Native Google Translate Element (Hidden via CSS) */}
+            <div id="google_translate_element" style={{ opacity: 0, position: 'absolute', zIndex: -1 }}></div>
+            
+            {/* Custom Language Selector */}
+            <div className={`relative ${isSearchOpen ? 'hidden' : 'block'}`}>
+              <motion.button 
+                whileTap={{ scale: 0.95 }} 
+                whileHover={{ scale: 1.05 }}
+                onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
+                className={`transition-all duration-300 relative flex items-center justify-center rounded-full overflow-hidden ${
+                  isScrolled ? 'w-8 h-8 xl:w-9 xl:h-9 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200' : 'w-8 h-8 xl:w-9 xl:h-9 bg-white dark:bg-slate-800 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700 text-primary-500 hover:scale-105'
+                }`}
+                title="Pilih Bahasa / Change Language"
+              >
+                <Globe className="w-3.5 h-3.5 xl:w-4 xl:h-4 shrink-0" />
+              </motion.button>
+
+              <AnimatePresence>
+                {isLangMenuOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40 bg-transparent" 
+                      onClick={() => setIsLangMenuOpen(false)}
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50 py-2"
+                    >
+                      <div className="px-3 pb-2 mb-2 border-b border-slate-100 dark:border-slate-700">
+                        <p className="text-[10px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase">Pilih Bahasa</p>
+                      </div>
+                      <div className="max-h-[300px] overflow-y-auto px-1 scrollbar-hide">
+                        {LANGUAGES.map((lang) => (
+                          <button
+                            key={lang.code}
+                            onClick={() => handleLanguageChange(lang.code)}
+                            className={`w-full flex items-center gap-3 px-3 py-2 text-sm rounded-xl transition-colors ${
+                              currentLang === lang.code 
+                                ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-bold' 
+                                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'
+                            }`}
+                          >
+                            <span className="text-base">{lang.flag}</span>
+                            <span className="flex-1 text-left">{lang.name}</span>
+                            {currentLang === lang.code && <CheckCircle2 className="w-4 h-4" />}
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Dark Mode Toggle - Hidden on desktop bar, available in menu */}
