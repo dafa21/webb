@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { GoogleGenAI } from "@google/genai";
 import { 
@@ -90,6 +91,7 @@ const DEEDS = [
 ];
 
 export default function AmaliyahPage() {
+  const navigate = useNavigate();
   const [activeView, setActiveView] = useState<'today' | 'history' | 'stats'>('today');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [todayDeeds, setTodayDeeds] = useState<Record<string, boolean>>({});
@@ -541,8 +543,8 @@ export default function AmaliyahPage() {
         {/* Header Section */}
         <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <h1 className="text-3xl font-black text-slate-800 dark:text-white mb-2 tracking-tight">Ritual Harian</h1>
-            <p className="text-slate-500 dark:text-slate-400">Optimize your daily spiritual routine.</p>
+            <h1 className="text-3xl font-black text-slate-800 dark:text-white mb-2 tracking-tight">Amaliyah & Ibadah</h1>
+            <p className="text-slate-500 dark:text-slate-400">Pusat aktivitas dan ibadah harian Anda.</p>
           </div>
           
           <div className="flex bg-white dark:bg-slate-800 rounded-2xl p-1 shadow-sm border border-slate-200 dark:border-slate-700 overflow-x-auto no-scrollbar">
@@ -550,7 +552,7 @@ export default function AmaliyahPage() {
               onClick={() => setActiveView('today')}
               className={`whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${activeView === 'today' ? 'bg-primary-500 text-white shadow-md shadow-primary-500/20' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
             >
-              <LayoutDashboard className="w-4 h-4" /> Today
+              <LayoutDashboard className="w-4 h-4" /> Tracker
             </button>
             <button 
               onClick={() => setActiveView('stats')}
@@ -565,6 +567,37 @@ export default function AmaliyahPage() {
               <History className="w-4 h-4" /> History
             </button>
           </div>
+        </div>
+
+        {/* Hub/Menu Grid */}
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-8">
+          {[
+            { name: "Qur'an", icon: BookOpen, path: '/quran', color: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' },
+            { name: "Hadits", icon: BookOpen, path: '/quran?tab=hadits', color: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' },
+            { name: "Doa", icon: HandHeart, path: '/quran?tab=doa', color: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400' },
+            { name: "Dzikir", icon: HeartPulse, path: '/quran?tab=dzikir', color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' },
+            { name: "Sholat", icon: CalendarIcon, path: '/sholat', color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
+            { name: "Makhraj", icon: Sparkles, path: '/quran?tab=makhraj', color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' },
+          ].map((item, index) => (
+            <motion.button
+              key={index}
+              onClick={() => {
+                navigate(item.path);
+                window.scrollTo(0,0);
+              }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex flex-col items-center justify-center p-3 sm:p-4 bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 gap-2 hover:shadow-md transition-all group"
+            >
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold ${item.color} group-hover:scale-110 transition-transform`}>
+                <item.icon className="w-6 h-6" />
+              </div>
+              <span className="text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 text-center leading-tight whitespace-nowrap">{item.name}</span>
+            </motion.button>
+          ))}
         </div>
 
         {/* Stats Summary Area */}

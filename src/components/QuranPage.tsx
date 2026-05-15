@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { BookOpen, Book, ArrowLeft, Search, Bookmark, BookmarkPlus, AlignRight, AlignLeft, FileText, ChevronRight, ChevronLeft, ChevronDown, PlayCircle, Play, Pause, Loader2, Mic, Square, Activity, Sparkles, Copy, Check, X, MapPin, Volume2, BrainCircuit, Eye, CheckCircle2, ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { db, auth, OperationType, handleFirestoreError } from '../firebase';
 import { doc, getDoc, setDoc, serverTimestamp, getDocs, collection } from 'firebase/firestore';
 import doaData from '../data/doa.json';
@@ -40,7 +40,7 @@ export default function QuranPage() {
             setSurahDetail(null);
             setPlayingAudio(null);
             setSelectedBook(null);
-            setHadithDetail(null);
+            setHadiths([]);
         }
     }, [location.search]);
     
@@ -979,49 +979,106 @@ export default function QuranPage() {
     };
 
     const startRecording = async (ayahNumber: number) => {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            alert('Perangkat Anda tidak mendukung perekaman audio atau sedang dalam mode tidak aman (Non-HTTPS).');
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            alert('Browser Anda tidak mendukung Speech Recognition API. Rekomendasi: Gunakan Google Chrome.');
             return;
         }
 
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            // Coba format yang didukung browser
-            const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
-            const mediaRecorder = new MediaRecorder(stream, { mimeType });
-            mediaRecorderRef.current = mediaRecorder;
-            audioChunksRef.current = [];
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'ar-SA';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+            
+            let hasResult = false;
 
-            mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    audioChunksRef.current.push(event.data);
+            recognition.onstart = () => {
+                setRecordingAyah(ayahNumber);
+                hasResult = false;
+            };
+
+            recognition.onresult = async (event: any) => {
+                hasResult = true;
+                const transcript = event.results[0][0].transcript;
+                setEvaluatingAyah(ayahNumber);
+                
+                if (quranViewMode === 'tahfidz') {
+                    setTahfidzStep('CHECK');
+                }
+                
+                const ayah = surahDetail?.ayat.find((a: any) => a.nomorAyat === ayahNumber);
+                
+                // Hapus harakat untuk perbandingan yang lebih baik (Normalisasi sederhana)
+                const removeTashkeel = (text: string) => text.replace(/[\u0617-\u061A\u064B-\u0652]/g, '');
+                const transcriptNorm = removeTashkeel(transcript || '').trim();
+                const ayahNorm = removeTashkeel(ayah?.teksArab || '').trim();
+                
+                let feedback = '';
+                if (transcriptNorm === ayahNorm) {
+                    feedback = 'Masya Allah! Hafalan Anda sempurna.';
+                } else if (transcriptNorm && (ayahNorm.includes(transcriptNorm) || transcriptNorm.includes(ayahNorm))) {
+                    feedback = 'Alhamdulillah bacaan Anda sudah baik, namun terdapat sedikit kekeliruan. Mari kita dengarkan bacaan yang benar.';
+                } else {
+                    feedback = 'Bacaan kurang tepat atau kurang jelas. Jangan menyerah, mari kita dengarkan bacaan yang benar.';
+                }
+
+                setEvaluationResults(prev => ({
+                    ...prev,
+                    [ayahNumber]: `(Speech API Terdeteksi: "${transcript}")\n\n${feedback}`
+                }));
+                
+                if (ayah) {
+                    speakFeedbackAndPlayCorrect(feedback, ayah.audio[selectedReciter], ayahNumber);
+                }
+                setEvaluatingAyah(null);
+            };
+
+            recognition.onerror = (event: any) => {
+                hasResult = true; // prevent onend from overwriting
+                if (event.error !== 'aborted') {
+                    console.error('Speech recognition error', event.error);
+                    setEvaluationResults(prev => ({
+                        ...prev,
+                        [ayahNumber]: `Gagal mendeteksi suara (${event.error}). Pastikan Anda memberikan izin mikrofon dan berbicara dengan jelas.`
+                    }));
+                    if (quranViewMode === 'tahfidz') {
+                        setTahfidzStep('CHECK');
+                    }
+                }
+                setRecordingAyah(null);
+                setEvaluatingAyah(null);
+            };
+
+            recognition.onend = () => {
+                setRecordingAyah(null);
+                if (!hasResult) {
+                    setEvaluationResults(prev => ({
+                        ...prev,
+                        [ayahNumber]: "Suara tidak terdeteksi. Silakan coba lagi dan pastikan berbicara dengan jelas."
+                    }));
+                    if (quranViewMode === 'tahfidz') {
+                        setTahfidzStep('CHECK');
+                    }
                 }
             };
 
-            mediaRecorder.onstop = async () => {
-                const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
-                stream.getTracks().forEach(track => track.stop());
-                await evaluateAudio(ayahNumber, audioBlob, mimeType);
-            };
-
-            mediaRecorder.start();
-            setRecordingAyah(ayahNumber);
+            mediaRecorderRef.current = recognition as any;
+            recognition.start();
         } catch (err) {
-            console.error('Error accessing microphone:', err);
-            if (err instanceof DOMException && err.name === 'NotAllowedError') {
-                alert('Akses mikrofon ditolak. Mohon aktifkan izin mikrofon di pengaturan browser Anda, atau coba buka aplikasi di Tab Baru jika sedang menggunakan pratinjau editor.');
-            } else {
-                alert('Tidak dapat mengakses mikrofon: ' + (err instanceof Error ? err.message : String(err)));
-            }
+            console.error('Error accessing microphone via API:', err);
+            alert('Tidak dapat memulai Speech Recognition: ' + (err instanceof Error ? err.message : String(err)));
         }
     };
 
     const stopRecording = () => {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-            const currentAyah = recordingAyah;
-            mediaRecorderRef.current.stop();
+        if (mediaRecorderRef.current) {
+            try {
+                (mediaRecorderRef.current as any).stop();
+            } catch (e) {
+                // Ignore
+            }
             setRecordingAyah(null);
-            setEvaluatingAyah(currentAyah);
         }
     };
 
@@ -1495,7 +1552,7 @@ export default function QuranPage() {
                                                         <p className="font-arabic text-3xl md:text-4xl leading-[2.2] md:leading-[2.5] text-slate-800 dark:text-slate-100" dir="rtl">
                                                             {ayah.quranComWords.filter((w: any) => w.char_type_name !== 'end').map((word: any, wIndex: number) => {
                                                                 return (
-                                                                    <span key={word.id || wIndex}>
+                                                                    <span key={`word-list-${ayah.nomorAyat}-${wIndex}`}>
                                                                         <span 
                                                                             id={`word-${ayah.nomorAyat}-${wIndex}`}
                                                                             className={`inline transition-colors duration-200`}
@@ -1608,9 +1665,9 @@ export default function QuranPage() {
                                                                 (ayah.teksTajweed || '') + 
                                                                 (ayah.teksArab || '') + 
                                                                 (ayah.quranComWords?.map((w:any) => w.text_uthmani_tajweed || '').join(' ') || '')
-                                                            ).map(rule => (
+                                                            ).map((rule, idx) => (
                                                                 <div 
-                                                                    key={rule.name} 
+                                                                    key={`${rule.name}-list-${idx}`} 
                                                                     className="flex items-start gap-3 p-2.5 rounded-2xl bg-slate-50/50 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-700/40 hover:border-[#1799dc]/30 transition-colors"
                                                                 >
                                                                     <div className="w-2.5 h-2.5 rounded-full mt-1 shrink-0 shadow-sm" style={{ backgroundColor: rule.color }}></div>
@@ -1686,7 +1743,7 @@ export default function QuranPage() {
                                                                 {ayah.quranComWords ? (
                                                                     <>
                                                                         {ayah.quranComWords.filter((w: any) => w.char_type_name !== 'end').map((word: any, wIndex: number) => (
-                                                                            <span key={wIndex}>
+                                                                            <span key={`word-mushaf-${ayah.nomorAyat}-${wIndex}`}>
                                                                                 <span dangerouslySetInnerHTML={{ __html: word.text_uthmani_tajweed || word.text_uthmani || word.text }} />
                                                                                 {" "}
                                                                             </span>
@@ -1832,9 +1889,13 @@ export default function QuranPage() {
                                                                     </button>
                                                                     <button 
                                                                         onClick={() => {
-                                                                            const nextAyah = surahDetail.ayat[tahfidzAyahIdx + 1];
-                                                                            if (nextAyah) {
-                                                                                startRecording(nextAyah.nomorAyat);
+                                                                            if (recordingAyah) {
+                                                                                stopRecording();
+                                                                            } else {
+                                                                                const nextAyah = surahDetail.ayat[tahfidzAyahIdx + 1];
+                                                                                if (nextAyah) {
+                                                                                    startRecording(nextAyah.nomorAyat);
+                                                                                }
                                                                             }
                                                                         }}
                                                                         className={`flex-1 py-4 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-black rounded-2xl transition-all flex items-center justify-center gap-2 ${recordingAyah ? 'bg-red-50 text-red-500 border-red-200' : 'hover:bg-slate-50 dark:hover:bg-slate-700'}`}
@@ -1961,7 +2022,7 @@ export default function QuranPage() {
                                                         <p className="font-arabic text-2xl md:text-3xl leading-[2.2] md:leading-[2.5] text-slate-800 dark:text-slate-100" dir="rtl">
                                                             {ayah.quranComWords.filter((w: any) => w.char_type_name !== 'end').map((word: any, wIndex: number) => {
                                                                 return (
-                                                                    <span key={word.id || wIndex}>
+                                                                    <span key={`word-tahfidz-${ayah.nomorAyat}-${wIndex}`}>
                                                                         <span 
                                                                             id={`word-modal-${ayah.nomorAyat}-${wIndex}`}
                                                                             className={`inline transition-colors duration-200`}
@@ -2041,9 +2102,9 @@ export default function QuranPage() {
                                                                 (ayah.teksTajweed || '') + 
                                                                 (ayah.teksArab || '') + 
                                                                 (ayah.quranComWords?.map((w:any) => w.text_uthmani_tajweed || '').join(' ') || '')
-                                                            ).map(rule => (
+                                                            ).map((rule, idx) => (
                                                                 <div 
-                                                                    key={rule.name} 
+                                                                    key={`${rule.name}-mushaf-${idx}`} 
                                                                     className="flex items-start gap-3 p-2.5 rounded-2xl bg-slate-50/50 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-700/40 hover:border-[#1799dc]/30 transition-colors"
                                                                 >
                                                                     <div className="w-2.5 h-2.5 rounded-full mt-1 shrink-0 shadow-sm" style={{ backgroundColor: rule.color }}></div>

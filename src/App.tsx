@@ -1375,6 +1375,9 @@ export default function App() {
                             
                             const pages = [
                               { title: 'Al-Quran', path: '/quran', icon: BookOpen },
+                              { title: 'Hadits', path: '/quran?tab=hadits', icon: BookOpen },
+                              { title: 'Doa', path: '/quran?tab=doa', icon: BookOpen },
+                              { title: 'Dzikir', path: '/quran?tab=dzikir', icon: BookOpen },
                               { title: 'Makhraj', path: '/quran?tab=makhraj', icon: Sparkles },
                               { title: 'Amaliyah', path: '/amaliyah', icon: Heart },
                               { title: 'Zakat', path: '/zakat', icon: HandCoins },

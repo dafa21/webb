@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { makhrajData, MakhrajDetail } from '../data/makhrajData';
-import { Wind, Activity, MessageCircle, Smile, Box, ChevronRight, Volume2, Search, ArrowLeft } from 'lucide-react';
+import { Wind, Activity, MessageCircle, Smile, Box, ChevronRight, Volume2, Search, ArrowLeft, Maximize, List, Sparkles, Layers, BookOpen } from 'lucide-react';
+import LetterInteractiveVisualizer from './LetterInteractiveVisualizer';
+import HijaiyahWordsVisualizer from './HijaiyahWordsVisualizer';
+import HijaiyahSentencesVisualizer from './HijaiyahSentencesVisualizer';
 
 export default function MakhrajPage() {
     const [selectedMakhraj, setSelectedMakhraj] = useState<MakhrajDetail | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [viewMode, setViewMode] = useState<'interactive' | 'words' | 'sentences' | 'list'>('interactive');
 
     const iconMap: Record<string, React.ReactNode> = {
         Wind: <Wind className="w-6 h-6" />,
@@ -109,79 +113,122 @@ export default function MakhrajPage() {
     }
 
     return (
-        <div className="pb-12 animate-fade-in relative">
-            <div className="text-center max-w-2xl mx-auto mb-10 mt-6 relative z-10">
-                <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-4">
-                    Belajar <span className="text-[#1799dc]">Makharijul Huruf</span>
-                </h2>
-                <p className="text-slate-600 dark:text-slate-300">
-                    Memahami titik keluarnya suara huruf hijaiyah demi kesempurnaan bacaan Al-Qur'an (Tajwid).
-                </p>
+        <div className="pb-12 animate-fade-in relative max-w-7xl mx-auto">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 mt-4 gap-6">
+                <div className="max-w-xl">
+                    <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-4">
+                        Belajar <span className="text-[#1799dc]">Makharijul Huruf</span>
+                    </h2>
+                    <p className="text-slate-600 dark:text-slate-300">
+                        Memahami titik keluarnya suara huruf hijaiyah demi kesempurnaan bacaan Al-Qur'an (Tajwid).
+                    </p>
+                </div>
                 
-                <div className="mt-8 relative max-w-md mx-auto">
-                    <input 
-                        type="text" 
-                        placeholder="Cari huruf atau makhraj..."
-                        value={searchQuery}
-                        onChange={handleSearch}
-                        className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full py-3 pl-12 pr-4 shadow-sm focus:ring-2 focus:ring-[#1799dc] focus:border-transparent transition-all outline-none"
-                    />
-                    <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
-                {filteredMakhraj.map((item) => (
-                    <button 
-                        key={item.id}
-                        onClick={() => setSelectedMakhraj(item)}
-                        className="bg-white dark:bg-slate-800 rounded-3xl p-6 text-left shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-xl hover:-translate-y-1 hover:border-[#1799dc]/30 transition-all duration-300 group flex flex-col"
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl shrink-0 self-start overflow-x-auto max-w-full">
+                    <button
+                        onClick={() => setViewMode('interactive')}
+                        className={`flex whitespace-nowrap items-center gap-2 px-4 md:px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${viewMode === 'interactive' ? 'bg-white dark:bg-slate-700 text-[#1799dc] shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
                     >
-                        <div className="flex justify-between items-start mb-6">
-                            <div className="w-14 h-14 rounded-2xl bg-[#1799dc]/10 text-[#1799dc] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                {iconMap[item.icon || '']}
-                            </div>
-                            <span className="font-arabic text-3xl text-slate-300 dark:text-slate-600 group-hover:text-[#1799dc]/20 transition-colors">
-                                {item.arabicName}
-                            </span>
-                        </div>
-                        
-                        <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-1 group-hover:text-[#1799dc] transition-colors">{item.name}</h3>
-                        <p className="text-sm font-semibold text-[#1799dc] mb-3">{item.shortDesc}</p>
-                        
-                        <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-6 flex-1">
-                            {item.description}
-                        </p>
-
-                        <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100 dark:border-slate-700">
-                            <div className="flex -space-x-2">
-                                {item.letters.slice(0, 4).map((l, i) => (
-                                    <div key={i} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 border-2 border-white dark:border-slate-800 flex items-center justify-center">
-                                        <span className="text-xs font-arabic text-slate-700 dark:text-slate-200">{l}</span>
-                                    </div>
-                                ))}
-                                {item.letters.length > 4 && (
-                                    <div className="w-8 h-8 rounded-full bg-[#1799dc] border-2 border-white dark:border-slate-800 flex items-center justify-center">
-                                        <span className="text-[10px] font-bold text-white">+{item.letters.length - 4}</span>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-50 dark:bg-slate-900 group-hover:bg-[#1799dc] group-hover:text-white text-slate-400 transition-colors">
-                                <ChevronRight className="w-4 h-4" />
-                            </div>
-                        </div>
+                        <Sparkles className="w-4 h-4" />
+                        Tingkat 1
                     </button>
-                ))}
+                    <button
+                        onClick={() => setViewMode('words')}
+                        className={`flex whitespace-nowrap items-center gap-2 px-4 md:px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${viewMode === 'words' ? 'bg-white dark:bg-slate-700 text-[#1799dc] shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+                    >
+                        <Layers className="w-4 h-4" />
+                        Tingkat 2
+                    </button>
+                    <button
+                        onClick={() => setViewMode('sentences')}
+                        className={`flex whitespace-nowrap items-center gap-2 px-4 md:px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${viewMode === 'sentences' ? 'bg-white dark:bg-slate-700 text-[#1799dc] shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+                    >
+                        <BookOpen className="w-4 h-4" />
+                        Tingkat 3
+                    </button>
+                    <button
+                        onClick={() => setViewMode('list')}
+                        className={`flex whitespace-nowrap items-center gap-2 px-4 md:px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 text-[#1799dc] shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+                    >
+                        <List className="w-4 h-4" />
+                        Makharijul
+                    </button>
+                </div>
             </div>
 
-            {filteredMakhraj.length === 0 && (
-                <div className="text-center py-20 relative z-10">
-                    <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
-                        <Search className="w-8 h-8" />
+            {viewMode === 'interactive' ? (
+                <LetterInteractiveVisualizer />
+            ) : viewMode === 'words' ? (
+                <HijaiyahWordsVisualizer />
+            ) : viewMode === 'sentences' ? (
+                <HijaiyahSentencesVisualizer />
+            ) : (
+                <>
+                    <div className="mb-8 relative max-w-md">
+                        <input 
+                            type="text" 
+                            placeholder="Cari huruf atau makhraj..."
+                            value={searchQuery}
+                            onChange={handleSearch}
+                            className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl py-3 pl-12 pr-4 shadow-sm focus:ring-2 focus:ring-[#1799dc] focus:border-transparent transition-all outline-none"
+                        />
+                        <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">Makhraj tidak ditemukan</h3>
-                    <p className="text-slate-500 dark:text-slate-400">Coba cari dengan huruf atau nama makhraj yang lain.</p>
-                </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+                        {filteredMakhraj.map((item) => (
+                            <button 
+                                key={item.id}
+                                onClick={() => setSelectedMakhraj(item)}
+                                className="bg-white dark:bg-slate-800 rounded-3xl p-6 text-left shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-xl hover:-translate-y-1 hover:border-[#1799dc]/30 transition-all duration-300 group flex flex-col"
+                            >
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className="w-14 h-14 rounded-2xl bg-[#1799dc]/10 text-[#1799dc] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                        {iconMap[item.icon || '']}
+                                    </div>
+                                    <span className="font-arabic text-3xl text-slate-300 dark:text-slate-600 group-hover:text-[#1799dc]/20 transition-colors">
+                                        {item.arabicName}
+                                    </span>
+                                </div>
+                                
+                                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-1 group-hover:text-[#1799dc] transition-colors">{item.name}</h3>
+                                <p className="text-sm font-semibold text-[#1799dc] mb-3">{item.shortDesc}</p>
+                                
+                                <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-6 flex-1">
+                                    {item.description}
+                                </p>
+
+                                <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100 dark:border-slate-700">
+                                    <div className="flex -space-x-2">
+                                        {item.letters.slice(0, 4).map((l, i) => (
+                                            <div key={i} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 border-2 border-white dark:border-slate-800 flex items-center justify-center">
+                                                <span className="text-xs font-arabic text-slate-700 dark:text-slate-200">{l}</span>
+                                            </div>
+                                        ))}
+                                        {item.letters.length > 4 && (
+                                            <div className="w-8 h-8 rounded-full bg-[#1799dc] border-2 border-white dark:border-slate-800 flex items-center justify-center">
+                                                <span className="text-[10px] font-bold text-white">+{item.letters.length - 4}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-50 dark:bg-slate-900 group-hover:bg-[#1799dc] group-hover:text-white text-slate-400 transition-colors">
+                                        <ChevronRight className="w-4 h-4" />
+                                    </div>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+
+                    {filteredMakhraj.length === 0 && (
+                        <div className="text-center py-20 relative z-10">
+                            <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+                                <Search className="w-8 h-8" />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">Makhraj tidak ditemukan</h3>
+                            <p className="text-slate-500 dark:text-slate-400">Coba cari dengan huruf atau nama makhraj yang lain.</p>
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );
