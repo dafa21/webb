@@ -1,0 +1,9 @@
+{
+  "name": "Laznas Dewan Dakwah - Digital Donation Platform",
+  "description": "Modern Islamic donation platform for Laznas Dewan Dakwah, designed for trust, ease of use, and spiritual engagement.",
+  "requestFramePermissions": [
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": []
+}
