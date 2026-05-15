@@ -1375,6 +1375,7 @@ export default function App() {
                             
                             const pages = [
                               { title: 'Al-Quran', path: '/quran', icon: BookOpen },
+                              { title: 'Makhraj', path: '/quran?tab=makhraj', icon: Sparkles },
                               { title: 'Amaliyah', path: '/amaliyah', icon: Heart },
                               { title: 'Zakat', path: '/zakat', icon: HandCoins },
                               { title: 'Qurban', path: '/qurban', icon: Heart },
@@ -1651,6 +1652,7 @@ export default function App() {
                 { name: 'Program', icon: HandHeart, id: 'program' },
                 { name: 'Amaliyah', icon: LayoutDashboard, path: '/amaliyah' },
                 { name: "Qur'an", icon: BookOpen, path: '/quran' },
+                { name: 'Makhraj', icon: Sparkles, path: '/quran?tab=makhraj' },
                 { name: 'Zakat', icon: HandCoins, path: '/zakat' },
                 { name: 'Qurban', icon: Tent, path: '/qurban' },
                 { name: 'Cari Masjid', icon: MapPin, path: '/mosques' },
@@ -1959,13 +1961,13 @@ export default function App() {
           {/* Quick Menu Grid */}
           <div className="w-full max-w-[600px] mx-auto mt-8 mb-12 flex-1">
              <div className="grid grid-cols-4 gap-y-6 md:gap-y-8 gap-x-2 md:gap-x-4">
-               {[
-                  { icon: HandCoins, label: 'Zakat', color: 'from-emerald-400 to-emerald-500 text-white shadow-emerald-500/20', link: '/zakat' },
+                {[
+                  { icon: BookOpen, label: "Al-Qur'an", color: 'from-[#1799dc] to-[#127bb0] text-white shadow-[#1799dc]/20', link: '/quran' },
+                  { icon: Sparkles, label: 'Makhraj', color: 'from-emerald-400 to-emerald-500 text-white shadow-emerald-500/20', link: '/quran?tab=makhraj' },
+                  { icon: HandCoins, label: 'Zakat', color: 'from-amber-400 to-amber-500 text-white shadow-amber-500/20', link: '/zakat' },
                   { icon: Heart, label: 'Infak/Sedekah', color: 'from-[#2db2f5] to-[#1799dc] text-white shadow-[#1799dc]/20', link: '#program' },
                   { icon: Tent, label: 'Qurban', color: 'from-[#febb22] to-[#f29f05] text-white shadow-[#f29f05]/20', link: '/qurban' },
-                  { icon: Clock, label: 'Waktu Sholat', color: 'from-amber-400 to-amber-500 text-white shadow-amber-500/20', link: '/sholat' },
-                  { icon: Users, label: 'Kemanusiaan', color: 'from-rose-400 to-rose-500 text-white shadow-rose-500/20', link: '#program' },
-                  { icon: Calculator, label: 'Kalkulator', color: 'from-purple-400 to-purple-500 text-white shadow-purple-500/20', link: '/zakat' },
+                  { icon: Clock, label: 'Waktu Sholat', color: 'from-indigo-400 to-indigo-500 text-white shadow-indigo-500/20', link: '/sholat' },
                   { icon: MapPin, label: 'Cari Masjid', color: 'from-cyan-400 to-cyan-500 text-white shadow-cyan-500/20', link: '/mosques' },
                   { icon: Component, label: 'Lainnya', color: 'from-slate-400 to-slate-500 text-white shadow-slate-500/20 text-xs tracking-wider', link: '#layanan' },
                ].map((menu, i) => (

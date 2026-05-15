@@ -6,6 +6,7 @@ import { db, auth, OperationType, handleFirestoreError } from '../firebase';
 import { doc, getDoc, setDoc, serverTimestamp, getDocs, collection } from 'firebase/firestore';
 import doaData from '../data/doa.json';
 import dzikirData from '../data/dzikir.json';
+import MakhrajPage from './MakhrajPage';
 
 const RECITERS = [
     { id: "01", name: "Syaikh Abdullah Al-Juhany" },
@@ -18,7 +19,30 @@ const RECITERS = [
 export default function QuranPage() {
     const navigate = useNavigate();
     const [selectedReciter, setSelectedReciter] = useState<string>("05");
-    const [activeTab, setActiveTab] = useState<'quran' | 'hadits' | 'doa' | 'dzikir' | 'kisahnabi' | 'tahfidz'>('quran');
+    const location = useLocation();
+    
+    // Read initial from URL or default to 'quran'
+    const getTabFromUrl = () => {
+        const params = new URLSearchParams(location.search);
+        return (params.get('tab') as any) || 'quran';
+    };
+
+    const [activeTab, setActiveTab] = useState<'quran' | 'hadits' | 'doa' | 'dzikir' | 'kisahnabi' | 'makhraj'>(getTabFromUrl());
+    
+    useEffect(() => {
+        const tab = getTabFromUrl();
+        if (tab !== activeTab) {
+            setActiveTab(tab);
+            setSelectedDoa(null);
+            setSelectedDzikir(null);
+            setQuranViewMode('list');
+            setSelectedSurah(null);
+            setSurahDetail(null);
+            setPlayingAudio(null);
+            setSelectedBook(null);
+            setHadithDetail(null);
+        }
+    }, [location.search]);
     
     const [quranViewMode, setQuranViewMode] = useState<'list' | 'mushaf' | 'tahfidz'>('list');
     const [tahfidzStep, setTahfidzStep] = useState<'IDLE' | 'SHEIKH' | 'USER' | 'CHECK'>('IDLE');
@@ -1088,7 +1112,7 @@ export default function QuranPage() {
 
     const toArabicNumber = (n: number) => n.toString().replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d as any]);
 
-    const changeTab = (tab: 'quran' | 'hadits' | 'doa' | 'dzikir' | 'kisahnabi') => {
+    const changeTab = (tab: 'quran' | 'hadits' | 'doa' | 'dzikir' | 'kisahnabi' | 'makhraj') => {
         setActiveTab(tab);
         setSelectedDoa(null);
         setSelectedDzikir(null);
@@ -1189,6 +1213,12 @@ export default function QuranPage() {
                                     className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${activeTab === 'kisahnabi' ? 'bg-[#1799dc] text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
                                 >
                                     Kisah Nabi
+                                </button>
+                                <button 
+                                    onClick={() => changeTab('makhraj')}
+                                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${activeTab === 'makhraj' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400'}`}
+                                >
+                                    <Sparkles className="w-3.5 h-3.5 hidden sm:block" /> Makhraj
                                 </button>
                             </div>
                         </div>
@@ -2710,6 +2740,11 @@ export default function QuranPage() {
                                     )}
                                 </div>
                             )}
+                        </div>
+                    )}
+                    {activeTab === 'makhraj' && (
+                        <div className="animate-fade-in-up">
+                            <MakhrajPage />
                         </div>
                     )}
 
