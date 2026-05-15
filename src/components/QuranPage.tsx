@@ -356,7 +356,7 @@ export default function QuranPage() {
     const [playingAudio, setPlayingAudio] = useState<string | null>(null);
     const [openTafsirAyah, setOpenTafsirAyah] = useState<number | null>(null);
 
-    const toggleAudio = (audioUrl: string, ayahNumber?: number, audioSegments?: any[]) => {
+    const toggleAudio = (audioUrl: string, ayahNumber?: number, audioSegments?: any[], stopEarlyMs?: number) => {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
         }
@@ -402,6 +402,22 @@ export default function QuranPage() {
                     const updateHighlight = () => {
                         if (!audioEl || audioEl.paused) return;
                         const currentTimeMs = audioEl.currentTime * 1000;
+                        if (stopEarlyMs && currentTimeMs >= stopEarlyMs) {
+                            audioEl.pause();
+                            setPlayingAudio(null);
+                            if (activeWordRef.current) {
+                                const el = document.getElementById(`word-${activeWordRef.current.ayahNumber}-${activeWordRef.current.wordIndex}`);
+                                if (el) el.classList.remove('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
+                                activeWordRef.current = null;
+                            }
+                            if (rqAnimRef.current) {
+                                cancelAnimationFrame(rqAnimRef.current);
+                                rqAnimRef.current = null;
+                            }
+                            audioEl.dispatchEvent(new Event('ended'));
+                            return;
+                        }
+
                         let newActiveWord: { ayahNumber: number, wordIndex: number } | null = null;
                         
                         for (let i = 0; i < audioSegments.length; i++) {
@@ -438,7 +454,30 @@ export default function QuranPage() {
                         rqAnimRef.current = requestAnimationFrame(updateHighlight);
                     }
                 } else {
-                    audioEl.onplay = null;
+                    if (stopEarlyMs) {
+                        const updateEarlyStop = () => {
+                            if (!audioEl || audioEl.paused) return;
+                            if (audioEl.currentTime * 1000 >= stopEarlyMs) {
+                                audioEl.pause();
+                                setPlayingAudio(null);
+                                if (rqAnimRef.current) {
+                                    cancelAnimationFrame(rqAnimRef.current);
+                                    rqAnimRef.current = null;
+                                }
+                                audioEl.dispatchEvent(new Event('ended'));
+                                return;
+                            }
+                            rqAnimRef.current = requestAnimationFrame(updateEarlyStop);
+                        };
+                        audioEl.onplay = () => {
+                            rqAnimRef.current = requestAnimationFrame(updateEarlyStop);
+                        };
+                        if (!audioEl.paused) {
+                            rqAnimRef.current = requestAnimationFrame(updateEarlyStop);
+                        }
+                    } else {
+                        audioEl.onplay = null;
+                    }
                 }
             }
         }
@@ -987,6 +1026,53 @@ export default function QuranPage() {
         const words = text.split(' ');
         if (words.length <= 3) return words[0];
         return words.slice(0, Math.ceil(words.length / 3)).join(' ');
+    };
+
+    const getPotonganEndTimeMs = (text: string, audioSegments?: any[]) => {
+        if (!text || !audioSegments) return undefined;
+        const words = text.split(' ');
+        let wordCount = words.length <= 3 ? 1 : Math.ceil(words.length / 3);
+        
+        let maxEndMs = 0;
+        for(let i = 0; i < audioSegments.length; i++){
+             const seg = audioSegments[i];
+             // segment is usually [wordIndex, wordIndex, startMs, endMs]
+             // We check if seg[0] <= wordCount - 1 because wIndex is 0-based
+             if(seg && seg[0] <= wordCount - 1){
+                  if(seg[3] > maxEndMs) maxEndMs = seg[3];
+             }
+        }
+        return maxEndMs > 0 ? maxEndMs : undefined;
+    };
+
+    const renderArabicWithHighlight = (ayah: any, isPotongan: boolean = false, className: string = "") => {
+        if (!ayah) return null;
+        
+        if (!ayah.quranComWords) {
+            return <p className={className} dir="rtl">{isPotongan ? getPotonganAyat(ayah.teksArab) : ayah.teksArab}{isPotongan && ' ...'}</p>;
+        }
+
+        let words = ayah.quranComWords.filter((w: any) => w.char_type_name !== 'end');
+        if (isPotongan) {
+            const limit = ayah.teksArab.split(' ').length <= 3 ? 1 : Math.ceil(ayah.teksArab.split(' ').length / 3);
+            words = words.slice(0, limit);
+        }
+
+        return (
+            <p className={className} dir="rtl">
+                {words.map((word: any, wIndex: number) => (
+                    <span key={`tahfidz-word-${ayah.nomorAyat}-${wIndex}`}>
+                        <span 
+                            id={`word-${ayah.nomorAyat}-${wIndex}`}
+                            className="inline transition-colors duration-300 rounded"
+                            dangerouslySetInnerHTML={{ __html: word.text_uthmani_tajweed || word.text_uthmani || word.text }}
+                        />
+                        {" "}
+                    </span>
+                ))}
+                {isPotongan && <span className="text-slate-400">...</span>}
+            </p>
+        );
     };
 
     const startRecording = async (ayahNumber: number) => {
@@ -1969,9 +2055,11 @@ export default function QuranPage() {
                                                         <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-700 relative overflow-hidden">
                                                             <div className="absolute top-0 left-0 w-1 h-full bg-[#1799dc]"></div>
                                                             <span className="text-[10px] font-black uppercase tracking-widest text-[#1799dc] mb-3 block">Ayat Terakhir Diputar</span>
-                                                            <p className="font-arabic text-3xl md:text-4xl leading-[2.2] text-right text-slate-800 dark:text-slate-100 mb-4" dir="rtl">
-                                                                {surahDetail.ayat[tahfidzAyahIdx].teksArab}
-                                                            </p>
+                                                            {renderArabicWithHighlight(
+                                                                surahDetail.ayat[tahfidzAyahIdx], 
+                                                                false, 
+                                                                "font-arabic text-3xl md:text-4xl leading-[2.2] text-right text-slate-800 dark:text-slate-100 mb-4"
+                                                            )}
                                                             <div className="flex justify-between items-end">
                                                                 <div className="flex-1">
                                                                     <p className="text-xs font-bold text-[#1799dc] mb-1">{surahDetail.ayat[tahfidzAyahIdx].teksLatin}</p>
@@ -2015,22 +2103,25 @@ export default function QuranPage() {
                                                                                     const ayah = surahDetail.ayat[tahfidzAyahIdx + 1];
                                                                                     if (ayah) {
                                                                                         const audioUrl = (selectedReciter === "05" && ayah.quranComAudio) ? "https://verses.quran.com/" + ayah.quranComAudio.url : ayah.audio[selectedReciter];
-                                                                                        toggleAudio(audioUrl, ayah.nomorAyat, ayah.quranComAudio?.segments);
+                                                                                        const stopEarlyMs = getPotonganEndTimeMs(ayah.teksArab, ayah.quranComAudio?.segments);
+                                                                                        toggleAudio(audioUrl, ayah.nomorAyat, ayah.quranComAudio?.segments, stopEarlyMs);
                                                                                     }
                                                                                 }}
                                                                                 className="w-10 h-10 bg-amber-200 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center hover:bg-amber-300 dark:hover:bg-amber-800 transition-colors shadow-sm"
                                                                                 title="Putar Audio"
                                                                             >
-                                                                                {playingAudio === surahDetail.ayat[tahfidzAyahIdx + 1]?.nomorAyat ? (
+                                                                                {playingAudio === ((selectedReciter === "05" && surahDetail.ayat[tahfidzAyahIdx + 1]?.quranComAudio) ? "https://verses.quran.com/" + surahDetail.ayat[tahfidzAyahIdx + 1]?.quranComAudio.url : surahDetail.ayat[tahfidzAyahIdx + 1]?.audio[selectedReciter]) ? (
                                                                                     <Square className="w-4 h-4" fill="currentColor" />
                                                                                 ) : (
                                                                                     <Volume2 className="w-5 h-5" fill="currentColor" />
                                                                                 )}
                                                                             </button>
                                                                         </div>
-                                                                        <p className="font-arabic text-3xl leading-[2.2] text-center text-slate-800 dark:text-slate-200 ml-14" dir="rtl">
-                                                                            {getPotonganAyat(surahDetail.ayat[tahfidzAyahIdx + 1]?.teksArab)} ...
-                                                                        </p>
+                                                                        {renderArabicWithHighlight(
+                                                                            surahDetail.ayat[tahfidzAyahIdx + 1],
+                                                                            true,
+                                                                            "font-arabic text-3xl leading-[2.2] text-center text-slate-800 dark:text-slate-200 ml-14"
+                                                                        )}
                                                                     </div>
                                                                 )}
                                                                 
@@ -2088,16 +2179,18 @@ export default function QuranPage() {
                                                                             className="w-10 h-10 bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center hover:bg-green-200 dark:hover:bg-green-800 transition-colors shadow-sm"
                                                                             title="Putar Audio"
                                                                         >
-                                                                            {playingAudio === surahDetail.ayat[tahfidzAyahIdx + 1]?.nomorAyat ? (
+                                                                            {playingAudio === ((selectedReciter === "05" && surahDetail.ayat[tahfidzAyahIdx + 1]?.quranComAudio) ? "https://verses.quran.com/" + surahDetail.ayat[tahfidzAyahIdx + 1]?.quranComAudio.url : surahDetail.ayat[tahfidzAyahIdx + 1]?.audio[selectedReciter]) ? (
                                                                                 <Square className="w-4 h-4" fill="currentColor" />
                                                                             ) : (
                                                                                 <Play className="w-4 h-4 ml-1" fill="currentColor" />
                                                                             )}
                                                                         </button>
                                                                     </div>
-                                                                    <p className="font-arabic text-3xl md:text-4xl leading-[2.2] text-right text-slate-800 dark:text-slate-100 mb-4 ml-14" dir="rtl">
-                                                                        {surahDetail.ayat[tahfidzAyahIdx + 1]?.teksArab}
-                                                                    </p>
+                                                                    {renderArabicWithHighlight(
+                                                                        surahDetail.ayat[tahfidzAyahIdx + 1],
+                                                                        false,
+                                                                        "font-arabic text-3xl md:text-4xl leading-[2.2] text-right text-slate-800 dark:text-slate-100 mb-4 ml-14"
+                                                                    )}
                                                                     <p className="text-sm font-bold text-green-600 mb-1">{surahDetail.ayat[tahfidzAyahIdx + 1]?.teksLatin}</p>
                                                                     <p className="text-sm text-slate-600 dark:text-slate-400">{surahDetail.ayat[tahfidzAyahIdx + 1]?.teksIndonesia}</p>
                                                                     

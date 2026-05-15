@@ -17,7 +17,7 @@ import { GoogleGenAI } from "@google/genai";
 import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
 import { Routes, Route, useNavigate, useLocation, Navigate, Link } from 'react-router-dom';
 import confetti from 'canvas-confetti';
-import { auth, db, handleFirestoreError, OperationType } from './firebase';
+import { auth, db, handleFirestoreError, OperationType, onConnectionChange } from './firebase';
 import { collection, addDoc, query, where, getDocs, orderBy, onSnapshot, serverTimestamp, setDoc, doc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { Chatbot } from './components/Chatbot';
@@ -1284,9 +1284,28 @@ export default function App() {
   }, []);
 
   
+  const [isFirestoreConnected, setIsFirestoreConnected] = useState(true);
+
+  useEffect(() => {
+    return onConnectionChange((status) => {
+      setIsFirestoreConnected(status);
+    });
+  }, []);
+
   return (
     <div className="min-h-screen font-sans">
       <AnimatePresence>
+        {!isFirestoreConnected && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-0 left-0 right-0 z-[200] bg-amber-500 text-white text-[10px] sm:text-xs py-1 px-4 text-center font-bold flex items-center justify-center gap-2"
+          >
+            <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span>Sedang dalam mode offline. Beberapa fitur mungkin tertunda hingga koneksi pulih.</span>
+          </motion.div>
+        )}
         {showToast && (
           <motion.div
             initial={{ opacity: 0, y: -50, x: "-50%", scale: 0.95 }}

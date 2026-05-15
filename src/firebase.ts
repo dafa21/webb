@@ -5,20 +5,47 @@ import firebaseConfig from '../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firestore with experimental long polling to improve connectivity in proxied environments
+// Initialize Firestore with settings optimized for connectivity
 export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true,
-}, (firebaseConfig as any).firestoreDatabaseId);
+}, firebaseConfig.firestoreDatabaseId);
 
 export const auth = getAuth(app);
 
-// Simple connection test
+let isConnected = true;
+const listeners: ((status: boolean) => void)[] = [];
+
+export const onConnectionChange = (callback: (status: boolean) => void) => {
+  listeners.push(callback);
+  callback(isConnected);
+  return () => {
+    const index = listeners.indexOf(callback);
+    if (index > -1) listeners.splice(index, 1);
+  };
+};
+
+const updateConnectionStatus = (status: boolean) => {
+  if (isConnected !== status) {
+    isConnected = status;
+    listeners.forEach(l => l(status));
+  }
+};
+
+// Simple connection test with better diagnostics
 async function testConnection() {
   try {
+    // Try to get a document from the server to verify connectivity
     await getDocFromServer(doc(db, 'test', 'connection'));
+    console.log("Firestore connected successfully.");
+    updateConnectionStatus(true);
   } catch (error) {
-    if(error instanceof Error && (error.message.includes('the client is offline') || error.message.includes('unavailable') || error.message.includes('could not be completed'))) {
-      console.warn("Firestore may be offline or initializing. Operating in offline/deferred mode.");
+    if (error instanceof Error) {
+      if (error.message.includes('the client is offline') || error.message.includes('unavailable')) {
+        console.warn("Firestore is currently unreachable. The app will continue in offline mode and sync when the connection is restored.");
+        updateConnectionStatus(false);
+      } else {
+        console.error("Firestore initialization error:", error.message);
+      }
     }
   }
 }
