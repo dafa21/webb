@@ -941,20 +941,158 @@ export default function App() {
   const LANGUAGES = [
     { code: 'id', name: 'Bahasa Indonesia', flag: '🇮🇩' },
     { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'es', name: 'Español', flag: '🇪🇸' },
     { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+    { code: 'es', name: 'Español', flag: '🇪🇸' },
     { code: 'zh-CN', name: '中文 (简体)', flag: '🇨🇳' },
     { code: 'ja', name: '日本語', flag: '🇯🇵' },
     { code: 'ko', name: '한국어', flag: '🇰🇷' },
-    { code: 'ms', name: 'Bahasa Melayu', flag: '🇲🇾' },
+    { code: 'ms', name: 'Melayu', flag: '🇲🇾' },
     { code: 'th', name: 'ไทย', flag: '🇹🇭' },
     { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
   ];
+
+  // Manual translations for key UI strings for better accuracy
+  const T = {
+    id: {
+      hero_top: "Hadirkan",
+      hero_bottom: "SEJUTA SENYUMAN!",
+      hero2_top: "Terangi",
+      hero2_bottom: "PELOSOK NEGERI!",
+      hero3_top: "Kuatkan",
+      hero3_bottom: "DAKWAH PEDALAMAN!",
+      hero4_top: "Bantuan",
+      hero4_bottom: "PENUH HARAPAN!",
+      hero5_top: "Menyulam",
+      hero5_bottom: "KEBAIKAN UMAT!",
+      donate_now: "Donasi Sekarang",
+      pilih_bahasa: "Pilih Bahasa",
+      donasiku: "Donasiku",
+      tentang: "Tentang",
+      beranda: "Beranda",
+      program: "Program",
+      amaliyah: "Amaliyah",
+      zakat: "Zakat",
+      kuning: "Mudahnya Berbagi Kebaikan",
+      login: "Masuk",
+      profil: "Profil Saya",
+      cari: "Cari fitur & program donasi...",
+      menu: "Menu",
+      notifikasi: "Notifikasi",
+      layanan: "Layanan Kami",
+      program_utama: "Program Utama",
+      hubungi: "Hubungi Kami",
+      hak_cipta: "Seluruh hak cipta dilindungi.",
+      kalkulator: "Kalkulator Zakat"
+    },
+    en: {
+      hero_top: "Bring Forth",
+      hero_bottom: "A MILLION SMILES!",
+      hero2_top: "Light Up",
+      hero2_bottom: "THE CORNERS OF THE NATION!",
+      hero3_top: "Strengthen",
+      hero3_bottom: "RURAL DA'WAH!",
+      hero4_top: "Help",
+      hero4_bottom: "FULL OF HOPE!",
+      hero5_top: "Weaving",
+      hero5_bottom: "UMMAH'S GOODNESS!",
+      donate_now: "Donate Now",
+      pilih_bahasa: "Select Language",
+      donasiku: "My Donation",
+      tentang: "About",
+      beranda: "Home",
+      program: "Program",
+      amaliyah: "Practice",
+      zakat: "Zakat",
+      kuning: "The Ease of Sharing Kindness",
+      login: "Login",
+      profil: "My Profile",
+      cari: "Search features & donation programs...",
+      menu: "Menu",
+      notifikasi: "Notifications",
+      layanan: "Our Services",
+      program_utama: "Main Programs",
+      hubungi: "Contact Us",
+      hak_cipta: "All rights reserved.",
+      kalkulator: "Zakat Calculator"
+    },
+    ar: {
+      hero_top: "إجلب",
+      hero_bottom: "مليون ابتسامة!",
+      hero2_top: "أنر",
+      hero2_bottom: "أطراف البلاد!",
+      hero3_top: "قوّ",
+      hero3_bottom: "الدعوة في المناطق النائية!",
+      hero4_top: "مساعدة",
+      hero4_bottom: "مليئة بالأمل!",
+      hero5_top: "نسج",
+      hero5_bottom: "خير الأمة!",
+      donate_now: "تبرع الآن",
+      pilih_bahasa: "اختر اللغة",
+      donasiku: "تبرعاتي",
+      tentang: "حول",
+      beranda: "الصفحة الرئيسية",
+      program: "البرنامج",
+      amaliyah: "العمل",
+      zakat: "الزكاة",
+      kuning: "سهولة مشاركة اللطف",
+      login: "تسجيل الدخول",
+      profil: "ملفي الشخصي",
+      cari: "ابحث عن الميزات وبرامج التبرع...",
+      menu: "قائمة الطعام",
+      notifikasi: "إشعارات",
+      layanan: "خدماتنا",
+      program_utama: "البرامج الرئيسية",
+      hubungi: "اتصل بنا",
+      hak_cipta: "جميع الحقوق محفوظة.",
+      kalkulator: "حاسبة الزكاة"
+    },
+    es: {
+      hero_top: "Trae",
+      hero_bottom: "¡UN MILLÓN DE SONRISAS!",
+      donate_now: "Donar Ahora",
+      pilih_bahasa: "Seleccionar Idioma",
+      donasiku: "Mi Donación",
+      tentang: "Acerca de",
+      beranda: "Inicio",
+      program: "Programa",
+      amaliyah: "Práctica",
+      zakat: "Zakat",
+      kuning: "La facilidad de compartir la bondad",
+      login: "Iniciar sesión",
+      profil: "Mi Perfil",
+      cari: "Buscar funciones y programas de donación...",
+      menu: "Menú",
+      notifikasi: "Notificaciones"
+    },
+    "zh-CN": {
+      hero_top: "带来",
+      hero_bottom: "百万笑容！",
+      donate_now: "立即捐款",
+      pilih_bahasa: "选择语言",
+      donasiku: "我的捐款",
+      tentang: "关于",
+      beranda: "首页",
+      program: "项目",
+      amaliyah: "实践",
+      zakat: "天课",
+      kuning: "轻松传递善意",
+      login: "登录",
+      profil: "我的个人资料",
+      cari: "搜索功能和捐赠项目...",
+      menu: "菜单",
+      notifikasi: "通知"
+    }
+  };
+
+  const t = (key: string) => {
+    return (T as any)[currentLang]?.[key] || (T as any)['id']?.[key] || key;
+  };
 
   const handleLanguageChange = (langCode: string) => {
     setCurrentLang(langCode);
     setIsLangMenuOpen(false);
 
+    // Set cookies for Google Translate as fallback for dynamic content
     if (langCode === 'id') {
       document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
       document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
@@ -969,6 +1107,10 @@ export default function App() {
     if (select) {
       select.value = langCode;
       select.dispatchEvent(new Event('change', { bubbles: true }));
+      // Small Delay before reload to ensure Google Translate starts but we keep our UI
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
     } else {
       setTimeout(() => {
         window.location.reload();
@@ -1422,7 +1564,7 @@ export default function App() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                       type="text"
-                      placeholder="Cari fitur & program donasi..."
+                      placeholder={t('cari')}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className={`w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 shadow-sm transition-all text-slate-800 dark:text-slate-200`}
@@ -1572,7 +1714,7 @@ export default function App() {
                       className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50 py-2"
                     >
                       <div className="px-3 pb-2 mb-2 border-b border-slate-100 dark:border-slate-700">
-                        <p className="text-[10px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase">Pilih Bahasa</p>
+                        <p className="text-[10px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase">{t('pilih_bahasa')}</p>
                       </div>
                       <div className="max-h-[300px] overflow-y-auto px-1 scrollbar-hide">
                         {LANGUAGES.map((lang) => (
@@ -1585,7 +1727,7 @@ export default function App() {
                                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'
                             }`}
                           >
-                            <span className="text-base">{lang.flag}</span>
+                            <span className="text-base w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-full shadow-sm">{lang.flag}</span>
                             <span className="flex-1 text-left">{lang.name}</span>
                             {currentLang === lang.code && <CheckCircle2 className="w-4 h-4" />}
                           </button>
@@ -1642,7 +1784,7 @@ export default function App() {
                 ? 'bg-[#f29f05] text-white hover:bg-[#d98f04] px-3 xl:px-4 py-1.5 xl:py-2 shadow-md shadow-[#f29f05]/20' 
                 : 'bg-[#f29f05] text-white hover:bg-[#d98f04] shadow-lg shadow-[#f29f05]/20 px-3 xl:px-4 py-1.5 xl:py-2 border border-[#f29f05]'
             } hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95 whitespace-nowrap`}>
-              Donasi Sekarang
+              {t('donate_now')}
             </motion.button>
 
             {/* Notifications Button - Hidden on desktop bar, available in menu */}
@@ -1719,7 +1861,7 @@ export default function App() {
               className={`transition-all duration-300 ${isSearchOpen ? 'hidden' : 'flex'} items-center justify-center gap-2 rounded-full transition-all duration-300 ${
                 isScrolled ? 'px-2.5 md:px-3 h-8 md:h-9 hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200' : 'px-3 md:px-4 h-8 md:h-9 bg-white dark:bg-slate-800 shadow-lg shadow-black/5 border border-white/40 dark:border-slate-700 text-primary-500 hover:scale-105'
               } transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}>
-              <span className="hidden sm:inline font-bold text-[10px] uppercase tracking-widest mt-0.5">Menu</span>
+              <span className="hidden sm:inline font-bold text-[10px] uppercase tracking-widest mt-0.5">{t('menu')}</span>
               <Menu className="w-4 h-4 flex-shrink-0" />
             </motion.button>
           </div>
@@ -1772,11 +1914,11 @@ export default function App() {
             </div>
             <div className="flex-1 p-5 lg:p-6 flex flex-col gap-2 overflow-y-auto">
               {[
-                { name: 'Beranda', icon: Home, id: 'beranda' },
-                { name: 'Program', icon: HandHeart, id: 'program' },
-                { name: 'Amaliyah', icon: LayoutDashboard, path: '/amaliyah' },
+                { name: t('beranda'), icon: Home, id: 'beranda', path: '/' },
+                { name: t('program'), icon: HandHeart, id: 'program', path: '/donasi' },
+                { name: t('amaliyah'), icon: LayoutDashboard, path: '/amaliyah' },
                 { name: "Qur'an", icon: BookOpen, path: '/quran' },
-                { name: 'Zakat', icon: HandCoins, path: '/zakat' },
+                { name: t('zakat'), icon: HandCoins, path: '/zakat' },
                 { name: 'Qurban', icon: Tent, path: '/qurban' },
                 { name: 'Cari Masjid', icon: MapPin, path: '/mosques' },
                 { name: 'Sholat & Kiblat', icon: Clock, path: '/sholat' },
@@ -1945,9 +2087,21 @@ export default function App() {
                  >
                    <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-white mb-4 tracking-tight drop-shadow-md leading-[1.15]">
                      <span className="text-[#f29f05] block">
-                       {HERO_SLIDES[currentSlideIndex].topText}
+                       {currentSlideIndex === 0 ? t('hero_top') : 
+                         currentSlideIndex === 1 ? t('hero2_top') :
+                         currentSlideIndex === 2 ? t('hero3_top') :
+                         currentSlideIndex === 3 ? t('hero4_top') :
+                         currentSlideIndex === 4 ? t('hero5_top') :
+                         HERO_SLIDES[currentSlideIndex].topText}
+
                      </span>
-                     {HERO_SLIDES[currentSlideIndex].bottomText}
+                     {currentSlideIndex === 0 ? t('hero_bottom') : 
+                       currentSlideIndex === 1 ? t('hero2_bottom') :
+                       currentSlideIndex === 2 ? t('hero3_bottom') :
+                       currentSlideIndex === 3 ? t('hero4_bottom') :
+                       currentSlideIndex === 4 ? t('hero5_bottom') :
+                       HERO_SLIDES[currentSlideIndex].bottomText}
+
                    </h1>
                    <p className="text-[#eaf4fc] dark:text-slate-300 text-sm md:text-base max-w-xl font-medium mb-8 drop-shadow-sm leading-relaxed">
                      Tunaikan Zakat, Infak, dan Sedekah dengan mudah, aman, dan transparan untuk meluaskan kebermanfaatan umat bersama kami.
@@ -3155,9 +3309,9 @@ export default function App() {
             </div>
 
             <div>
-              <h5 className="font-bold text-lg mb-8 text-slate-900 dark:text-white">Layanan Kami</h5>
+              <h5 className="font-bold text-lg mb-8 text-slate-900 dark:text-white">{t('layanan')}</h5>
               <ul className="flex flex-col gap-4 text-slate-600 dark:text-slate-400 text-sm">
-                <li><motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }} onClick={() => { navigate('/zakat'); window.scrollTo(0,0); }} className="hover:text-[#1799dc] dark:hover:text-[#2db2f5] transition-colors duration-300">Kalkulator Zakat</motion.button></li>
+                <li><motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }} onClick={() => { navigate('/zakat'); window.scrollTo(0,0); }} className="hover:text-[#1799dc] dark:hover:text-[#2db2f5] transition-colors duration-300">{t('kalkulator')}</motion.button></li>
                 <li><motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }} onClick={() => { navigate('/qurban'); window.scrollTo(0,0); }} className="hover:text-[#1799dc] dark:hover:text-[#2db2f5] transition-colors duration-300">Qurban</motion.button></li>
                 <li><motion.a href="#" className="hover:text-[#1799dc] dark:hover:text-[#2db2f5] transition-colors duration-300" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>Konfirmasi Donasi</motion.a></li>
                 <li><motion.a href="#" className="hover:text-[#1799dc] dark:hover:text-[#2db2f5] transition-colors duration-300" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>Layanan Jemput Zakat</motion.a></li>
@@ -3166,7 +3320,7 @@ export default function App() {
             </div>
 
             <div>
-              <h5 className="font-bold text-lg mb-8 text-slate-900 dark:text-white">Program Utama</h5>
+              <h5 className="font-bold text-lg mb-8 text-slate-900 dark:text-white">{t('program_utama')}</h5>
                <ul className="flex flex-col gap-4 text-slate-600 dark:text-slate-400 text-sm">
                 <li><motion.a href="#" className="hover:text-[#1799dc] dark:hover:text-[#2db2f5] transition-colors duration-300" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>Beasiswa Tahfidz</motion.a></li>
                 <li><motion.a href="#" className="hover:text-[#1799dc] dark:hover:text-[#2db2f5] transition-colors duration-300" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>Air Bersih Nusantara</motion.a></li>
@@ -3176,7 +3330,7 @@ export default function App() {
             </div>
 
             <div>
-              <h5 className="font-bold text-lg mb-8 text-slate-900 dark:text-white">Hubungi Kami</h5>
+              <h5 className="font-bold text-lg mb-8 text-slate-900 dark:text-white">{t('hubungi')}</h5>
               <ul className="flex flex-col gap-6 text-slate-600 dark:text-slate-400 text-sm">
                 <li className="flex gap-3 items-start">
                   <MapPin className="w-5 h-5 text-[#f29f05] flex-shrink-0" />
@@ -3196,7 +3350,7 @@ export default function App() {
 
           <div className="pt-10 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-6">
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              &copy; 2026 LAZNAS Dewan Dakwah. Seluruh hak cipta dilindungi.
+              &copy; 2026 LAZNAS Dewan Dakwah. {t('hak_cipta')}
             </p>
             <div className="flex gap-8 text-xs text-slate-500 dark:text-slate-400">
               <motion.a href="#" className="hover:text-[#1799dc] transition-colors duration-300" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>Kebijakan Privasi</motion.a>

@@ -136,18 +136,40 @@ body {
     top: 0px !important; 
 }
 
-.skiptranslate > iframe.goog-te-banner-frame {
+.skiptranslate, 
+.goog-te-banner-frame, 
+#goog-gt-tt, 
+.goog-te-balloon-frame, 
+.goog-te-menu-value,
+.goog-te-gadget-icon,
+.goog-te-menu-frame {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+html {
+    top: 0px !important;
+}
+
+body {
+    top: 0px !important; 
+    position: static !important;
+}
+
+iframe.skiptranslate {
+    display: none !important;
+    visibility: hidden !important;
 }
 
 #google_translate_element {
    position: absolute;
-   width: 1px;
-   height: 1px;
+   width: 0;
+   height: 0;
    padding: 0;
-   margin: -1px;
+   margin: 0;
    overflow: hidden;
-   clip: rect(0, 0, 0, 0);
-   white-space: nowrap;
-   border-width: 0;
+   border: none;
+   background: transparent;
 }
