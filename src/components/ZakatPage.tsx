@@ -76,11 +76,11 @@ export const ZakatPage = () => {
         isEligible = totalAsset >= requiredNisab;
         if (isEligible) zakatAmmount = totalAsset * 0.025;
     } else if (calcTab === 'maal') {
-        const t = parseInt(calcMaalTabungan.replace(/\D/g, '')) || 0;
+        const tabunganVal = parseInt(calcMaalTabungan.replace(/\D/g, '')) || 0;
         const e = parseInt(calcMaalEmas.replace(/\D/g, '')) || 0;
         const p = parseInt(calcMaalProperti.replace(/\D/g, '')) || 0;
         const h = parseInt(calcMaalHutang.replace(/\D/g, '')) || 0;
-        totalAsset = t + e + p - h;
+        totalAsset = tabunganVal + e + p - h;
         requiredNisab = nisabTahun;
         isEligible = totalAsset >= requiredNisab;
         if (isEligible) zakatAmmount = totalAsset * 0.025;

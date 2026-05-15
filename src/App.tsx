@@ -38,6 +38,34 @@ import DonationHistory from './components/DonationHistory';
 import PengajuanBantuan from './components/PengajuanBantuan';
 
 import { SedekahSubuhCard } from './components/SedekahSubuhCard';
+import { T } from './translations';
+
+const getInitialLang = () => {
+  const savedLang = localStorage.getItem('app_language');
+  if (savedLang) return savedLang;
+  
+  const cookies = document.cookie.split(';');
+  const gtCookie = cookies.find(c => c.trim().startsWith('googtrans='));
+  if (gtCookie) {
+    const part = gtCookie.split('/').pop();
+    if (part) return part;
+  }
+  
+  return 'id';
+};
+
+const LANGUAGES = [
+  { code: 'id', name: 'Bahasa Indonesia', flag: '🇮🇩' },
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'zh-CN', name: '中文 (简体)', flag: '🇨🇳' },
+  { code: 'ja', name: '日本語', flag: '🇯🇵' },
+  { code: 'ko', name: '한국어', flag: '🇰🇷' },
+  { code: 'ms', name: 'Melayu', flag: '🇲🇾' },
+  { code: 'th', name: 'ไทย', flag: '🇹🇭' },
+  { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
+];
 
 // Types
 export interface Program {
@@ -489,7 +517,22 @@ const ProgramCardSkeleton = () => (
     </div>
   );
 
-  const ProgramCard: React.FC<{ p: Program, index: number, onQuickDonate: (p: any, amt: string) => void, onAddToCart: (p: any, amt: string) => void }> = ({ p, index, onQuickDonate, onAddToCart }) => {
+declare global {
+  interface Window {
+    snap: any;
+  }
+}
+
+const LIVE_TRANSACTIONS = [
+  { name: "Hamba Allah", action: "baru saja berqurban 1 Kambing untuk Orang Tua", time: "Baru saja", icon: "Tent" },
+  { name: "Siti F.", action: "baru saja menyalurkan Sedekah Subuh Rp 50.000", time: "1 menit yang lalu", icon: "TrendingUp" },
+  { name: "Bapak Budi", action: "ikut patungan Pembangunan Sumur", time: "2 menit yang lalu", icon: "Droplets" },
+  { name: "Keluarga Yanto", action: "berdonasi untuk Palestina Rp 500.000", time: "3 menit yang lalu", icon: "Globe" },
+  { name: "Hamba Allah", action: "baru saja menunaikan Zakat Penghasilan", time: "5 menit yang lalu", icon: "HandCoins" },
+  { name: "Ananda D.", action: "berdonasi Beasiswa Tahfidz", time: "10 menit yang lalu", icon: "BookOpen" }
+];
+
+  const ProgramCard: React.FC<{ p: Program, index: number, onQuickDonate: (p: any, amt: string) => void, onAddToCart: (p: any, amt: string) => void, t: (key: string) => string }> = ({ p, index, onQuickDonate, onAddToCart, t }) => {
     const [localDonationAmount, setLocalDonationAmount] = useState(p.category === 'Qurban' ? '2.500.000' : '100.000');
     const [isPulsing, setIsPulsing] = useState(false);
 
@@ -498,7 +541,7 @@ const ProgramCardSkeleton = () => (
       setIsPulsing(true);
       setTimeout(() => setIsPulsing(false), 200);
     };
-  
+
     return (
       <motion.div 
         whileHover={{ scale: 1.01, y: -4, transition: { duration: 0.3, ease: "easeOut" } }}
@@ -507,13 +550,13 @@ const ProgramCardSkeleton = () => (
         <Link to={`/program/${p.id}`} className="block relative aspect-[4/3] sm:aspect-[3/2] md:aspect-auto md:h-[160px] shrink-0 outline-none">
           {p.video ? (
              <video 
-               src={p.video}
-               autoPlay
-               loop
-               muted
-               playsInline
-               poster={p.image}
-               className="w-full h-full object-cover" 
+                src={p.video}
+                autoPlay
+                loop
+                muted
+                playsInline
+                poster={p.image}
+                className="w-full h-full object-cover" 
              />
           ) : (
             <img src={p.image} className="w-full h-full object-cover" alt={p.title} />
@@ -528,11 +571,11 @@ const ProgramCardSkeleton = () => (
             )}
             {p.collected >= p.target ? (
               <div className="bg-emerald-500/90 backdrop-blur-sm text-white text-[8px] font-bold px-2 py-0.5 rounded-full shadow-lg shadow-emerald-500/20 uppercase tracking-widest flex items-center gap-1 border border-emerald-400/30">
-                <CheckCircle2 className="w-3 h-3 text-white" /> Selesai
+                <CheckCircle2 className="w-3 h-3 text-white" /> {t('selesai')}
               </div>
             ) : p.urgent && (
               <div className="bg-red-500/90 backdrop-blur-sm text-white text-[8px] font-bold px-2 py-0.5 rounded-full shadow-lg shadow-red-500/20 uppercase tracking-widest flex items-center gap-1 border border-red-400/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Mendesak
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> {t('mendesak')}
               </div>
             )}
           </div>
@@ -560,7 +603,7 @@ const ProgramCardSkeleton = () => (
               <div className="bg-[#1799dc] h-full rounded-full" style={{ width: `${Math.min((p.collected / p.target) * 100, 100)}%` }}></div>
             </div>
             <div className="flex justify-between items-center text-[9px] md:text-[10px]">
-              <span className="text-slate-500 font-medium tracking-tight">Terkumpul <strong>Rp {new Intl.NumberFormat('id-ID').format(p.collected)}</strong></span>
+              <span className="text-slate-500 font-medium tracking-tight">{t('terhimpun')} <strong>Rp {new Intl.NumberFormat('id-ID').format(p.collected)}</strong></span>
               <span className="text-[#1799dc] font-bold">{Math.round((p.collected / p.target) * 100)}%</span>
             </div>
           </div>
@@ -569,10 +612,10 @@ const ProgramCardSkeleton = () => (
             {p.collected >= p.target ? (
               <div className="flex flex-col gap-2 mt-2">
                 <div className="w-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-center text-[10px] md:text-xs py-2 rounded-lg flex items-center justify-center gap-1.5">
-                  <CheckCircle className="w-3.5 h-3.5" /> Target Terpenuhi
+                  <CheckCircle className="w-3.5 h-3.5" /> {t('target_terpenuhi')}
                 </div>
                 <Link to={`/program/${p.id}`} className="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-bold text-center text-[11px] md:text-[13px] py-2 md:py-2.5 rounded-full transition-colors flex justify-center items-center h-8 md:h-10">
-                  Lihat Detail
+                  {t('lihat_detail')}
                 </Link>
               </div>
             ) : (
@@ -634,8 +677,8 @@ const ProgramCardSkeleton = () => (
                     className="flex-1 h-8 md:h-10 bg-gradient-to-r from-[#f29f05] to-[#f09a00] hover:from-[#d98f04] hover:to-[#df8f00] text-white font-extrabold text-[11px] md:text-[13px] rounded-full flex items-center justify-center gap-1 md:gap-1.5 shadow-[0_4px_14px_0_rgba(242,159,5,0.3)] active:scale-[0.98] transition-all whitespace-nowrap px-1 md:px-2"
                   >
                     <Heart className="w-3 h-3 md:w-4 md:h-4 fill-white/80 shrink-0" />
-                    <span className="hidden sm:inline">Kebaikan Cepat</span>
-                    <span className="sm:hidden">Donasi</span>
+                    <span className="hidden sm:inline">{t('kebaikan_cepat')}</span>
+                    <span className="sm:hidden">{t('donasi')}</span>
                   </motion.button>
                 </div>
               </>
@@ -646,22 +689,7 @@ const ProgramCardSkeleton = () => (
     );
   };
 
-declare global {
-  interface Window {
-    snap: any;
-  }
-}
-
-const LIVE_TRANSACTIONS = [
-  { name: "Hamba Allah", action: "baru saja berqurban 1 Kambing untuk Orang Tua", time: "Baru saja", icon: "Tent" },
-  { name: "Siti F.", action: "baru saja menyalurkan Sedekah Subuh Rp 50.000", time: "1 menit yang lalu", icon: "TrendingUp" },
-  { name: "Bapak Budi", action: "ikut patungan Pembangunan Sumur", time: "2 menit yang lalu", icon: "Droplets" },
-  { name: "Keluarga Yanto", action: "berdonasi untuk Palestina Rp 500.000", time: "3 menit yang lalu", icon: "Globe" },
-  { name: "Hamba Allah", action: "baru saja menunaikan Zakat Penghasilan", time: "5 menit yang lalu", icon: "HandCoins" },
-  { name: "Ananda D.", action: "berdonasi Beasiswa Tahfidz", time: "10 menit yang lalu", icon: "BookOpen" }
-];
-
-const DonasiPage = ({ onAddToCart, onQuickDonate }: { onAddToCart: (p: any, amt: string) => void, onQuickDonate: (p: any, amt: string) => void }) => {
+const DonasiPage = ({ onAddToCart, onQuickDonate, t }: { onAddToCart: (p: any, amt: string) => void, onQuickDonate: (p: any, amt: string) => void, t: any }) => {
   const [activeFilter, setActiveFilter] = useState('Semua');
   const [activeStatusFilter, setActiveStatusFilter] = useState('Semua');
   const [currentPage, setCurrentPage] = useState(1);
@@ -671,18 +699,18 @@ const DonasiPage = ({ onAddToCart, onQuickDonate }: { onAddToCart: (p: any, amt:
   const itemsPerPage = 6;
 
   const filters = [
-    { id: 'Semua', icon: LayoutGrid },
-    { id: 'Sosial', icon: Users },
-    { id: 'Pendidikan', icon: BookOpen },
-    { id: 'Kemanusiaan', icon: HandHeart },
-    { id: 'Qurban', icon: Tent }
+    { id: 'Semua', label: t('semua'), icon: LayoutGrid },
+    { id: 'Sosial', label: t('sosial'), icon: Users },
+    { id: 'Pendidikan', label: t('pendidikan'), icon: BookOpen },
+    { id: 'Kemanusiaan', label: t('kemanusiaan'), icon: HandHeart },
+    { id: 'Qurban', label: t('qurban_filter'), icon: Tent }
   ];
   
   const statusFilters = [
-    { id: 'Semua', icon: LayoutGrid },
-    { id: 'Aktif', icon: Activity },
-    { id: 'Mendesak', icon: AlertCircle },
-    { id: 'Selesai', icon: CheckCircle }
+    { id: 'Semua', label: t('semua'), icon: LayoutGrid },
+    { id: 'Aktif', label: t('aktif'), icon: Activity },
+    { id: 'Mendesak', label: t('mendesak'), icon: AlertCircle },
+    { id: 'Selesai', label: t('selesai'), icon: CheckCircle }
   ];
 
   const getProgramStatus = (p: any) => {
@@ -717,15 +745,15 @@ const DonasiPage = ({ onAddToCart, onQuickDonate }: { onAddToCart: (p: any, amt:
   return (
     <div className="pt-24 md:pt-32 pb-24 min-h-screen bg-[#eaf4fc]/40 dark:bg-slate-950 px-4 max-w-7xl mx-auto">
       <div className="mb-8 text-center max-w-2xl mx-auto">
-         <h1 className="text-3xl md:text-4xl font-serif font-black text-slate-900 dark:text-white mb-4">Semua Program</h1>
+         <h1 className="text-3xl md:text-4xl font-serif font-black text-slate-900 dark:text-white mb-4">{t('semua_program')}</h1>
          <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base leading-relaxed mb-6">
-           Pilih ladang pahala Anda. Setiap donasi memberikan dampak nyata bagi mereka yang membutuhkan.
+           {t('pilih_ladang')}
          </p>
          
          <div className="relative max-w-md mx-auto">
            <input
              type="text"
-             placeholder="Cari program (contoh: beasiswa, palestina...)"
+             placeholder={t('cari_program')}
              value={searchQuery}
              onChange={(e) => {
                setSearchQuery(e.target.value);
@@ -744,7 +772,7 @@ const DonasiPage = ({ onAddToCart, onQuickDonate }: { onAddToCart: (p: any, amt:
                className="flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full font-bold text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition"
             >
                <LayoutGrid className="w-4 h-4 text-[#1799dc]" />
-               Filter Program {(activeFilter !== 'Semua' || activeStatusFilter !== 'Semua') && <span className="w-2 h-2 rounded-full bg-red-500"></span>}
+               {t('filter_program')} {(activeFilter !== 'Semua' || activeStatusFilter !== 'Semua') && <span className="w-2 h-2 rounded-full bg-red-500"></span>}
                <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
             </button>
          </div>
@@ -770,7 +798,7 @@ const DonasiPage = ({ onAddToCart, onQuickDonate }: { onAddToCart: (p: any, amt:
                            }`}
                          >
                            <Icon className={`w-4 h-4 ${activeFilter === filter.id ? 'text-white' : 'text-[#1799dc]'}`} />
-                           {filter.id}
+                           {filter.label}
                          </button>
                        );
                      })}
@@ -789,7 +817,7 @@ const DonasiPage = ({ onAddToCart, onQuickDonate }: { onAddToCart: (p: any, amt:
                            }`}
                          >
                            <Icon className={`w-4 h-4 ${activeStatusFilter === filter.id ? 'text-white dark:text-slate-900' : 'text-slate-500 dark:text-slate-400'}`} />
-                           {filter.id}
+                           {filter.label}
                          </button>
                        );
                      })}
@@ -808,12 +836,13 @@ const DonasiPage = ({ onAddToCart, onQuickDonate }: { onAddToCart: (p: any, amt:
                  index={index} 
                  onAddToCart={onAddToCart} 
                  onQuickDonate={onQuickDonate}
+                 t={t}
               />
            ))}
         </div>
       ) : (
         <div className="text-center py-12 text-slate-500 dark:text-slate-400">
-          Tidak ada program untuk kategori ini.
+          {t('tidak_ada_program_kategori')}
         </div>
       )}
 
@@ -860,7 +889,7 @@ const DonasiPage = ({ onAddToCart, onQuickDonate }: { onAddToCart: (p: any, amt:
               onClick={() => setShowAll(true)}
               className="relative px-6 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full text-[#1799dc] font-bold text-xs md:text-sm hover:bg-[#1799dc]/5 transition flex items-center gap-1.5 shadow-sm hover:shadow"
             >
-              Lihat Semua Program ({filteredPrograms.length})
+              {t('lihat_semua')} ({filteredPrograms.length})
               <ChevronDown className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -876,7 +905,7 @@ const DonasiPage = ({ onAddToCart, onQuickDonate }: { onAddToCart: (p: any, amt:
               }}
               className="px-6 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full font-bold text-[#1799dc] shadow-sm hover:bg-slate-50 transition flex items-center gap-2"
             >
-              Kembali ke Halaman Pertama
+              {t('kembali_halaman_pertama')}
             </button>
          </div>
       )}
@@ -885,6 +914,8 @@ const DonasiPage = ({ onAddToCart, onQuickDonate }: { onAddToCart: (p: any, amt:
 };
 
 export default function App() {
+  const [currentLang, setCurrentLang] = useState(getInitialLang());
+
   const handleDonationAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatCurrencyForm(e.target.value);
     setDonationAmount(formatted);
@@ -900,7 +931,7 @@ export default function App() {
       }
       return [...prev, { id: p.id.toString(), program: p, amount: amt }];
     });
-    setToastMessage(`Alhamdulillah, ${p.title} berhasil dititipkan ke Kantung Kebaikan!`);
+    setToastMessage(t('berhasil_kantung').replace('{title}', p.title));
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
@@ -910,7 +941,11 @@ export default function App() {
   const { scrollY } = useScroll();
   const heroImageY = useTransform(scrollY, [0, 800], [0, 150]);
   const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('Alhamdulillah, Donasi Anda Telah Diterima!');
+  const [toastMessage, setToastMessage] = useState('');
+  
+  useEffect(() => {
+    setToastMessage(t('alhamdulillah_donasi_terima'));
+  }, []);
   const [cartItems, setCartItems] = useState<{id: string, program: Program, amount: string}[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -932,165 +967,14 @@ export default function App() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
 
-  const getInitialLang = () => {
-    const match = document.cookie.match(/googtrans=\/auto\/([a-zA-Z-]+)/) || document.cookie.match(/googtrans=\/id\/([a-zA-Z-]+)/);
-    return match ? match[1] : 'id';
-  };
-  const [currentLang, setCurrentLang] = useState(getInitialLang());
-
-  const LANGUAGES = [
-    { code: 'id', name: 'Bahasa Indonesia', flag: '🇮🇩' },
-    { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'ar', name: 'العربية', flag: '🇸🇦' },
-    { code: 'es', name: 'Español', flag: '🇪🇸' },
-    { code: 'zh-CN', name: '中文 (简体)', flag: '🇨🇳' },
-    { code: 'ja', name: '日本語', flag: '🇯🇵' },
-    { code: 'ko', name: '한국어', flag: '🇰🇷' },
-    { code: 'ms', name: 'Melayu', flag: '🇲🇾' },
-    { code: 'th', name: 'ไทย', flag: '🇹🇭' },
-    { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
-  ];
-
-  // Manual translations for key UI strings for better accuracy
-  const T = {
-    id: {
-      hero_top: "Hadirkan",
-      hero_bottom: "SEJUTA SENYUMAN!",
-      hero2_top: "Terangi",
-      hero2_bottom: "PELOSOK NEGERI!",
-      hero3_top: "Kuatkan",
-      hero3_bottom: "DAKWAH PEDALAMAN!",
-      hero4_top: "Bantuan",
-      hero4_bottom: "PENUH HARAPAN!",
-      hero5_top: "Menyulam",
-      hero5_bottom: "KEBAIKAN UMAT!",
-      donate_now: "Donasi Sekarang",
-      pilih_bahasa: "Pilih Bahasa",
-      donasiku: "Donasiku",
-      tentang: "Tentang",
-      beranda: "Beranda",
-      program: "Program",
-      amaliyah: "Amaliyah",
-      zakat: "Zakat",
-      kuning: "Mudahnya Berbagi Kebaikan",
-      login: "Masuk",
-      profil: "Profil Saya",
-      cari: "Cari fitur & program donasi...",
-      menu: "Menu",
-      notifikasi: "Notifikasi",
-      layanan: "Layanan Kami",
-      program_utama: "Program Utama",
-      hubungi: "Hubungi Kami",
-      hak_cipta: "Seluruh hak cipta dilindungi.",
-      kalkulator: "Kalkulator Zakat"
-    },
-    en: {
-      hero_top: "Bring Forth",
-      hero_bottom: "A MILLION SMILES!",
-      hero2_top: "Light Up",
-      hero2_bottom: "THE CORNERS OF THE NATION!",
-      hero3_top: "Strengthen",
-      hero3_bottom: "RURAL DA'WAH!",
-      hero4_top: "Help",
-      hero4_bottom: "FULL OF HOPE!",
-      hero5_top: "Weaving",
-      hero5_bottom: "UMMAH'S GOODNESS!",
-      donate_now: "Donate Now",
-      pilih_bahasa: "Select Language",
-      donasiku: "My Donation",
-      tentang: "About",
-      beranda: "Home",
-      program: "Program",
-      amaliyah: "Practice",
-      zakat: "Zakat",
-      kuning: "The Ease of Sharing Kindness",
-      login: "Login",
-      profil: "My Profile",
-      cari: "Search features & donation programs...",
-      menu: "Menu",
-      notifikasi: "Notifications",
-      layanan: "Our Services",
-      program_utama: "Main Programs",
-      hubungi: "Contact Us",
-      hak_cipta: "All rights reserved.",
-      kalkulator: "Zakat Calculator"
-    },
-    ar: {
-      hero_top: "إجلب",
-      hero_bottom: "مليون ابتسامة!",
-      hero2_top: "أنر",
-      hero2_bottom: "أطراف البلاد!",
-      hero3_top: "قوّ",
-      hero3_bottom: "الدعوة في المناطق النائية!",
-      hero4_top: "مساعدة",
-      hero4_bottom: "مليئة بالأمل!",
-      hero5_top: "نسج",
-      hero5_bottom: "خير الأمة!",
-      donate_now: "تبرع الآن",
-      pilih_bahasa: "اختر اللغة",
-      donasiku: "تبرعاتي",
-      tentang: "حول",
-      beranda: "الصفحة الرئيسية",
-      program: "البرنامج",
-      amaliyah: "العمل",
-      zakat: "الزكاة",
-      kuning: "سهولة مشاركة اللطف",
-      login: "تسجيل الدخول",
-      profil: "ملفي الشخصي",
-      cari: "ابحث عن الميزات وبرامج التبرع...",
-      menu: "قائمة الطعام",
-      notifikasi: "إشعارات",
-      layanan: "خدماتنا",
-      program_utama: "البرامج الرئيسية",
-      hubungi: "اتصل بنا",
-      hak_cipta: "جميع الحقوق محفوظة.",
-      kalkulator: "حاسبة الزكاة"
-    },
-    es: {
-      hero_top: "Trae",
-      hero_bottom: "¡UN MILLÓN DE SONRISAS!",
-      donate_now: "Donar Ahora",
-      pilih_bahasa: "Seleccionar Idioma",
-      donasiku: "Mi Donación",
-      tentang: "Acerca de",
-      beranda: "Inicio",
-      program: "Programa",
-      amaliyah: "Práctica",
-      zakat: "Zakat",
-      kuning: "La facilidad de compartir la bondad",
-      login: "Iniciar sesión",
-      profil: "Mi Perfil",
-      cari: "Buscar funciones y programas de donación...",
-      menu: "Menú",
-      notifikasi: "Notificaciones"
-    },
-    "zh-CN": {
-      hero_top: "带来",
-      hero_bottom: "百万笑容！",
-      donate_now: "立即捐款",
-      pilih_bahasa: "选择语言",
-      donasiku: "我的捐款",
-      tentang: "关于",
-      beranda: "首页",
-      program: "项目",
-      amaliyah: "实践",
-      zakat: "天课",
-      kuning: "轻松传递善意",
-      login: "登录",
-      profil: "我的个人资料",
-      cari: "搜索功能和捐赠项目...",
-      menu: "菜单",
-      notifikasi: "通知"
-    }
-  };
-
   const t = (key: string) => {
-    return (T as any)[currentLang]?.[key] || (T as any)['id']?.[key] || key;
+    return T[currentLang as keyof typeof T]?.[key as keyof (typeof T)['id']] || key;
   };
 
   const handleLanguageChange = (langCode: string) => {
     setCurrentLang(langCode);
     setIsLangMenuOpen(false);
+    localStorage.setItem('app_language', langCode);
 
     // Set cookies for Google Translate as fallback for dynamic content
     if (langCode === 'id') {
@@ -1107,14 +991,6 @@ export default function App() {
     if (select) {
       select.value = langCode;
       select.dispatchEvent(new Event('change', { bubbles: true }));
-      // Small Delay before reload to ensure Google Translate starts but we keep our UI
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
-    } else {
-      setTimeout(() => {
-        window.location.reload();
-      }, 300);
     }
   };
 
@@ -1367,11 +1243,11 @@ export default function App() {
         isEligible = totalAsset >= requiredNisab;
         if (isEligible) zakatAmmount = totalAsset * 0.025;
     } else if (zakatTab === 'maal') {
-        const t = parseInt(maalTabungan.replace(/\D/g, '')) || 0;
+        const tabunganVal = parseInt(maalTabungan.replace(/\D/g, '')) || 0;
         const e = parseInt(maalEmas.replace(/\D/g, '')) || 0;
         const p = parseInt(maalProperti.replace(/\D/g, '')) || 0;
         const h = parseInt(maalHutang.replace(/\D/g, '')) || 0;
-        totalAsset = t + e + p - h;
+        totalAsset = tabunganVal + e + p - h;
         requiredNisab = nisabTahun;
         isEligible = totalAsset >= requiredNisab;
         if (isEligible) zakatAmmount = totalAsset * 0.025;
@@ -1917,15 +1793,15 @@ export default function App() {
                 { name: t('beranda'), icon: Home, id: 'beranda', path: '/' },
                 { name: t('program'), icon: HandHeart, id: 'program', path: '/donasi' },
                 { name: t('amaliyah'), icon: LayoutDashboard, path: '/amaliyah' },
-                { name: "Qur'an", icon: BookOpen, path: '/quran' },
+                { name: t('quran'), icon: BookOpen, path: '/quran' },
                 { name: t('zakat'), icon: HandCoins, path: '/zakat' },
-                { name: 'Qurban', icon: Tent, path: '/qurban' },
-                { name: 'Cari Masjid', icon: MapPin, path: '/mosques' },
-                { name: 'Sholat & Kiblat', icon: Clock, path: '/sholat' },
-                { name: 'Tentang Kami', icon: Info, id: 'tentang-kami' },
-                { name: 'Layanan', icon: Component, id: 'layanan' },
-                { name: 'Laporan', icon: TrendingUp, path: '/laporan' },
-                { name: 'Artikel', icon: FileText, id: 'artikel' }
+                { name: t('qurban'), icon: Tent, path: '/qurban' },
+                { name: t('mosques'), icon: MapPin, path: '/mosques' },
+                { name: t('sholat'), icon: Clock, path: '/sholat' },
+                { name: t('tentang'), icon: Info, id: 'tentang-kami' },
+                { name: t('layanan'), icon: Component, id: 'layanan' },
+                { name: t('laporan'), icon: TrendingUp, path: '/laporan' },
+                { name: t('artikel'), icon: FileText, id: 'artikel' }
               ].map((item) => (
                 <motion.button whileTap={{ scale: 0.98 }} whileHover={{ scale: 1.02 }} 
                   key={item.name} 
@@ -1965,7 +1841,7 @@ export default function App() {
                 <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[#1799dc] shrink-0">
                   <UserCircle className="w-4 h-4" />
                 </div>
-                <span className="flex-1 truncate">Dashboard Donatur</span>
+                <span className="flex-1 truncate">{t('profil')}</span>
               </motion.button>
 
               <motion.button whileTap={{ scale: 0.98 }} whileHover={{ scale: 1.02 }} 
@@ -1978,9 +1854,9 @@ export default function App() {
                 <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[#1799dc] shrink-0">
                   <Bell className="w-4 h-4" />
                 </div>
-                <span className="flex-1 truncate">Notifikasi</span>
+                <span className="flex-1 truncate">{t('notifikasi')}</span>
                 <span className="flex items-center gap-1.5 shrink-0">
-                  <span className="text-[9px] font-bold bg-red-500 text-white rounded-full px-2 py-0.5">1 Baru</span>
+                  <span className="text-[9px] font-bold bg-red-500 text-white rounded-full px-2 py-0.5">1 {t('baru')}</span>
                 </span>
               </motion.button>
               
@@ -1991,7 +1867,7 @@ export default function App() {
                 <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[#1799dc] shrink-0">
                   {isDarkMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
                 </div>
-                <span className="flex-1 truncate">Tema Gelap</span>
+                <span className="flex-1 truncate">{t('tema_gelap')}</span>
                 <div className={`shrink-0 w-9 h-5 rounded-full flex items-center transition-colors ${isDarkMode ? 'bg-[#1799dc]' : 'bg-slate-300 dark:bg-slate-700'}`}>
                   <div className={`w-3.5 h-3.5 bg-white rounded-full mx-0.5 shadow-sm transform transition-transform ${isDarkMode ? 'translate-x-4' : 'translate-x-0'}`}></div>
                 </div>
@@ -1999,7 +1875,7 @@ export default function App() {
               
               <div className="mt-auto pt-8 flex flex-col gap-3">
                 <motion.button className="w-full py-3.5 rounded-xl bg-[#1799dc] hover:bg-[#1588c4] active:bg-[#137ab0] text-white font-bold text-base shadow-lg shadow-[#1799dc]/20 transition-all" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  Mulai Sedekah
+                  {t('donate_now')}
                 </motion.button>
                 <div className="flex justify-center gap-5 text-slate-400 dark:text-slate-500 mt-2 pb-4">
                   <motion.a href="#" className="hover:text-[#1799dc] transition-colors" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}><Facebook className="w-5 h-5" /></motion.a>
@@ -2029,6 +1905,7 @@ export default function App() {
         } />
         <Route path="/donasi" element={
           <DonasiPage 
+            t={t}
             onAddToCart={handleAddToCart} 
             onQuickDonate={(prog, amt) => {
               setSelectedProgramForDonation(prog);
@@ -2175,12 +2052,12 @@ export default function App() {
              {/* Total Penyaluran & Manfaat - Super Compact */}
              <div className="p-5 md:px-6 md:py-6 flex-1 flex items-center justify-between gap-4 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-800/80">
                 <div>
-                   <p className="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5 text-[#1799dc]" /> Penyaluran</p>
-                   <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white leading-none">26.5 <span className="text-sm font-bold text-slate-500">Miliar+</span></h2>
+                   <p className="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5 text-[#1799dc]" /> {t('penyaluran')}</p>
+                   <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white leading-none">26.5 <span className="text-sm font-bold text-slate-500">{t('muliar')}+</span></h2>
                 </div>
                 <div className="text-right">
-                   <p className="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center justify-end gap-1.5 justify-end"><Heart className="w-3.5 h-3.5 text-emerald-500" /> Penerima</p>
-                   <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white leading-none">1.2 <span className="text-sm font-bold text-slate-500">Juta+</span></h2>
+                   <p className="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center justify-end gap-1.5 justify-end"><Heart className="w-3.5 h-3.5 text-emerald-500" /> {t('penerima')}</p>
+                   <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white leading-none">1.2 <span className="text-sm font-bold text-slate-500">{t('juta')}+</span></h2>
                 </div>
              </div>
 
@@ -2239,14 +2116,14 @@ export default function App() {
           <div className="w-full max-w-[600px] mx-auto mt-8 mb-12 flex-1">
              <div className="grid grid-cols-4 gap-y-6 md:gap-y-8 gap-x-2 md:gap-x-4">
                {[
-                  { icon: HandCoins, label: 'Zakat', color: 'from-emerald-400 to-emerald-500 text-white shadow-emerald-500/20', link: '/zakat' },
-                  { icon: Heart, label: 'Infak/Sedekah', color: 'from-[#2db2f5] to-[#1799dc] text-white shadow-[#1799dc]/20', link: '#program' },
-                  { icon: Tent, label: 'Qurban', color: 'from-[#febb22] to-[#f29f05] text-white shadow-[#f29f05]/20', link: '/qurban' },
-                  { icon: Clock, label: 'Waktu Sholat', color: 'from-amber-400 to-amber-500 text-white shadow-amber-500/20', link: '/sholat' },
-                  { icon: Users, label: 'Kemanusiaan', color: 'from-rose-400 to-rose-500 text-white shadow-rose-500/20', link: '#program' },
-                  { icon: Calculator, label: 'Kalkulator', color: 'from-purple-400 to-purple-500 text-white shadow-purple-500/20', link: '/zakat' },
-                  { icon: MapPin, label: 'Cari Masjid', color: 'from-cyan-400 to-cyan-500 text-white shadow-cyan-500/20', link: '/mosques' },
-                  { icon: Component, label: 'Lainnya', color: 'from-slate-400 to-slate-500 text-white shadow-slate-500/20 text-xs tracking-wider', link: '#layanan' },
+                  { icon: HandCoins, label: t('zakat'), color: 'from-emerald-400 to-emerald-500 text-white shadow-emerald-500/20', link: '/zakat' },
+                  { icon: Heart, label: t('donasi'), color: 'from-[#2db2f5] to-[#1799dc] text-white shadow-[#1799dc]/20', link: '#program' },
+                  { icon: Tent, label: t('qurban'), color: 'from-[#febb22] to-[#f29f05] text-white shadow-[#f29f05]/20', link: '/qurban' },
+                  { icon: Clock, label: t('sholat'), color: 'from-amber-400 to-amber-500 text-white shadow-amber-500/20', link: '/sholat' },
+                  { icon: Users, label: t('kemanusiaan'), color: 'from-rose-400 to-rose-500 text-white shadow-rose-500/20', link: '#program' },
+                  { icon: Calculator, label: t('kalkulator'), color: 'from-purple-400 to-purple-500 text-white shadow-purple-500/20', link: '/zakat' },
+                  { icon: MapPin, label: t('mosques'), color: 'from-cyan-400 to-cyan-500 text-white shadow-cyan-500/20', link: '/mosques' },
+                  { icon: Component, label: t('lihat_semua'), color: 'from-slate-400 to-slate-500 text-white shadow-slate-500/20 text-xs tracking-wider', link: '#layanan' },
                ].map((menu, i) => (
                  <div 
                    key={i} 
@@ -2295,25 +2172,25 @@ export default function App() {
                     onClick={() => setImpactTab('infografis')}
                     className={`transition-all duration-300 px-4 md:px-6 py-1.5 md:py-2 rounded-full text-[11px] md:text-sm font-bold flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 ${impactTab === 'infografis' ? 'bg-white dark:bg-slate-700 text-[#1799dc] shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
                   >
-                  <FileText className="w-3.5 h-3.5 md:w-4 md:h-4" /> Infografis
+                  <FileText className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('infografis')}
                 </motion.button>
                 <motion.button whileTap={{ scale: 0.95 }}
                   onClick={() => setImpactTab('peta')}
                   className={`transition-all duration-300 px-4 md:px-6 py-1.5 md:py-2 rounded-full text-[11px] md:text-sm font-bold flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 ${impactTab === 'peta' ? 'bg-white dark:bg-slate-700 text-[#f29f05] shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
                 >
-                  <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4" /> Peta Program
+                  <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('peta_program')}
                 </motion.button>
                 <motion.button whileTap={{ scale: 0.95 }}
                   onClick={() => setImpactTab('peta_qurban')}
                   className={`transition-all duration-300 px-4 md:px-6 py-1.5 md:py-2 rounded-full text-[11px] md:text-sm font-bold flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 ${impactTab === 'peta_qurban' ? 'bg-white dark:bg-slate-700 text-[#1799dc] shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
                 >
-                  <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4" /> Peta Qurban
+                  <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('peta_qurban')}
                 </motion.button>
                 <motion.button whileTap={{ scale: 0.95 }}
                   onClick={() => setImpactTab('galeri')}
                   className={`transition-all duration-300 px-4 md:px-6 py-1.5 md:py-2 rounded-full text-[11px] md:text-sm font-bold flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 ${impactTab === 'galeri' ? 'bg-white dark:bg-slate-700 text-emerald-500 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
                 >
-                  <ImageIcon className="w-3.5 h-3.5 md:w-4 md:h-4" /> Galeri
+                  <ImageIcon className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('galeri')}
                 </motion.button>
               </div>
             </div>
@@ -2332,10 +2209,10 @@ export default function App() {
                 >
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-4xl mx-auto">
                     {[
-                      { icon: TrendingUp, val: "26.5M", label: "Penyaluran (Rp)", color: "text-[#1799dc]", bg: "bg-[#1799dc]/" },
-                      { icon: Heart, val: "1.2Jt+", label: "Penerima Manfaat", color: "text-emerald-500", bg: "bg-emerald-500/" },
-                      { icon: MapPin, val: "34", label: "Provinsi", color: "text-[#f29f05]", bg: "bg-[#f29f05]/" },
-                      { icon: CheckCircle2, val: "50+", label: "Program Berhasil", color: "text-purple-500", bg: "bg-purple-500/" }
+                      { icon: TrendingUp, val: "26.5M", label: t('penyaluran') + " (Rp)", color: "text-[#1799dc]", bg: "bg-[#1799dc]/" },
+                      { icon: Heart, val: "1.2Jt+", label: t('penerima'), color: "text-emerald-500", bg: "bg-emerald-500/" },
+                      { icon: MapPin, val: "34", label: t('provinsi'), color: "text-[#f29f05]", bg: "bg-[#f29f05]/" },
+                      { icon: CheckCircle2, val: "50+", label: t('program_berhasil'), color: "text-purple-500", bg: "bg-purple-500/" }
                     ].map((stat, i) => (
                       <div key={i} className="bg-white dark:bg-slate-800 rounded-[20px] p-4 text-center border border-slate-200/50 dark:border-slate-700 shadow-sm transition-all group flex flex-col items-center justify-center hover:shadow-md">
                         <div className={`w-10 h-10 md:w-12 md:h-12 rounded-[14px] ${stat.bg}10 mb-2.5 flex items-center justify-center group-hover:scale-110 transition-transform`}>
@@ -2611,7 +2488,7 @@ export default function App() {
              {/* Diagonal line like in reference */}
              <div className="absolute left-0 bottom-0 w-2/3 h-[1px] bg-[#1799dc]/20 -rotate-2 origin-left z-0 sm:block hidden"></div>
             <div className="relative z-10 bg-white dark:bg-slate-800 pr-4 md:pr-8 text-left transition-colors duration-300">
-              <h2 className="text-3xl md:text-5xl font-extrabold text-[#1799dc] tracking-tight leading-none mb-1 md:mb-0">Program<br className="hidden md:block"/> Prioritas</h2>
+              <h2 className="text-3xl md:text-5xl font-extrabold text-[#1799dc] tracking-tight leading-none mb-1 md:mb-0">Program<br className="hidden md:block"/> {t('prioritas')}</h2>
             </div>
             <div className="mt-4 sm:mt-0 relative z-10 bg-white dark:bg-slate-800 pl-0 sm:pl-4 transition-colors duration-300">
                <motion.button className="transition-all duration-300 text-slate-800 hover:text-primary-600 font-bold flex items-center gap-2 text-sm md:text-base group transition-all duration-300 hover:shadow-lg" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }}>
@@ -2644,7 +2521,7 @@ export default function App() {
             ) : (
               PROGRAMS.map((p, index) => (
                 <motion.div variants={{ hidden: { opacity: 0, y: 40 }, show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } } }} key={p.id} className="h-full">
-                  <ProgramCard p={p} index={index} onAddToCart={handleAddToCart} onQuickDonate={(prog, amt) => {
+                  <ProgramCard p={p} index={index} onAddToCart={handleAddToCart} t={t} onQuickDonate={(prog, amt) => {
                   setSelectedProgramForDonation(prog);
                   setQurbanName('');
                   setQurbanQty(1);
@@ -3275,7 +3152,7 @@ export default function App() {
         <Route path="/quran" element={<QuranPage />} />
         <Route path="/amaliyah" element={<AmaliyahPage />} />
         <Route path="/zakat" element={<ZakatPage />} />
-        <Route path="/qurban" element={<QurbanPage onAddToCart={handleAddToCart} />} />
+        <Route path="/qurban" element={<QurbanPage onAddToCart={handleAddToCart} t={t} />} />
         <Route path="/mosques" element={<MasjidLocator />} />
         <Route path="/sholat" element={<SholatPage />} />
         <Route path="/history" element={<DonationHistory />} />
@@ -3921,25 +3798,25 @@ export default function App() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nama Sahabat Dakwah</label>
-                      <input required value={donorName} onChange={(e) => setDonorName(e.target.value)} type="text" placeholder="Nama Anda" className="w-full px-3 py-2 bg-slate-50/50 rounded-xl border border-slate-200 text-sm font-medium" />
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">{t('nama_sahabat')}</label>
+                      <input required value={donorName} onChange={(e) => setDonorName(e.target.value)} type="text" placeholder={t('nama_anda')} className="w-full px-3 py-2 bg-slate-50/50 rounded-xl border border-slate-200 text-sm font-medium" />
                     </div>
                     <div className="space-y-1">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nomor Telepon</label>
-                      <input required value={donorPhone} onChange={(e) => setDonorPhone(e.target.value)} type="tel" placeholder="08xxxxxxxx" className="w-full px-3 py-2 bg-slate-50/50 rounded-xl border border-slate-200 text-sm font-medium" />
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">{t('telp')}</label>
+                      <input required value={donorPhone} onChange={(e) => setDonorPhone(e.target.value)} type="tel" placeholder={t('placeholder_telp')} className="w-full px-3 py-2 bg-slate-50/50 rounded-xl border border-slate-200 text-sm font-medium" />
                     </div>
                   </div>
 
                   <div className="relative z-40">
                     <div className="flex justify-between items-center mb-2 gap-2">
-                      <label className="block text-[10px] md:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.15em] px-1 opacity-80 shrink-0">Metode Pembayaran</label>
+                      <label className="block text-[10px] md:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.15em] px-1 opacity-80 shrink-0">{t('metode_pembayaran')}</label>
                       <div className="relative flex-1 max-w-[150px]">
                         <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
                           <Search className="w-3.5 h-3.5 text-slate-400" />
                         </div>
                         <input 
                           type="text" 
-                          placeholder="Cari e-wallet / bank..." 
+                          placeholder={t('cari_payment')} 
                           value={paymentSearchQuery}
                           onChange={(e) => setPaymentSearchQuery(e.target.value)}
                           className="w-full pl-8 pr-3 py-1.5 text-[11px] bg-slate-50/80 dark:bg-slate-900/40 rounded-full border border-slate-200 dark:border-slate-700 focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium text-slate-900 dark:text-white placeholder:text-slate-400"
@@ -3976,7 +3853,7 @@ export default function App() {
                       ) : (
                         <div className="w-full text-center py-4 flex flex-col items-center justify-center">
                           <Wallet className="w-6 h-6 text-slate-300 dark:text-slate-600 mb-2" />
-                          <span className="text-xs font-medium text-slate-500">Metode \'{paymentSearchQuery}\' tidak ditemukan</span>
+                          <span className="text-xs font-medium text-slate-500">Metode \'{paymentSearchQuery}\' {t('tidak_ditemukan')}</span>
                         </div>
                       )}
                     </div>
@@ -3986,7 +3863,7 @@ export default function App() {
                     <div className="bg-primary-50/50 dark:bg-primary-900/10 p-3.5 md:p-4 rounded-xl border border-primary-100 dark:border-primary-900/30 space-y-4">
                       <div>
                         <label className="block text-[11px] md:text-[13px] font-bold text-slate-700 dark:text-slate-300 mb-1 md:mb-1.5 uppercase tracking-wider" htmlFor="qurban-name">
-                          Atas Nama Siapa Qurban Ini Diniatkan? <span className="text-red-500">*</span>
+                          {t('qurban_atas_nama')} <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
                            <div className="absolute inset-y-0 left-0 pl-3 md:pl-4 flex items-center pointer-events-none">
@@ -4006,7 +3883,7 @@ export default function App() {
 
                       <div>
                         <label className="block text-[11px] md:text-[13px] font-bold text-slate-700 dark:text-slate-300 mb-1 md:mb-1.5 uppercase tracking-wider" htmlFor="qurban-location">
-                          Pilih Wilayah Penyaluran Qurban <span className="text-red-500">*</span>
+                          {t('pilih_wilayah')} <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
                            <div className="absolute inset-y-0 left-0 pl-3 md:pl-4 flex items-center pointer-events-none">
@@ -4019,7 +3896,7 @@ export default function App() {
                              onChange={(e) => setQurbanLocation(e.target.value)}
                              className="w-full pl-9 md:pl-11 pr-8 py-2 md:py-3 bg-white dark:bg-slate-900/50 rounded-lg md:rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm md:text-base appearance-none cursor-pointer" 
                            >
-                             <option value="" disabled>Pilih Wilayah Penyaluran</option>
+                             <option value="" disabled>{t('pilih_wilayah')}</option>
                              {QURBAN_LOCATIONS.map((loc) => (
                                <option key={loc.id} value={loc.id}>{loc.name}</option>
                              ))}
@@ -4033,7 +3910,7 @@ export default function App() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-[11px] md:text-[13px] font-bold text-slate-700 dark:text-slate-300 mb-1 md:mb-1.5 uppercase tracking-wider" htmlFor="qurban-animal">
-                            Tipe Hewan Qurban <span className="text-red-500">*</span>
+                            {t('tipe_hewan')} <span className="text-red-500">*</span>
                           </label>
                           <div className="relative">
                              <select 
@@ -4043,7 +3920,7 @@ export default function App() {
                                onChange={(e) => setQurbanAnimal(e.target.value)}
                                className="w-full px-3 py-2 md:py-3 bg-white dark:bg-slate-900/50 rounded-lg md:rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm md:text-base appearance-none cursor-pointer" 
                              >
-                               <option value="" disabled>Pilih Hewan Qurban</option>
+                               <option value="" disabled>{t('tipe_hewan')}</option>
                                {QURBAN_ANIMALS.map((animal) => (
                                  <option key={animal.id} value={animal.id}>{animal.name}</option>
                                ))}
@@ -4056,7 +3933,7 @@ export default function App() {
 
                         <div>
                           <label className="block text-[11px] md:text-[13px] font-bold text-slate-700 dark:text-slate-300 mb-1 md:mb-1.5 uppercase tracking-wider" htmlFor="qurban-processing">
-                            Metode Penyaluran <span className="text-red-500">*</span>
+                            {t('metode_penyaluran')} <span className="text-red-500">*</span>
                           </label>
                           <div className="relative">
                              <select 
@@ -4066,7 +3943,7 @@ export default function App() {
                                onChange={(e) => setQurbanProcessing(e.target.value)}
                                className="w-full px-3 py-2 md:py-3 bg-white dark:bg-slate-900/50 rounded-lg md:rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm md:text-base appearance-none cursor-pointer" 
                              >
-                               <option value="" disabled>Pilih Metode Penyaluran</option>
+                               <option value="" disabled>{t('metode_penyaluran')}</option>
                                {QURBAN_PROCESSING.map((process) => (
                                  <option key={process.id} value={process.id}>{process.name}</option>
                                ))}
@@ -4081,7 +3958,7 @@ export default function App() {
                       <div className="flex gap-4">
                         <div className="flex-1">
                           <label className="block text-[11px] md:text-[13px] font-bold text-slate-700 dark:text-slate-300 mb-1 md:mb-1.5 uppercase tracking-wider" htmlFor="qurban-qty">
-                            Jumlah Keberkahan (Bagian/Ekor)
+                            {t('jumlah_keberkahan')}
                           </label>
                           <div className="flex items-center gap-2">
                              <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }} type="button" onClick={() => setQurbanQty(Math.max(1, qurbanQty - 1))} className="transition-all duration-300 w-10 h-10 md:w-12 md:h-12 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg flex items-center justify-center hover:bg-slate-50 transition-colors text-xl font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95">-</motion.button>
@@ -4098,7 +3975,7 @@ export default function App() {
                               className="w-4 h-4 md:w-5 md:h-5 rounded text-primary-600 focus:ring-primary-500 border-slate-300"
                             />
                             <span className="text-[11px] md:text-[13px] font-bold text-slate-700 dark:text-slate-300 group-hover:text-primary-700 transition-colors">
-                              Persembahan Paling Mulia Untuk Orang Tua
+                              {t('untuk_orang_tua')}
                             </span>
                           </label>
                         </div>
@@ -4108,15 +3985,15 @@ export default function App() {
                   
                   <div className="space-y-2">
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1 flex justify-between items-center">
-                      <span>Titipkan Doa & Harapan</span>
-                      <span className="text-slate-400 capitalize normal-case text-[9px] font-medium italic">Tampil live di Dinding Doa</span>
+                      <span>{t('titip_doa')}</span>
+                      <span className="text-slate-400 capitalize normal-case text-[9px] font-medium italic">{t('tampil_live')}</span>
                     </label>
                     <div className="relative">
                       <textarea 
                         value={newPrayerMessage} 
                         onChange={(e) => setNewPrayerMessage(e.target.value)} 
                         rows={2}
-                        placeholder="Tuliskan doa terbaik Anda (Opsional)" 
+                        placeholder={t('placeholder_doa')} 
                         className="w-full px-3.5 py-3 bg-white dark:bg-slate-800/80 rounded-[1.25rem] border border-slate-200 dark:border-slate-700 text-sm font-medium resize-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 shadow-sm pr-4 transition-all"
                       ></textarea>
                     </div>
@@ -4132,7 +4009,7 @@ export default function App() {
                         ) : (
                           <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
                         )}
-                        Bantu Rangkai Doa
+                        {t('rangkai_doa')}
                       </button>
                     </div>
                   </div>
@@ -4160,11 +4037,11 @@ export default function App() {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        Memproses...
+                        {t('memproses')}
                       </span>
                     ) : (
                       <>
-                        {selectedProgramForDonation.category === 'Qurban' ? 'Bismillah, Siapkan Kendaraan Syurga Anda Sekarang' : 'Bismillah, Tunaikan Sedekah'} 
+                        {selectedProgramForDonation.category === 'Qurban' ? t('donasi_qurban_btn') : t('donasi_sedekah_btn')} 
                         <Heart className="w-5 h-5 fill-white/20 group-hover:scale-110 transition-transform" />
                       </>
                     )}
@@ -4197,8 +4074,8 @@ export default function App() {
                     <Calculator className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-slate-800 dark:text-slate-200">Kalkulator Zakat</h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Hitung & tunaikan kewajiban Zakat</p>
+                    <h3 className="font-bold text-slate-800 dark:text-slate-200">{t('kalkulator')}</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{t('hitung_zakat')}</p>
                   </div>
                 </div>
                 <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }} 
@@ -4212,11 +4089,11 @@ export default function App() {
               {/* Tab Navigation */}
               <div className="flex border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
                 {[
-                  { id: 'penghasilan', label: 'Penghasilan' },
-                  { id: 'maal', label: 'Maal/Harta' },
-                  { id: 'perdagangan', label: 'Perdagangan' },
-                  { id: 'saham', label: 'Saham' },
-                  { id: 'rikaz', label: 'Rikaz' },
+                  { id: 'penghasilan', label: t('penghasilan') },
+                  { id: 'maal', label: t('maal') },
+                  { id: 'perdagangan', label: t('ekonomi') },
+                  { id: 'saham', label: t('saham') },
+                  { id: 'rikaz', label: t('rikaz') },
                   { id: 'fidyah', label: 'Fidyah' }
                 ].map((tab) => (
                   <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }}
@@ -4237,7 +4114,7 @@ export default function App() {
                 <div className="mb-5 p-3.5 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-800/30 flex items-center justify-between group cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
                   <div>
                     <label className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider mb-0.5 block">
-                      Harga Emas Saat Ini
+                      {t('harga_emas')}
                     </label>
                     <div className="flex items-center gap-1.5 focus-within:ring-2 focus-within:ring-primary-500/20 rounded-md">
                       <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Rp</span>
@@ -4271,8 +4148,8 @@ export default function App() {
                       {zakatTab === 'penghasilan' && (
                         <>
                           {[
-                            { label: 'Pendapatan per Bulan', val: zakatIncome, set: setZakatIncome },
-                            { label: 'Bonus/THR', val: zakatBonus, set: setZakatBonus }
+                            { label: t('pendapatan_bulan'), val: zakatIncome, set: setZakatIncome },
+                            { label: t('bonus_thr'), val: zakatBonus, set: setZakatBonus }
                           ].map((f, i) => (
                             <div key={i}>
                               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">{f.label}</label>
@@ -4296,10 +4173,10 @@ export default function App() {
                       {zakatTab === 'maal' && (
                         <>
                           {[
-                            { label: 'Uang Tunai & Tabungan', val: maalTabungan, set: setMaalTabungan },
-                            { label: 'Nilai Emas / Perak', val: maalEmas, set: setMaalEmas },
-                            { label: 'Properti / Kendaraan (Non-primer)', val: maalProperti, set: setMaalProperti },
-                            { label: 'Hutang Jatuh Tempo', val: maalHutang, set: setMaalHutang, isDeduction: true }
+                            { label: t('tunai_tabungan'), val: maalTabungan, set: setMaalTabungan },
+                            { label: t('nilai_emas'), val: maalEmas, set: setMaalEmas },
+                            { label: t('properti_non_primer'), val: maalProperti, set: setMaalProperti },
+                            { label: t('hutang_jatuh_tempo'), val: maalHutang, set: setMaalHutang, isDeduction: true }
                           ].map((f, i) => (
                             <div key={i}>
                               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">{f.label}</label>
@@ -4323,10 +4200,10 @@ export default function App() {
                       {zakatTab === 'perdagangan' && (
                         <>
                           {[
-                            { label: 'Modal Diputar', val: dagangModal, set: setDagangModal },
-                            { label: 'Keuntungan Perdagangan', val: dagangUntung, set: setDagangUntung },
-                            { label: 'Piutang Lancar', val: dagangPiutang, set: setDagangPiutang },
-                            { label: 'Hutang Jatuh Tempo', val: dagangHutang, set: setDagangHutang, isDeduction: true }
+                            { label: t('modal_diputar'), val: dagangModal, set: setDagangModal },
+                            { label: t('untung_dagang'), val: dagangUntung, set: setDagangUntung },
+                            { label: t('piutang_lancar'), val: dagangPiutang, set: setDagangPiutang },
+                            { label: t('hutang_jatuh_tempo'), val: dagangHutang, set: setDagangHutang, isDeduction: true }
                           ].map((f, i) => (
                             <div key={i}>
                               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">{f.label}</label>
@@ -4350,8 +4227,8 @@ export default function App() {
                       {zakatTab === 'saham' && (
                         <>
                           {[
-                            { label: 'Nilai Saham Saat Ini', val: sahamNilai, set: setSahamNilai },
-                            { label: 'Keuntungan / Dividen', val: sahamDividen, set: setSahamDividen }
+                            { label: t('nilai_saham'), val: sahamNilai, set: setSahamNilai },
+                            { label: t('dividen'), val: sahamDividen, set: setSahamDividen }
                           ].map((f, i) => (
                             <div key={i}>
                               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">{f.label}</label>
@@ -4376,11 +4253,11 @@ export default function App() {
                         <>
                           <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-xl border border-amber-200 dark:border-amber-700/50 mb-4 bg-opacity-50">
                             <p className="text-xs text-amber-800 dark:text-amber-400 leading-relaxed">
-                              <b>Zakat Rikaz</b> (Harta Temuan/Karun) tidak memiliki syarat nisab maupun haul (waktu kepemilikan). Kewajiban zakatnya adalah <b>20% (Khums)</b> dan harus segera dikeluarkan saat harta tersebut ditemukan.
+                              {t('rikaz_info')}
                             </p>
                           </div>
                           {[
-                            { label: 'Nilai Harta Temuan (Rikaz)', val: rikazNilai, set: setRikazNilai }
+                            { label: t('nilai_rikaz'), val: rikazNilai, set: setRikazNilai }
                           ].map((f, i) => (
                             <div key={i}>
                               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">{f.label}</label>
@@ -4405,25 +4282,25 @@ export default function App() {
                         <>
                           <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-xl border border-amber-200 dark:border-amber-700/50 mb-4 bg-opacity-50">
                             <p className="text-xs text-amber-800 dark:text-amber-400 leading-relaxed">
-                              <b>Fidyah</b> dibayarkan untuk mengganti puasa Ramadhan yang ditinggalkan (bagi yang tidak mampu mengganti/qadha puasa). <b>Kafarat</b> adalah tebusan atas pelanggaran (seperti sumpah).
+                              {t('fidyah_info')}
                             </p>
                           </div>
                           <div className="mb-4">
-                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">Jenis Kewajiban</label>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">{t('jenis_kewajiban')}</label>
                             <div className="flex gap-2">
                               <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }}
                                 onClick={() => { setFidyahType('fidyah'); setFidyahRate('60000'); }}
                                 className={`transition-all duration-300 flex-1 py-2 text-xs font-bold rounded-lg border transition-colors ${fidyahType === 'fidyah' ? 'bg-primary-500 text-white border-primary-500' : 'bg-transparent text-slate-600 border-slate-300 dark:text-slate-300 dark:border-slate-600'}`}
-                              >Fidyah Puasa</motion.button>
+                              >{t('fidyah_puasa')}</motion.button>
                               <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }}
                                 onClick={() => { setFidyahType('kafarat'); setFidyahRate('60000'); }}
                                 className={`transition-all duration-300 flex-1 py-2 text-xs font-bold rounded-lg border transition-colors ${fidyahType === 'kafarat' ? 'bg-primary-500 text-white border-primary-500' : 'bg-transparent text-slate-600 border-slate-300 dark:text-slate-300 dark:border-slate-600'}`}
-                              >Kafarat Sumpah</motion.button>
+                              >{t('kafarat_sumpah')}</motion.button>
                             </div>
                           </div>
                           {[
-                            { label: fidyahType === 'fidyah' ? 'Jumlah Hari Ditinggalkan' : 'Jumlah Pelanggaran', val: fidyahDays, set: setFidyahDays, prefix: '' },
-                            { label: fidyahType === 'fidyah' ? 'Harga Fidyah per Hari' : 'Harga Kafarat (Makan 10 Orang Miskin)', val: fidyahRate, set: setFidyahRate, prefix: 'Rp' }
+                            { label: fidyahType === 'fidyah' ? t('jumlah_hari') : t('jumlah_pelanggaran'), val: fidyahDays, set: setFidyahDays, prefix: '' },
+                            { label: fidyahType === 'fidyah' ? t('harga_fidyah') : t('harga_kafarat'), val: fidyahRate, set: setFidyahRate, prefix: 'Rp' }
                           ].map((f, i) => (
                             <div key={i}>
                               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider mt-4">{f.label}</label>
@@ -4452,40 +4329,40 @@ export default function App() {
                     {totalAsset > 0 && (
                       <div>
                         <h5 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-200 dark:border-slate-700/50 pb-1.5 flex items-center gap-1.5">
-                          <FileText className="w-3.5 h-3.5" /> Rincian Sumber Dana
+                          <FileText className="w-3.5 h-3.5" /> {t('rincian')}
                         </h5>
                         <div className="space-y-1.5 mb-3 px-1">
                           {zakatTab === 'penghasilan' && (
                             <>
-                              {parseInt(zakatIncome.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">Pendapatan</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(zakatIncome)}</span></div>}
+                              {parseInt(zakatIncome.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('pendapatan')}</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(zakatIncome)}</span></div>}
                               {parseInt(zakatBonus.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">Bonus/THR</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(zakatBonus)}</span></div>}
                             </>
                           )}
                           {zakatTab === 'maal' && (
                             <>
-                              {parseInt(maalTabungan.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">Tabungan</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(maalTabungan)}</span></div>}
-                              {parseInt(maalEmas.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">Emas/Perak</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(maalEmas)}</span></div>}
-                              {parseInt(maalProperti.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">Properti/Kendaraan</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(maalProperti)}</span></div>}
-                              {parseInt(maalHutang.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">Hutang</span><span className="font-medium text-red-500">-Rp {formatCurrencyForm(maalHutang)}</span></div>}
+                              {parseInt(maalTabungan.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('tabungan')}</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(maalTabungan)}</span></div>}
+                              {parseInt(maalEmas.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('emas_perak')}</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(maalEmas)}</span></div>}
+                              {parseInt(maalProperti.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('properti_kendaraan')}</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(maalProperti)}</span></div>}
+                              {parseInt(maalHutang.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('hutang_label')}</span><span className="font-medium text-red-500">-Rp {formatCurrencyForm(maalHutang)}</span></div>}
                             </>
                           )}
                           {zakatTab === 'perdagangan' && (
                             <>
-                              {parseInt(dagangModal.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">Modal Diputar</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(dagangModal)}</span></div>}
-                              {parseInt(dagangUntung.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">Keuntungan</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(dagangUntung)}</span></div>}
-                              {parseInt(dagangPiutang.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">Piutang Lancar</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(dagangPiutang)}</span></div>}
-                              {parseInt(dagangHutang.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">Hutang</span><span className="font-medium text-red-500">-Rp {formatCurrencyForm(dagangHutang)}</span></div>}
+                              {parseInt(dagangModal.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('modal_diputar_label')}</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(dagangModal)}</span></div>}
+                              {parseInt(dagangUntung.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('keuntungan')}</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(dagangUntung)}</span></div>}
+                              {parseInt(dagangPiutang.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('piutang_lancar_label')}</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(dagangPiutang)}</span></div>}
+                              {parseInt(dagangHutang.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('hutang_label')}</span><span className="font-medium text-red-500">-Rp {formatCurrencyForm(dagangHutang)}</span></div>}
                             </>
                           )}
                           {zakatTab === 'saham' && (
                             <>
-                              {parseInt(sahamNilai.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">Nilai Saham</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(sahamNilai)}</span></div>}
-                              {parseInt(sahamDividen.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">Dividen</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(sahamDividen)}</span></div>}
+                              {parseInt(sahamNilai.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('nilai_saham')}</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(sahamNilai)}</span></div>}
+                              {parseInt(sahamDividen.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('dividen')}</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(sahamDividen)}</span></div>}
                             </>
                           )}
                           {zakatTab === 'rikaz' && (
                             <>
-                              {parseInt(rikazNilai.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">Nilai Temuan</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(rikazNilai)}</span></div>}
+                              {parseInt(rikazNilai.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('nilai_temuan')}</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(rikazNilai)}</span></div>}
                             </>
                           )}
                           {zakatTab === 'fidyah' && (
@@ -4501,17 +4378,17 @@ export default function App() {
                     {zakatTab !== 'rikaz' && zakatTab !== 'fidyah' && (
                       <div>
                         <h5 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-200 dark:border-slate-700/50 pb-1.5 flex items-center gap-1.5">
-                          <Calculator className="w-3.5 h-3.5" /> Detail Perhitungan Nisab
+                          <Calculator className="w-3.5 h-3.5" /> {t('perhitungan_nisab')}
                         </h5>
                         <div className="space-y-1.5 px-1 text-xs">
                           {zakatTab === 'penghasilan' && (
                             <div className="mb-2 text-[10px] text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800/50 p-2 rounded border border-slate-100 dark:border-slate-700/50 leading-relaxed">
-                              Nisab zakat penghasilan adalah senilai 85 gram emas per tahun. Jika dibayar per bulan, nisab dihitung dari nilai 85 gram emas dibagi 12 bulan. Zakat yang harus dikeluarkan adalah 2,5% dari total penghasilan.
+                              {t('desc_penghasilan')}
                             </div>
                           )}
                           {zakatTab === 'maal' && (
                             <div className="mb-2 text-[10px] text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800/50 p-2 rounded border border-slate-100 dark:border-slate-700/50 leading-relaxed">
-                              Nisab zakat maal (harta simpanan) adalah senilai 85 gram emas. Harta yang wajib dizakati adalah yang telah mencapai haul (1 tahun) dan dihitung setelah dikurangi hutang jatuh tempo. Nilai zakatnya adalah 2,5%.
+                              {t('desc_maal')}
                             </div>
                           )}
                           {zakatTab === 'perdagangan' && (
@@ -4544,12 +4421,12 @@ export default function App() {
 
                     <div className={`${totalAsset > 0 || (zakatTab !== 'rikaz' && zakatTab !== 'fidyah') ? 'pt-3 border-t border-slate-200 dark:border-slate-700/50 mt-2' : ''}`}>
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{zakatTab === 'fidyah' ? 'Total Tagihan' : 'Total Harta Terhitung'}</span>
+                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{zakatTab === 'fidyah' ? t('total_tagihan') : t('total_harta')}</span>
                         <span className="text-sm font-bold text-primary-600 dark:text-primary-500">Rp {formatCurrencyForm(totalAsset.toString())}</span>
                       </div>
                       {zakatTab !== 'fidyah' && (
                         <div className="flex justify-between items-center">
-                          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Batas Nisab {zakatTab === 'rikaz' ? '(Tidak Ada)' : zakatTab === 'penghasilan' ? '(Bulan)' : '(Tahun)'}</span>
+                          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t('batas_nisab')} {zakatTab === 'rikaz' ? '(Tidak Ada)' : zakatTab === 'penghasilan' ? '(Bulan)' : '(Tahun)'}</span>
                           <span className="text-[11px] font-medium text-slate-700 dark:text-slate-300">Rp {formatCurrencyForm(Math.floor(requiredNisab).toString())}</span>
                         </div>
                       )}
@@ -4564,10 +4441,10 @@ export default function App() {
                     >
                       <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-emerald-400 to-emerald-500"></div>
                       <p className="text-xs font-extrabold text-emerald-800 dark:text-emerald-400 uppercase tracking-widest mb-1.5 flex items-center justify-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> {zakatTab === 'fidyah' ? 'Wajib Dibayarkan' : `Wajib Zakat (${zakatTab === 'rikaz' ? '20%' : '2.5%'})`}
+                        <CheckCircle2 className="w-3.5 h-3.5" /> {zakatTab === 'fidyah' ? t('wajib_dibayar') : `${t('wajib_zakat_rate')} (${zakatTab === 'rikaz' ? '20%' : '2.5%'})`}
                       </p>
                       <h4 className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mb-2 drop-shadow-sm">Rp {formatCurrencyForm(zakatToPay.toString())}</h4>
-                      <p className="text-xs font-medium text-emerald-700/80 dark:text-emerald-400/80 leading-relaxed px-4">{zakatTab === 'fidyah' ? (fidyahType === 'fidyah' ? 'Tunaikan fidyah Anda untuk mengganti puasa yang ditinggalkan.' : 'Tunaikan kafarat Anda sebagai tebusan atas pelanggaran.') : zakatTab === 'rikaz' ? 'Rikaz (Harta Temuan) wajib dikeluarkan zakatnya sebesar 20% tanpa syarat nisab dan haul.' : 'Alhamdulillah, harta Anda telah mencapai nisab. Tunaikan segera untuk membersihkan dan memberkahi harta Anda.'}</p>
+                      <p className="text-xs font-medium text-emerald-700/80 dark:text-emerald-400/80 leading-relaxed px-4">{zakatTab === 'fidyah' ? (fidyahType === 'fidyah' ? t('fidyah_desc_result') : t('kafarat_desc_result')) : zakatTab === 'rikaz' ? t('rikaz_desc_result') : t('zakat_cleanse')}</p>
                     </motion.div>
                   ) : totalAsset > 0 && zakatTab !== 'fidyah' ? (
                     <motion.div 
@@ -4575,7 +4452,7 @@ export default function App() {
                       animate={{ opacity: 1 }}
                       className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl text-center border border-slate-200 dark:border-slate-700/50"
                     >
-                      <p className="text-xs font-medium text-slate-600 dark:text-slate-400 leading-relaxed">Harta Anda belum mencapai batas nisab wajib zakat. Anda tetap bisa meraih keutamaan berbagi dengan menunaikan <b>Infak</b> atau <b>Sedekah</b>.</p>
+                      <p className="text-xs font-medium text-slate-600 dark:text-slate-400 leading-relaxed">{t('harta_kurang')}</p>
                     </motion.div>
                   ) : null}
 
@@ -4594,7 +4471,7 @@ export default function App() {
                   }}
                   className={`w-full py-4 rounded-xl font-extrabold flex items-center justify-center gap-2 transition-all text-sm md:text-base ${ isEligibleZakat ? 'bg-gradient-to-r from-primary-500 to-[#1799dc] hover:from-primary-600 hover:to-[#1380b8] text-white shadow-lg shadow-primary-500/30 hover:shadow-xl hover:-translate-y-0.5' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed border border-slate-200 dark:border-slate-700/50' } duration-300`}
                 >
-                  {isEligibleZakat ? 'Bismillah, Tunaikan Zakat' : 'Penuhi Nisab Terlebih Dahulu'}
+                  {isEligibleZakat ? t('tunaikan_zakat_btn') : t('penuhi_nisab_btn')}
                 </motion.button>
               </div>
 

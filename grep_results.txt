@@ -1,0 +1,587 @@
+src/components/QuranInteractive.tsx:34:    const rect = button.getBoundingClientRect();
+src/components/QuranInteractive.tsx:47:    setTimeout(() => {
+src/components/QuranInteractive.tsx:106:    onAddToCart(program, totalAmount.toString());
+src/components/QuranInteractive.tsx:134:              Rp {new Intl.NumberFormat('id-ID').format(105000000)}
+src/components/QuranInteractive.tsx:316:           <ItemControl item={ITEMS[0]} count={counts.iqro} onAdd={() => updateCount('iqro', 1)} onSub={() => updateCount('iqro', -1)} onRipple={createRipple} />
+src/components/QuranInteractive.tsx:319:           <ItemControl item={ITEMS[1]} count={counts.quran} onAdd={() => updateCount('quran', 1)} onSub={() => updateCount('quran', -1)} onRipple={createRipple} />
+src/components/QuranInteractive.tsx:322:           <ItemControl item={ITEMS[2]} count={counts.rehal} onAdd={() => updateCount('rehal', 1)} onSub={() => updateCount('rehal', -1)} onRipple={createRipple} />
+src/components/QuranInteractive.tsx:325:           <ItemControl item={ITEMS[3]} count={counts.rak} onAdd={() => updateCount('rak', 1)} onSub={() => updateCount('rak', -1)} onRipple={createRipple} />
+src/components/QuranInteractive.tsx:334:            {new Intl.NumberFormat('id-ID').format(totalAmount)}
+src/components/QuranInteractive.tsx:379:    const rect = button.getBoundingClientRect();
+src/components/QuranInteractive.tsx:392:    setTimeout(() => {
+src/components/MasjidInteractive.tsx:34:    const rect = button.getBoundingClientRect();
+src/components/MasjidInteractive.tsx:47:    setTimeout(() => {
+src/components/MasjidInteractive.tsx:110:    onAddToCart(program, totalAmount.toString());
+src/components/MasjidInteractive.tsx:138:              Rp {new Intl.NumberFormat('id-ID').format(150000000)}
+src/components/MasjidInteractive.tsx:301:           <ItemControl item={ITEMS[0]} count={counts.semen} onAdd={() => updateCount('semen', 1)} onSub={() => updateCount('semen', -1)} onRipple={createRipple} />
+src/components/MasjidInteractive.tsx:304:           <ItemControl item={ITEMS[1]} count={counts.bata} onAdd={() => updateCount('bata', 1)} onSub={() => updateCount('bata', -1)} onRipple={createRipple} />
+src/components/MasjidInteractive.tsx:307:           <ItemControl item={ITEMS[2]} count={counts.keramik} onAdd={() => updateCount('keramik', 1)} onSub={() => updateCount('keramik', -1)} onRipple={createRipple} />
+src/components/MasjidInteractive.tsx:310:           <ItemControl item={ITEMS[3]} count={counts.karpet} onAdd={() => updateCount('karpet', 1)} onSub={() => updateCount('karpet', -1)} onRipple={createRipple} />
+src/components/MasjidInteractive.tsx:319:            {new Intl.NumberFormat('id-ID').format(totalAmount)}
+src/components/MasjidInteractive.tsx:364:    const rect = button.getBoundingClientRect();
+src/components/MasjidInteractive.tsx:377:    setTimeout(() => {
+src/components/PanganInteractive.tsx:34:    const rect = button.getBoundingClientRect();
+src/components/PanganInteractive.tsx:47:    setTimeout(() => {
+src/components/PanganInteractive.tsx:106:    onAddToCart(program, totalAmount.toString());
+src/components/PanganInteractive.tsx:134:              Rp {new Intl.NumberFormat('id-ID').format(45000000)}
+src/components/PanganInteractive.tsx:293:           <ItemControl item={ITEMS[0]} count={counts.beras} onAdd={() => updateCount('beras', 1)} onSub={() => updateCount('beras', -1)} onRipple={createRipple} />
+src/components/PanganInteractive.tsx:296:           <ItemControl item={ITEMS[1]} count={counts.minyak} onAdd={() => updateCount('minyak', 1)} onSub={() => updateCount('minyak', -1)} onRipple={createRipple} />
+src/components/PanganInteractive.tsx:299:           <ItemControl item={ITEMS[2]} count={counts.lauk} onAdd={() => updateCount('lauk', 1)} onSub={() => updateCount('lauk', -1)} onRipple={createRipple} />
+src/components/PanganInteractive.tsx:302:           <ItemControl item={ITEMS[3]} count={counts.gula} onAdd={() => updateCount('gula', 1)} onSub={() => updateCount('gula', -1)} onRipple={createRipple} />
+src/components/PanganInteractive.tsx:311:            {new Intl.NumberFormat('id-ID').format(totalAmount)}
+src/components/PanganInteractive.tsx:356:    const rect = button.getBoundingClientRect();
+src/components/PanganInteractive.tsx:369:    setTimeout(() => {
+src/components/PrayerCountdownCard.tsx:27:            <span className="text-4xl font-black leading-none">{String(nextPrayer.hours).padStart(2, '0')}</span>
+src/components/PrayerCountdownCard.tsx:32:            <span className="text-4xl font-black leading-none">{String(nextPrayer.mins).padStart(2, '0')}</span>
+src/components/ProgramDetailPage.tsx:11:  return new Intl.NumberFormat('id-ID').format(Number(numberString)).replace(/,/g, '.');
+src/components/ProgramDetailPage.tsx:34:    setLocalDonationAmount(formatted);
+src/components/ProgramDetailPage.tsx:44:  useEffect(() => {
+src/components/ProgramDetailPage.tsx:49:      setDonaturList(prev => {
+src/components/ProgramDetailPage.tsx:134:                navigator.clipboard.writeText(window.location.href);
+src/components/ProgramDetailPage.tsx:135:                alert("Link berhasil disalin!");
+src/components/ProgramDetailPage.tsx:198:               <div className="absolute top-0 bottom-0 left-0 right-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.15)_50%,rgba(255,255,255,0.15)_75%,transparent_75%,transparent)] bg-[length:1rem_1rem] animate-[progress_1s_linear_infinite]"></div>
+src/components/ProgramDetailPage.tsx:205:               <span className="font-bold text-slate-800 dark:text-white text-sm md:text-base truncate block">Rp {new Intl.NumberFormat('id-ID').format(program.collected)}</span>
+src/components/ProgramDetailPage.tsx:209:               <span className="font-bold text-slate-800 dark:text-white text-sm md:text-base truncate block">Rp {new Intl.NumberFormat('id-ID').format(program.target)}</span>
+src/components/ProgramDetailPage.tsx:381:                          {donor.name.charAt(0)}
+src/components/ProgramDetailPage.tsx:409:                    onClick={() => setLocalDonationAmount(amt)}
+src/components/ProgramDetailPage.tsx:429:                 onClick={() => onAddToCart(program, localDonationAmount)}
+src/components/QuranPage.tsx:71:    useEffect(() => {
+src/components/QuranPage.tsx:101:            alert("Silakan login untuk menyimpan penanda.");
+src/components/QuranPage.tsx:127:            alert(`Berhasil menandai Surat ${lastRead.surahName} Ayat ${ayahNumber}`);
+src/components/QuranPage.tsx:130:            alert("Gagal menyimpan penanda.");
+src/components/QuranPage.tsx:137:        navigator.clipboard.writeText(text);
+src/components/QuranPage.tsx:139:        setTimeout(() => setCopiedId(null), 2000);
+src/components/QuranPage.tsx:159:    useEffect(() => {
+src/components/QuranPage.tsx:175:    useEffect(() => {
+src/components/QuranPage.tsx:191:    useEffect(() => {
+src/components/QuranPage.tsx:206:    useEffect(() => {
+src/components/QuranPage.tsx:237:    useEffect(() => {
+src/components/QuranPage.tsx:240:            setTimeout(() => {
+src/components/QuranPage.tsx:248:    useEffect(() => {
+src/components/QuranPage.tsx:251:            setTimeout(() => {
+src/components/QuranPage.tsx:259:    useEffect(() => {
+src/components/QuranPage.tsx:404:            voice = voices.find(v => v.lang.startsWith(lang.split('-')[0]) && (v.name.includes('Google') || v.name.includes('Premium') || v.name.includes('Enhanced')));
+src/components/QuranPage.tsx:408:        if (!voice) voice = voices.find(v => v.lang.startsWith(lang.split('-')[0]));
+src/components/QuranPage.tsx:472:                const words = processedText.split(' ');
+src/components/QuranPage.tsx:514:                audioEl.src = `/api/tts?text=${encodeURIComponent(chunk)}&lang=${lang.split('-')[0]}`;
+src/components/QuranPage.tsx:534:                            alert('Browser memblokir audio otomatis. Silakan klik tombol lagi.');
+src/components/QuranPage.tsx:596:                        setTimeout(() => window.speechSynthesis.speak(utterance), 50);
+src/components/QuranPage.tsx:608:                    setTimeout(() => window.speechSynthesis.speak(utterance), 50);
+src/components/QuranPage.tsx:649:                    setTimeout(() => window.speechSynthesis.speak(utterance), 50);
+src/components/QuranPage.tsx:661:                setTimeout(() => window.speechSynthesis.speak(utterance), 50);
+src/components/QuranPage.tsx:670:    useEffect(() => {
+src/components/QuranPage.tsx:681:        setSearchHadithText('');
+src/components/QuranPage.tsx:809:        const words = content.split(/\s+/);
+src/components/QuranPage.tsx:813:             return title.charAt(0).toUpperCase() + title.slice(1) + (words.length > 10 ? '...' : '');
+src/components/QuranPage.tsx:818:        return title.charAt(0).toUpperCase() + title.slice(1) + (words.length > titleLen ? '...' : '');
+src/components/QuranPage.tsx:959:            mediaRecorder.start();
+src/components/QuranPage.tsx:963:            alert('Tidak dapat mengakses mikrofon. Pastikan Anda telah memberikan izin.');
+src/components/QuranPage.tsx:1004:                const audioBase64 = base64data.split(',')[1];
+src/components/QuranPage.tsx:1037:                    speakFeedbackAndPlayCorrect(feedbackText, ayah.audio[selectedReciter], ayahNumber);
+src/components/QuranPage.tsx:1078:                    pagesMap.set(num, []);
+src/components/QuranPage.tsx:1080:                pagesMap.get(num).push(ayah);
+src/components/QuranPage.tsx:1083:                        .sort((a, b) => a[0] - b[0])
+src/components/QuranPage.tsx:1094:    useEffect(() => {
+src/components/QuranPage.tsx:1861:                                                        setTimeout(() => {
+src/components/QuranPage.tsx:1865:                                                            setTimeout(() => el?.classList.remove('ring-4', 'ring-[#1799dc]/30'), 2000);
+src/components/QuranPage.tsx:1933:                                    onChange={(e) => setSearchHadithText(e.target.value)}
+src/components/QuranPage.tsx:2006:                                                        {hadith.id.split(/(\[[^\]]+\])/).map((part: string, i: number) => {
+src/components/QuranPage.tsx:2082:                                                            {parseRiwayat(selectedDoa.riwayat, selectedDoa.ayat, selectedDoa.artinya)}
+src/components/DonationHistory.tsx:35:    alert('Profil berhasil disimpan');
+src/components/ZakatPage.tsx:12:  return new Intl.NumberFormat('id-ID').format(Number(numberString)).replace(/,/g, '.');
+src/components/ZakatPage.tsx:62:    const price = parseInt(calcGoldPrice.replace(/\D/g, '')) || 1350000;
+src/components/ZakatPage.tsx:72:        const income = parseInt(calcIncome.replace(/\D/g, '')) || 0;
+src/components/ZakatPage.tsx:73:        const bonus = parseInt(calcBonus.replace(/\D/g, '')) || 0;
+src/components/ZakatPage.tsx:79:        const tabunganVal = parseInt(calcMaalTabungan.replace(/\D/g, '')) || 0;
+src/components/ZakatPage.tsx:80:        const e = parseInt(calcMaalEmas.replace(/\D/g, '')) || 0;
+src/components/ZakatPage.tsx:81:        const p = parseInt(calcMaalProperti.replace(/\D/g, '')) || 0;
+src/components/ZakatPage.tsx:82:        const h = parseInt(calcMaalHutang.replace(/\D/g, '')) || 0;
+src/components/ZakatPage.tsx:88:        const m = parseInt(calcDagangModal.replace(/\D/g, '')) || 0;
+src/components/ZakatPage.tsx:89:        const u = parseInt(calcDagangUntung.replace(/\D/g, '')) || 0;
+src/components/ZakatPage.tsx:90:        const p = parseInt(calcDagangPiutang.replace(/\D/g, '')) || 0;
+src/components/ZakatPage.tsx:91:        const h = parseInt(calcDagangHutang.replace(/\D/g, '')) || 0;
+src/components/ZakatPage.tsx:97:        const s = parseInt(calcSahamNilai.replace(/\D/g, '')) || 0;
+src/components/ZakatPage.tsx:98:        const d = parseInt(calcSahamDividen.replace(/\D/g, '')) || 0;
+src/components/ZakatPage.tsx:104:        const r = parseInt(calcRikazNilai.replace(/\D/g, '')) || 0;
+src/components/ZakatPage.tsx:110:        const days = parseInt(calcFidyahDays.replace(/\D/g, '')) || 0;
+src/components/ZakatPage.tsx:111:        const rate = parseInt(calcFidyahRate.replace(/\D/g, '')) || 0;
+src/components/ZakatPage.tsx:125:      setZakatAmount(formatCurrencyForm(calcZakatAmmount.toString()));
+src/components/ZakatPage.tsx:131:    return parseInt(zakatAmount.replace(/\D/g, '')) || 0;
+src/components/ZakatPage.tsx:135:    e.preventDefault();
+src/components/ZakatPage.tsx:137:        alert("Nomor telepon kudu diisi.");
+src/components/ZakatPage.tsx:142:        alert("Pilih metode pembayaran terlebih dahulu.");
+src/components/ZakatPage.tsx:151:            alert("Nominal zakat tidak valid");
+src/components/ZakatPage.tsx:157:        await new Promise(resolve => setTimeout(resolve, 800));
+src/components/ZakatPage.tsx:168:        alert(err.message || "Terjadi kesalahan sistem pembayaran.");
+src/components/ZakatPage.tsx:388:                      <span className="font-bold text-slate-600 dark:text-slate-300">#{Math.floor(Math.random() * 100000000).toString().padStart(8, '0')}</span>
+src/components/ZakatPage.tsx:406:                        setZakatAmount('');
+src/components/ZakatPage.tsx:516:                            onChange={(e) => setZakatAmount(e.target.value)}
+src/components/ZakatPage.tsx:720:                                <input type="text" value={formatCurrencyForm(f.val)} onChange={(e) => f.set(e.target.value)} placeholder="0" className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-[#1799dc]/20 focus:border-[#1799dc] outline-none font-bold text-sm transition-all dark:text-white" />
+src/components/ZakatPage.tsx:744:                                <input type="text" value={formatCurrencyForm(f.val)} onChange={(e) => f.set(e.target.value)} placeholder="0" className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 rounded-xl border outline-none font-bold text-sm transition-all dark:text-white ${f.color || 'border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-[#1799dc]/20 focus:border-[#1799dc]'}`} />
+src/components/ZakatPage.tsx:768:                                <input type="text" value={formatCurrencyForm(f.val)} onChange={(e) => f.set(e.target.value)} placeholder="0" className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 rounded-xl border outline-none font-bold text-sm transition-all dark:text-white ${f.color || 'border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-[#1799dc]/20 focus:border-[#1799dc]'}`} />
+src/components/ZakatPage.tsx:790:                                <input type="text" value={formatCurrencyForm(f.val)} onChange={(e) => f.set(e.target.value)} placeholder="0" className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-[#1799dc]/20 focus:border-[#1799dc] outline-none font-bold text-sm transition-all dark:text-white" />
+src/components/QurbanPage.tsx:22:  return new Intl.NumberFormat('id-ID').format(Number(numberString)).replace(/,/g, '.');
+src/components/QurbanPage.tsx:528:  useEffect(() => {
+src/components/QurbanPage.tsx:538:  useEffect(() => {
+src/components/QurbanPage.tsx:578:  useEffect(() => {
+src/components/QurbanPage.tsx:690:    e.preventDefault();
+src/components/QurbanPage.tsx:696:    setTimeout(() => {
+src/components/QurbanPage.tsx:702:  useEffect(() => {
+src/components/QurbanPage.tsx:719:    e.preventDefault();
+src/components/QurbanPage.tsx:742:    setIsForParent(false);
+src/components/QurbanPage.tsx:748:    e.preventDefault();
+src/components/QurbanPage.tsx:754:    setTimeout(() => {
+src/components/QurbanPage.tsx:760:  useEffect(() => {
+src/components/QurbanPage.tsx:847:              {t('tunaikan')}
+src/components/QurbanPage.tsx:853:              <Sparkles className="w-3.5 h-3.5 hidden sm:block" /> {t('tabungan')}
+src/components/QurbanPage.tsx:859:              {t('lacak')}
+src/components/QurbanPage.tsx:865:              <Heart className="w-3.5 h-3.5 hidden sm:block" /> {t('dampak')}
+src/components/QurbanPage.tsx:889:                        <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">{t('identitas_penunaian')}</h3>
+src/components/QurbanPage.tsx:894:                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">{t('nama_lengkap')}</label>
+src/components/QurbanPage.tsx:895:                          <input required type="text" value={donorName} onChange={e => setDonorName(e.target.value)} placeholder={t('nama_anda')} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 outline-none text-sm font-black shadow-sm focus:border-blue-400" />
+src/components/QurbanPage.tsx:898:                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">{t('wa_kontak')}</label>
+src/components/QurbanPage.tsx:904:                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">{t('niat_qurban')}</label>
+src/components/QurbanPage.tsx:908:                            value={isForParent ? t('ortu_tercinta') : qurbanFor}
+src/components/QurbanPage.tsx:916:                        <button type="button" onClick={() => setIsForParent(!isForParent)} className={`text-[10px] font-bold flex items-center gap-1.5 mt-1 transition-colors ${isForParent ? 'text-emerald-500' : 'text-slate-400 hover:text-emerald-500'}`}>
+src/components/QurbanPage.tsx:918:                          {isForParent ? t('persembahan_mulia') : t('pilih_hadiah_ortu')}
+src/components/QurbanPage.tsx:926:                        <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">{t('pilihan_qurban_wilayah')}</h3>
+src/components/QurbanPage.tsx:950:                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">{t('wilayah_penyaluran_label')}</label>
+src/components/QurbanPage.tsx:964:                                 {t('lokal')}
+src/components/QurbanPage.tsx:975:                                 {t('global')}
+src/components/QurbanPage.tsx:1004:                                    <span>{t('pilih_titik_distribusi')}</span>
+src/components/QurbanPage.tsx:1005:                                    <span className="text-[#1799dc] text-[7px]">{selectedRegion === 'pelosok' ? `📍 ${t('lokal')}` : `🌐 ${t('global')}`}</span>
+src/components/QurbanPage.tsx:1058:                                            <span>{t('sisa_kuota')}: {prog.quota - prog.filled}</span>
+src/components/QurbanPage.tsx:1059:                                            <span className={progress > 90 ? 'text-red-500' : 'text-[#1799dc]'}>{Math.round(progress)}% {t('terisi')}</span>
+src/components/QurbanPage.tsx:1077:                         <Info className="w-3.5 h-3.5" /> {t('lihat_detail_program')}
+src/components/QurbanPage.tsx:1098:                                  <h3 className="text-sm md:text-base font-black uppercase tracking-tight text-slate-800 dark:text-white leading-tight">{t('kawanan_kebaikan')}</h3>
+src/components/QurbanPage.tsx:1099:                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">{qurbanQty} {t('ekor_kambing_pilihan')}</p>
+src/components/QurbanPage.tsx:1154:                                  <h3 className="text-sm md:text-base font-black uppercase tracking-tight text-slate-800 dark:text-white leading-tight">{t('kawanan_utama')}</h3>
+src/components/QurbanPage.tsx:1155:                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">{qurbanQty} {t('ekor_sapi_tangguh')}</p>
+src/components/QurbanPage.tsx:1172:                                    <span className="text-[7px] font-black uppercase text-blue-500 tracking-[0.2em]">{t('pilihan')}</span>
+src/components/QurbanPage.tsx:1182:                                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest italic font-mono text-center">{t('pilih_jumlah_sapi')}</p>
+src/components/QurbanPage.tsx:1187:                              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight text-center px-4 bg-slate-50 dark:bg-slate-800 py-1 rounded-full border border-slate-100 dark:border-slate-700">{t('sapi_utuh_desc')} <span className="text-blue-500 font-black">{selectedProgram.location}</span></p>
+src/components/QurbanPage.tsx:1227:                                  <h3 className="text-sm md:text-base font-black uppercase tracking-tight text-slate-800 dark:text-white leading-tight">{t('mosaik_kebaikan')}</h3>
+src/components/QurbanPage.tsx:1230:                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">{t('sapi_bagian_1_7')}</p>
+src/components/QurbanPage.tsx:1238:                                <span className="text-[8px] font-black text-orange-600 dark:text-orange-400 uppercase tracking-[0.1em] leading-none mb-0.5">{t('potensi')}</span>
+src/components/QurbanPage.tsx:1239:                                <span className="text-[10px] font-black text-slate-700 dark:text-slate-200 leading-none tracking-tight">{t('pahala_abadi')}</span>
+src/components/QurbanPage.tsx:1277:                                  <span className="text-[8px] font-black text-blue-500 uppercase tracking-widest leading-none">{t('sahabat')}</span>
+src/components/QurbanPage.tsx:1284:                              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(23,153,220,0.08)_0%,transparent_70%)]" />
+src/components/QurbanPage.tsx:1430:                                        {t('bagian_anda_label')}
+src/components/QurbanPage.tsx:1443:                                  {t('sedekah_terbaik_quote')} 
+src/components/QurbanPage.tsx:1444:                                  <span className="text-[10px] mt-1.5 block text-slate-400 italic font-normal">{t('kepingan_niat_desc').replace('{location}', selectedProgram.location)}</span>
+src/components/QurbanPage.tsx:1457:                                    <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter">{t('penerima_manfaat')}</p>
+src/components/QurbanPage.tsx:1469:                                    <p className="text-[8px] font-black text-blue-600 uppercase tracking-tighter">{t('solidaritas')}</p>
+src/components/QurbanPage.tsx:1471:                                  <p className="text-[10px] font-bold text-slate-700 dark:text-slate-200 line-clamp-1">{t('bersama_donatur_lain').replace('{count}', (selectedProgram.filled % 7 || 6).toString())}</p>
+src/components/QurbanPage.tsx:1480:                                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">{t('puzzle_progress')}</span>
+src/components/QurbanPage.tsx:1482:                                  <span className="text-[10px] font-black text-[#1799dc]">{Math.round((((selectedProgram.filled % 7) || 4) / 7) * 100)}% {t('menyatu')}</span>
+src/components/QurbanPage.tsx:1501:                                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{t('sahabat_lain')}</span>
+src/components/QurbanPage.tsx:1505:                                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{t('bagian_anda_label')}</span>
+src/components/QurbanPage.tsx:1509:                                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{t('mari_lengkapi')}</span>
+src/components/QurbanPage.tsx:1520:                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">{t('jumlah_qurban')}</label>
+src/components/QurbanPage.tsx:1535:                        <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">{t('metode_pembayaran')}</h3>
+src/components/QurbanPage.tsx:1539:                        <input type="text" placeholder={t('cari_bank')} value={paymentSearchQuery} onChange={e => setPaymentSearchQuery(e.target.value)} className="w-full pl-7 pr-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full text-[10px] font-bold outline-none focus:border-blue-400 transition-all shadow-sm" />
+src/components/QurbanPage.tsx:1574:                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">{t('total_donasi')}</p>
+src/components/QurbanPage.tsx:1579:                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{t('rincian_amanah')}</p>
+src/components/QurbanPage.tsx:1581:                            {qurbanQty} {selectedProgram.type === 'sapi_1_7' ? t('bagian_sapi') : t('ekor_kambing')}
+src/components/QurbanPage.tsx:1591:                              onAddToCart(selectedProgram, calculateQurbanTotal().toString());
+src/components/QurbanPage.tsx:1596:                          title={t('kantung_kebaikan')}
+src/components/QurbanPage.tsx:1605:                          <span className="flex items-center gap-2">{t('tunaikan_qurban_sekarang')} <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></span>
+src/components/QurbanPage.tsx:1606:                          <span className="text-[10px] opacity-70 uppercase tracking-[0.3em] mt-0.5">{t('selesaikan_checkout_aman')}</span>
+src/components/QurbanPage.tsx:1630:                  <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white mb-3">{t('tabungan_qurban_title')}</h2>
+src/components/QurbanPage.tsx:1631:                  <p className="text-slate-600 dark:text-slate-400 max-w-xl mx-auto text-sm md:text-base leading-relaxed">{t('tabungan_qurban_desc')}</p>
+src/components/QurbanPage.tsx:1637:                      <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider mb-4 border-b border-slate-200 dark:border-slate-700 pb-3">{t('simulasi_tabungan')}</h3>
+src/components/QurbanPage.tsx:1641:                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1 mb-1.5">{t('target_qurban_label')}</label>
+src/components/QurbanPage.tsx:1644:                            onChange={(e) => setTabunganTarget(Number(e.target.value))}
+src/components/QurbanPage.tsx:1647:                            <option value={2500000}>{t('kambing_ekor')} - Rp 2.500.000</option>
+src/components/QurbanPage.tsx:1648:                            <option value={2100000}>{t('sapi_bagian')} - Rp 2.100.000</option>
+src/components/QurbanPage.tsx:1649:                            <option value={18000000}>{t('sapi_unit_utuh')} - Rp 18.000.000</option>
+src/components/QurbanPage.tsx:1653:                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1 mb-1.5">{t('periode_tabungan')} ({t('bulan_label')})</label>
+src/components/QurbanPage.tsx:1662:                                {m} {t('bulan_label').substring(0, 3)}
+src/components/QurbanPage.tsx:1669:                             <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">{t('setoran_per_bulan')}</p>
+src/components/QurbanPage.tsx:1671:                             <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70 mt-1">~ Rp {formatCurrencyForm(Math.floor(tabunganTarget / tabunganMonths / 30).toString())} / {t('per_hari')}</p>
+src/components/QurbanPage.tsx:1680:                       <h3 className="text-lg font-black text-slate-900 dark:text-white">{t('keuntungan_menabung_qurban')}</h3>
+src/components/QurbanPage.tsx:1686:                           <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed"><strong className="text-slate-900 dark:text-white font-bold">{t('ringan_terencana')}.</strong> {t('ringan_terencana_desc')}</p>
+src/components/QurbanPage.tsx:1692:                           <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed"><strong className="text-slate-900 dark:text-white font-bold">{t('autodebet_pintar')}.</strong> {t('autodebet_pintar_desc')}</p>
+src/components/QurbanPage.tsx:1698:                           <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed"><strong className="text-slate-900 dark:text-white font-bold">{t('prioritas_hewan_terbaik')}.</strong> {t('prioritas_hewan_terbaik_desc')}</p>
+src/components/QurbanPage.tsx:1704:                      onClick={() => alert(t('fitur_segera_hadir'))}
+src/components/QurbanPage.tsx:1707:                      <span className="flex items-center gap-2">{t('mulai_tabungan_sekarang')} <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></span>
+src/components/QurbanPage.tsx:1739:                    {t('track_your_qurban_title')}
+src/components/QurbanPage.tsx:1741:                  <p className="text-slate-500 dark:text-slate-400 text-xs mb-6 italic">{t('track_your_qurban_desc')}</p>
+src/components/QurbanPage.tsx:1748:                      placeholder={t('search_placeholder')}
+src/components/QurbanPage.tsx:1756:                      {searchStatus === 'loading' ? <Loader2 className="w-3 h-3 animate-spin" /> : t('lacak_button')}
+src/components/QurbanPage.tsx:1773:                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">{t('pequrban_terdaftar')}</p>
+src/components/QurbanPage.tsx:1780:                               <Milestone className="w-3 h-3" /> {t('berat_hewan')}: 280-320 Kg
+src/components/QurbanPage.tsx:2331:                                    const val = parseInt(e.target.value) || 0;
+src/components/QurbanPage.tsx:2603:                    <span className="font-bold text-slate-500 dark:text-slate-300">#{Math.floor(Math.random() * 100000000).toString().padStart(8, '0')}</span>
+src/components/AmaliyahPage.tsx:110:  useEffect(() => {
+src/components/AmaliyahPage.tsx:120:    e.preventDefault();
+src/components/AmaliyahPage.tsx:133:    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+src/components/AmaliyahPage.tsx:134:    return d.toISOString().split('T')[0];
+src/components/AmaliyahPage.tsx:140:  useEffect(() => {
+src/components/AmaliyahPage.tsx:148:    const unsubscribe = onSnapshot(docRef, (snapshot) => {
+src/components/AmaliyahPage.tsx:164:  useEffect(() => {
+src/components/AmaliyahPage.tsx:173:      limit(30)
+src/components/AmaliyahPage.tsx:176:    const unsubscribe = onSnapshot(q, (snapshot) => {
+src/components/AmaliyahPage.tsx:229:    const sortedHistory = [...history].sort((a, b) => b.date.localeCompare(a.date));
+src/components/AmaliyahPage.tsx:244:    const ascHistory = [...history].sort((a, b) => a.date.localeCompare(b.date));
+src/components/AmaliyahPage.tsx:295:      .sort((a, b) => a.date.localeCompare(b.date))
+src/components/AmaliyahPage.tsx:304:    const categories = Array.from(new Set(DEEDS.map(d => d.category)));
+src/components/AmaliyahPage.tsx:332:    const categories = Array.from(new Set(DEEDS.map(d => d.category)));
+src/components/AmaliyahPage.tsx:366:  useEffect(() => {
+src/components/AmaliyahPage.tsx:375:    setTimeout(() => {
+src/components/AmaliyahPage.tsx:401:      const response = await ai.models.generateContent({
+src/components/AmaliyahPage.tsx:519:              onChange={(e) => setPhoneInput(e.target.value)}
+src/components/AmaliyahPage.tsx:910:                    {['Semua', ...Array.from(new Set(DEEDS.map(d => d.category)))].map(cat => (
+src/components/AmaliyahPage.tsx:1096:                    {['Semua', ...Array.from(new Set(DEEDS.map(d => d.category)))].map(cat => (
+src/components/TwibbonModal.tsx:29:      await new Promise(resolve => setTimeout(resolve, 800));
+src/components/TwibbonModal.tsx:37:      const link = document.createElement('a');
+src/components/TwibbonModal.tsx:43:      alert('Gagal membuat gambar, silakan coba lagi.');
+src/components/TwibbonModal.tsx:88:                  <div className="absolute top-0 right-0 w-[120%] h-[120%] bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent -translate-y-1/4 translate-x-1/4"></div>
+src/components/SedekahSubuhCard.tsx:22:    setTimeout(() => {
+src/components/SedekahSubuhCard.tsx:23:      onAddToCart({
+src/components/SedekahSubuhCard.tsx:34:      setTimeout(() => setShowSuccess(false), 3000);
+src/components/SedekahSubuhCard.tsx:90:                    onClick={() => setAmount(amt)}
+src/components/Chatbot.tsx:26:export function Chatbot() {
+src/components/Chatbot.tsx:39:  useEffect(() => {
+src/components/Chatbot.tsx:44:    if (e) e.preventDefault();
+src/components/Chatbot.tsx:48:    setInput('');
+src/components/Chatbot.tsx:65:      const response = await model.generateContent({
+src/components/Chatbot.tsx:72:      const responseText = response.response.text();
+src/components/Chatbot.tsx:163:                  onChange={(e) => setInput(e.target.value)}
+src/components/ProgramMap.tsx:314:  useEffect(() => {
+src/components/ProgramMap.tsx:335:    const parts = loc.locationName.split(',');
+src/components/ProgramMap.tsx:342:  const provinces = Array.from(provincesMap).sort();
+src/components/ProgramMap.tsx:346:    const parts = loc.locationName.split(',');
+src/components/ProgramMap.tsx:352:  useEffect(() => {
+src/components/ProgramMap.tsx:354:    const timer = setTimeout(() => {
+src/components/ProgramMap.tsx:357:    return () => clearTimeout(timer);
+src/components/ProgramMap.tsx:360:  useEffect(() => {
+src/components/ProgramMap.tsx:363:      const parts = selectedLoc.locationName.split(',');
+src/components/AnalyticsDashboard.tsx:11:  return new Intl.NumberFormat('id-ID').format(Number(numberString)).replace(/,/g, '.');
+src/components/SholatPage.tsx:24:  useEffect(() => {
+src/components/SholatPage.tsx:48:  useEffect(() => {
+src/components/SholatPage.tsx:71:            const cariRes = await fetch(`https://api.myquran.com/v2/sholat/kota/cari/${encodeURIComponent(cityClean)}`);
+src/components/SholatPage.tsx:83:            const month = String(d.getMonth() + 1).padStart(2, '0');
+src/components/SholatPage.tsx:84:            const date = String(d.getDate()).padStart(2, '0');
+src/components/SholatPage.tsx:114:  useEffect(() => {
+src/components/SholatPage.tsx:188:        const [h, m] = jadwal[p].split(':');
+src/components/SholatPage.tsx:189:        const pMins = parseInt(h) * 60 + parseInt(m);
+src/components/SholatPage.tsx:198:      const [h, m] = jadwal.subuh.split(':');
+src/components/SholatPage.tsx:199:      const pMins = parseInt(h) * 60 + parseInt(m) + 24 * 60;
+src/components/PendidikanInteractive.tsx:34:    const rect = button.getBoundingClientRect();
+src/components/PendidikanInteractive.tsx:47:    setTimeout(() => {
+src/components/PendidikanInteractive.tsx:110:    onAddToCart(program, totalAmount.toString());
+src/components/PendidikanInteractive.tsx:138:              Rp {new Intl.NumberFormat('id-ID').format(85000000)}
+src/components/PendidikanInteractive.tsx:376:           <ItemControl item={ITEMS[0]} count={counts.buku} onAdd={() => updateCount('buku', 1)} onSub={() => updateCount('buku', -1)} onRipple={createRipple} />
+src/components/PendidikanInteractive.tsx:379:           <ItemControl item={ITEMS[1]} count={counts.tas} onAdd={() => updateCount('tas', 1)} onSub={() => updateCount('tas', -1)} onRipple={createRipple} />
+src/components/PendidikanInteractive.tsx:382:           <ItemControl item={ITEMS[2]} count={counts.seragam} onAdd={() => updateCount('seragam', 1)} onSub={() => updateCount('seragam', -1)} onRipple={createRipple} />
+src/components/PendidikanInteractive.tsx:385:           <ItemControl item={ITEMS[3]} count={counts.spp} onAdd={() => updateCount('spp', 1)} onSub={() => updateCount('spp', -1)} onRipple={createRipple} />
+src/components/PendidikanInteractive.tsx:394:            {new Intl.NumberFormat('id-ID').format(totalAmount)}
+src/components/PendidikanInteractive.tsx:439:    const rect = button.getBoundingClientRect();
+src/components/PendidikanInteractive.tsx:452:    setTimeout(() => {
+src/components/SumurInteractive.tsx:34:    const rect = button.getBoundingClientRect();
+src/components/SumurInteractive.tsx:47:    setTimeout(() => {
+src/components/SumurInteractive.tsx:110:    onAddToCart(program, totalAmount.toString());
+src/components/SumurInteractive.tsx:138:              Rp {new Intl.NumberFormat('id-ID').format(120000000)}
+src/components/SumurInteractive.tsx:307:           <ItemControl item={ITEMS[0]} count={counts.pipa} onAdd={() => updateCount('pipa', 1)} onSub={() => updateCount('pipa', -1)} onRipple={createRipple} />
+src/components/SumurInteractive.tsx:310:           <ItemControl item={ITEMS[1]} count={counts.keran} onAdd={() => updateCount('keran', 1)} onSub={() => updateCount('keran', -1)} onRipple={createRipple} />
+src/components/SumurInteractive.tsx:313:           <ItemControl item={ITEMS[2]} count={counts.toren} onAdd={() => updateCount('toren', 1)} onSub={() => updateCount('toren', -1)} onRipple={createRipple} />
+src/components/SumurInteractive.tsx:316:           <ItemControl item={ITEMS[3]} count={counts.pompa} onAdd={() => updateCount('pompa', 1)} onSub={() => updateCount('pompa', -1)} onRipple={createRipple} />
+src/components/SumurInteractive.tsx:325:            {new Intl.NumberFormat('id-ID').format(totalAmount)}
+src/components/SumurInteractive.tsx:370:    const rect = button.getBoundingClientRect();
+src/components/SumurInteractive.tsx:383:    setTimeout(() => {
+src/components/PohonKebaikanInteractive.tsx:24:  useEffect(() => {
+src/components/PohonKebaikanInteractive.tsx:289:                          Rp {new Intl.NumberFormat('id-ID').format(simulatedScore)}
+src/components/PohonKebaikanInteractive.tsx:303:                       Kurang <span className="font-bold text-slate-600 dark:text-slate-300">Rp {new Intl.NumberFormat('id-ID').format(nextStage.amount - simulatedScore)}</span> untuk tumbuh jadi {nextStage.name}
+src/components/MasjidLocator.tsx:48:  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+src/components/MasjidLocator.tsx:83:  useEffect(() => {
+src/components/MasjidLocator.tsx:100:  useEffect(() => {
+src/components/MasjidLocator.tsx:114:              const loc: [number, number] = [parseFloat(data.latitude), parseFloat(data.longitude)];
+src/components/MasjidLocator.tsx:149:              const loc: [number, number] = [parseFloat(data.latitude), parseFloat(data.longitude)];
+src/components/MasjidLocator.tsx:168:    e.preventDefault();
+src/components/MasjidLocator.tsx:173:      const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery + ' Indonesia')}`);
+src/components/MasjidLocator.tsx:177:        const newLoc: [number, number] = [parseFloat(lat), parseFloat(lon)];
+src/components/MasjidLocator.tsx:203:      const queryUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+src/components/MasjidLocator.tsx:206:        `https://api.allorigins.win/raw?url=${encodeURIComponent(queryUrl)}`,
+src/components/MasjidLocator.tsx:207:        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(queryUrl)}`
+src/components/MasjidLocator.tsx:222:          const text = await response.text();
+src/components/MasjidLocator.tsx:247:      })).sort((a: Mosque, b: Mosque) => (a.distance || 0) - (b.distance || 0));
+src/components/PengajuanBantuan.tsx:28:    useEffect(() => {
+src/components/PengajuanBantuan.tsx:38:        const unsubscribe = onSnapshot(q, (snapshot) => {
+src/components/PengajuanBantuan.tsx:62:                    const canvas = document.createElement('canvas');
+src/components/PengajuanBantuan.tsx:83:                    const ctx = canvas.getContext('2d');
+src/components/PengajuanBantuan.tsx:87:                img.onerror = (error) => reject(error);
+src/components/PengajuanBantuan.tsx:89:            reader.onerror = (error) => reject(error);
+src/components/PengajuanBantuan.tsx:146:        e.preventDefault();
+src/components/PengajuanBantuan.tsx:148:            alert('Anda harus login terlebih dahulu.');
+src/components/PengajuanBantuan.tsx:174:            setTimeout(() => {
+src/components/PengajuanBantuan.tsx:189:            alert('Terjadi kesalahan saat mengajukan bantuan.');
+src/components/PengajuanBantuan.tsx:356:                                                        <button type="button" onClick={() => removeDocument(i)} className="p-1 text-slate-400 hover:text-red-500 transition-colors">
+src/components/QurbanMap.tsx:174:  useEffect(() => {
+src/components/QurbanMap.tsx:188:  useEffect(() => {
+src/components/QurbanMap.tsx:189:    const timer = setTimeout(() => {
+src/components/QurbanMap.tsx:192:    return () => clearTimeout(timer);
+src/components/QurbanMap.tsx:196:  const years = Array.from(new Set(locations.map(loc => loc.year))).sort((a, b) => b - a);
+src/components/DaiInteractive.tsx:34:    const rect = button.getBoundingClientRect();
+src/components/DaiInteractive.tsx:47:    setTimeout(() => {
+src/components/DaiInteractive.tsx:114:    onAddToCart(daiProgram, totalAmount.toString());
+src/components/DaiInteractive.tsx:142:              Rp {new Intl.NumberFormat('id-ID').format(24700000)}
+src/components/DaiInteractive.tsx:306:           <ItemControl item={ITEMS[0]} count={counts.food} onAdd={() => updateCount('food', 1)} onSub={() => updateCount('food', -1)} onRipple={createRipple} />
+src/components/DaiInteractive.tsx:309:           <ItemControl item={ITEMS[1]} count={counts.clothes} onAdd={() => updateCount('clothes', 1)} onSub={() => updateCount('clothes', -1)} onRipple={createRipple} />
+src/components/DaiInteractive.tsx:312:           <ItemControl item={ITEMS[2]} count={counts.transport} onAdd={() => updateCount('transport', 1)} onSub={() => updateCount('transport', -1)} onRipple={createRipple} />
+src/components/DaiInteractive.tsx:315:           <ItemControl item={ITEMS[3]} count={counts.kit} onAdd={() => updateCount('kit', 1)} onSub={() => updateCount('kit', -1)} onRipple={createRipple} />
+src/components/DaiInteractive.tsx:324:            {new Intl.NumberFormat('id-ID').format(totalAmount)}
+src/components/DaiInteractive.tsx:369:    const rect = button.getBoundingClientRect();
+src/components/DaiInteractive.tsx:382:    setTimeout(() => {
+src/firebase.ts:29:    await signOut(auth);
+src/main.tsx:6:createRoot(document.getElementById('root')!).render(
+src/App.tsx:47:  const cookies = document.cookie.split(';');
+src/App.tsx:50:    const part = gtCookie.split('/').pop();
+src/App.tsx:338:  return new Intl.NumberFormat('id-ID', {
+src/App.tsx:342:  }).format(amount);
+src/App.tsx:493:  return new Intl.NumberFormat('id-ID').format(Number(numberString)).replace(/,/g, '.');
+src/App.tsx:540:      setLocalDonationAmount(newAmount);
+src/App.tsx:542:      setTimeout(() => setIsPulsing(false), 200);
+src/App.tsx:574:                <CheckCircle2 className="w-3 h-3 text-white" /> {t('selesai')}
+src/App.tsx:578:                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> {t('mendesak')}
+src/App.tsx:606:              <span className="text-slate-500 font-medium tracking-tight">{t('terhimpun')} <strong>Rp {new Intl.NumberFormat('id-ID').format(p.collected)}</strong></span>
+src/App.tsx:615:                  <CheckCircle className="w-3.5 h-3.5" /> {t('target_terpenuhi')}
+src/App.tsx:618:                  {t('lihat_detail')}
+src/App.tsx:624:                  onClick={() => setLocalDonationAmount(p.category === 'Qurban' ? '2.500.000' : '100.000')}
+src/App.tsx:636:                      onChange={(e) => setLocalDonationAmount(e.target.value)}
+src/App.tsx:648:                        const val = parseInt(localDonationAmount.replace(/\D/g, '') || '0');
+src/App.tsx:655:                        const val = parseInt(localDonationAmount.replace(/\D/g, '') || '0');
+src/App.tsx:666:                    onClick={() => onAddToCart(p, localDonationAmount.replace(/\D/g, ''))}
+src/App.tsx:680:                    <span className="hidden sm:inline">{t('kebaikan_cepat')}</span>
+src/App.tsx:681:                    <span className="sm:hidden">{t('donasi')}</span>
+src/App.tsx:702:    { id: 'Semua', label: t('semua'), icon: LayoutGrid },
+src/App.tsx:703:    { id: 'Sosial', label: t('sosial'), icon: Users },
+src/App.tsx:704:    { id: 'Pendidikan', label: t('pendidikan'), icon: BookOpen },
+src/App.tsx:705:    { id: 'Kemanusiaan', label: t('kemanusiaan'), icon: HandHeart },
+src/App.tsx:706:    { id: 'Qurban', label: t('qurban_filter'), icon: Tent }
+src/App.tsx:710:    { id: 'Semua', label: t('semua'), icon: LayoutGrid },
+src/App.tsx:711:    { id: 'Aktif', label: t('aktif'), icon: Activity },
+src/App.tsx:712:    { id: 'Mendesak', label: t('mendesak'), icon: AlertCircle },
+src/App.tsx:713:    { id: 'Selesai', label: t('selesai'), icon: CheckCircle }
+src/App.tsx:748:         <h1 className="text-3xl md:text-4xl font-serif font-black text-slate-900 dark:text-white mb-4">{t('semua_program')}</h1>
+src/App.tsx:750:           {t('pilih_ladang')}
+src/App.tsx:756:             placeholder={t('cari_program')}
+src/App.tsx:775:               {t('filter_program')} {(activeFilter !== 'Semua' || activeStatusFilter !== 'Semua') && <span className="w-2 h-2 rounded-full bg-red-500"></span>}
+src/App.tsx:845:          {t('tidak_ada_program_kategori')}
+src/App.tsx:892:              {t('lihat_semua')} ({filteredPrograms.length})
+src/App.tsx:908:              {t('kembali_halaman_pertama')}
+src/App.tsx:921:    setDonationAmount(formatted);
+src/App.tsx:929:        updated[existingIndex].amount = (parseInt(updated[existingIndex].amount) + parseInt(amt)).toString();
+src/App.tsx:934:    setToastMessage(t('berhasil_kantung').replace('{title}', p.title));
+src/App.tsx:935:    setShowToast(true);
+src/App.tsx:936:    setTimeout(() => setShowToast(false), 3000);
+src/App.tsx:946:  useEffect(() => {
+src/App.tsx:947:    setToastMessage(t('alhamdulillah_donasi_terima'));
+src/App.tsx:993:      select.dispatchEvent(new Event('change', { bubbles: true }));
+src/App.tsx:1004:  useEffect(() => {
+src/App.tsx:1040:    alert('Profil berhasil disimpan');
+src/App.tsx:1056:        const valAmount = parseInt(donationAmount.replace(/\D/g, '')) || 0;
+src/App.tsx:1103:    setShowToast(true);
+src/App.tsx:1104:    setTimeout(() => setShowToast(false), 5000);
+src/App.tsx:1127:  useEffect(() => {
+src/App.tsx:1137:      unsubSnap = onSnapshot(q, (snapshot) => {
+src/App.tsx:1181:      const response = await ai.models.generateContent({
+src/App.tsx:1218:  useEffect(() => {
+src/App.tsx:1229:    const price = parseInt(goldPrice.replace(/\D/g, '')) || 1350000;
+src/App.tsx:1239:        const income = parseInt(zakatIncome.replace(/\D/g, '')) || 0;
+src/App.tsx:1240:        const bonus = parseInt(zakatBonus.replace(/\D/g, '')) || 0;
+src/App.tsx:1246:        const tabunganVal = parseInt(maalTabungan.replace(/\D/g, '')) || 0;
+src/App.tsx:1247:        const e = parseInt(maalEmas.replace(/\D/g, '')) || 0;
+src/App.tsx:1248:        const p = parseInt(maalProperti.replace(/\D/g, '')) || 0;
+src/App.tsx:1249:        const h = parseInt(maalHutang.replace(/\D/g, '')) || 0;
+src/App.tsx:1255:        const m = parseInt(dagangModal.replace(/\D/g, '')) || 0;
+src/App.tsx:1256:        const u = parseInt(dagangUntung.replace(/\D/g, '')) || 0;
+src/App.tsx:1257:        const p = parseInt(dagangPiutang.replace(/\D/g, '')) || 0;
+src/App.tsx:1258:        const h = parseInt(dagangHutang.replace(/\D/g, '')) || 0;
+src/App.tsx:1264:        const s = parseInt(sahamNilai.replace(/\D/g, '')) || 0;
+src/App.tsx:1265:        const d = parseInt(sahamDividen.replace(/\D/g, '')) || 0;
+src/App.tsx:1271:        const r = parseInt(rikazNilai.replace(/\D/g, '')) || 0;
+src/App.tsx:1277:        const days = parseInt(fidyahDays.replace(/\D/g, '')) || 0;
+src/App.tsx:1278:        const rate = parseInt(fidyahRate.replace(/\D/g, '')) || 0;
+src/App.tsx:1292:  useEffect(() => {
+src/App.tsx:1302:  useEffect(() => {
+src/App.tsx:1304:    const timer = setTimeout(() => {
+src/App.tsx:1307:    return () => clearTimeout(timer);
+src/App.tsx:1310:  useEffect(() => {
+src/App.tsx:1317:  useEffect(() => {
+src/App.tsx:1319:    const initialTimer = setTimeout(() => {
+src/App.tsx:1324:      setTimeout(() => setShowLiveTransaction(false), 4000);
+src/App.tsx:1331:        setTimeout(() => setShowLiveTransaction(false), 4000);
+src/App.tsx:1337:      clearTimeout(initialTimer);
+src/App.tsx:1342:  useEffect(() => {
+src/App.tsx:1348:        new (window as any).google.translate.TranslateElement({
+src/App.tsx:1355:      const script = document.createElement('script');
+src/App.tsx:1361:    addGoogleTranslateScript();
+src/App.tsx:1364:  useEffect(() => {
+src/App.tsx:1394:              <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }} onClick={() => setShowToast(false)} className="transition-all duration-300 text-white/80 hover:text-white transition-colors p-1 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95">
+src/App.tsx:1443:                      placeholder={t('cari')}
+src/App.tsx:1593:                        <p className="text-[10px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase">{t('pilih_bahasa')}</p>
+src/App.tsx:1663:              {t('donate_now')}
+src/App.tsx:1740:              <span className="hidden sm:inline font-bold text-[10px] uppercase tracking-widest mt-0.5">{t('menu')}</span>
+src/App.tsx:1793:                { name: t('beranda'), icon: Home, id: 'beranda', path: '/' },
+src/App.tsx:1794:                { name: t('program'), icon: HandHeart, id: 'program', path: '/donasi' },
+src/App.tsx:1795:                { name: t('amaliyah'), icon: LayoutDashboard, path: '/amaliyah' },
+src/App.tsx:1796:                { name: t('quran'), icon: BookOpen, path: '/quran' },
+src/App.tsx:1797:                { name: t('zakat'), icon: HandCoins, path: '/zakat' },
+src/App.tsx:1798:                { name: t('qurban'), icon: Tent, path: '/qurban' },
+src/App.tsx:1799:                { name: t('mosques'), icon: MapPin, path: '/mosques' },
+src/App.tsx:1800:                { name: t('sholat'), icon: Clock, path: '/sholat' },
+src/App.tsx:1801:                { name: t('tentang'), icon: Info, id: 'tentang-kami' },
+src/App.tsx:1802:                { name: t('layanan'), icon: Component, id: 'layanan' },
+src/App.tsx:1803:                { name: t('laporan'), icon: TrendingUp, path: '/laporan' },
+src/App.tsx:1804:                { name: t('artikel'), icon: FileText, id: 'artikel' }
+src/App.tsx:1816:                            setTimeout(() => document.getElementById(item.id!)?.scrollIntoView({ behavior: 'smooth' }), 100);
+src/App.tsx:1844:                <span className="flex-1 truncate">{t('profil')}</span>
+src/App.tsx:1857:                <span className="flex-1 truncate">{t('notifikasi')}</span>
+src/App.tsx:1859:                  <span className="text-[9px] font-bold bg-red-500 text-white rounded-full px-2 py-0.5">1 {t('baru')}</span>
+src/App.tsx:1870:                <span className="flex-1 truncate">{t('tema_gelap')}</span>
+src/App.tsx:1878:                  {t('donate_now')}
+src/App.tsx:1899:              setDonationAmount(amt);
+src/App.tsx:1914:              setDonationAmount(amt);
+src/App.tsx:1940:           <div className="absolute inset-0 opacity-[0.05] dark:opacity-[0.02]" style={{ backgroundImage: 'radial-gradient(circle, #fff 2px, transparent 2px)', backgroundSize: '24px 24px' }}></div>
+src/App.tsx:1967:                       {currentSlideIndex === 0 ? t('hero_top') : 
+src/App.tsx:1968:                         currentSlideIndex === 1 ? t('hero2_top') :
+src/App.tsx:1969:                         currentSlideIndex === 2 ? t('hero3_top') :
+src/App.tsx:1970:                         currentSlideIndex === 3 ? t('hero4_top') :
+src/App.tsx:1971:                         currentSlideIndex === 4 ? t('hero5_top') :
+src/App.tsx:1975:                     {currentSlideIndex === 0 ? t('hero_bottom') : 
+src/App.tsx:1976:                       currentSlideIndex === 1 ? t('hero2_bottom') :
+src/App.tsx:1977:                       currentSlideIndex === 2 ? t('hero3_bottom') :
+src/App.tsx:1978:                       currentSlideIndex === 3 ? t('hero4_bottom') :
+src/App.tsx:1979:                       currentSlideIndex === 4 ? t('hero5_bottom') :
+src/App.tsx:2055:                   <p className="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5 text-[#1799dc]" /> {t('penyaluran')}</p>
+src/App.tsx:2056:                   <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white leading-none">26.5 <span className="text-sm font-bold text-slate-500">{t('muliar')}+</span></h2>
+src/App.tsx:2059:                   <p className="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center justify-end gap-1.5 justify-end"><Heart className="w-3.5 h-3.5 text-emerald-500" /> {t('penerima')}</p>
+src/App.tsx:2060:                   <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white leading-none">1.2 <span className="text-sm font-bold text-slate-500">{t('juta')}+</span></h2>
+src/App.tsx:2119:                  { icon: HandCoins, label: t('zakat'), color: 'from-emerald-400 to-emerald-500 text-white shadow-emerald-500/20', link: '/zakat' },
+src/App.tsx:2120:                  { icon: Heart, label: t('donasi'), color: 'from-[#2db2f5] to-[#1799dc] text-white shadow-[#1799dc]/20', link: '#program' },
+src/App.tsx:2121:                  { icon: Tent, label: t('qurban'), color: 'from-[#febb22] to-[#f29f05] text-white shadow-[#f29f05]/20', link: '/qurban' },
+src/App.tsx:2122:                  { icon: Clock, label: t('sholat'), color: 'from-amber-400 to-amber-500 text-white shadow-amber-500/20', link: '/sholat' },
+src/App.tsx:2123:                  { icon: Users, label: t('kemanusiaan'), color: 'from-rose-400 to-rose-500 text-white shadow-rose-500/20', link: '#program' },
+src/App.tsx:2124:                  { icon: Calculator, label: t('kalkulator'), color: 'from-purple-400 to-purple-500 text-white shadow-purple-500/20', link: '/zakat' },
+src/App.tsx:2125:                  { icon: MapPin, label: t('mosques'), color: 'from-cyan-400 to-cyan-500 text-white shadow-cyan-500/20', link: '/mosques' },
+src/App.tsx:2126:                  { icon: Component, label: t('lihat_semua'), color: 'from-slate-400 to-slate-500 text-white shadow-slate-500/20 text-xs tracking-wider', link: '#layanan' },
+src/App.tsx:2175:                  <FileText className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('infografis')}
+src/App.tsx:2181:                  <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('peta_program')}
+src/App.tsx:2187:                  <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('peta_qurban')}
+src/App.tsx:2193:                  <ImageIcon className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('galeri')}
+src/App.tsx:2212:                      { icon: TrendingUp, val: "26.5M", label: t('penyaluran') + " (Rp)", color: "text-[#1799dc]", bg: "bg-[#1799dc]/" },
+src/App.tsx:2213:                      { icon: Heart, val: "1.2Jt+", label: t('penerima'), color: "text-emerald-500", bg: "bg-emerald-500/" },
+src/App.tsx:2214:                      { icon: MapPin, val: "34", label: t('provinsi'), color: "text-[#f29f05]", bg: "bg-[#f29f05]/" },
+src/App.tsx:2215:                      { icon: CheckCircle2, val: "50+", label: t('program_berhasil'), color: "text-purple-500", bg: "bg-purple-500/" }
+src/App.tsx:2491:              <h2 className="text-3xl md:text-5xl font-extrabold text-[#1799dc] tracking-tight leading-none mb-1 md:mb-0">Program<br className="hidden md:block"/> {t('prioritas')}</h2>
+src/App.tsx:2531:                  setDonationAmount(formatCurrencyForm(amt));
+src/App.tsx:2592:                      {prayer.name.charAt(0)}
+src/App.tsx:2758:                  <div className="text-2xl font-black text-slate-800 dark:text-slate-100">{new Set(userDonations.map(d => d.program)).size}</div>
+src/App.tsx:3189:              <h5 className="font-bold text-lg mb-8 text-slate-900 dark:text-white">{t('layanan')}</h5>
+src/App.tsx:3191:                <li><motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }} onClick={() => { navigate('/zakat'); window.scrollTo(0,0); }} className="hover:text-[#1799dc] dark:hover:text-[#2db2f5] transition-colors duration-300">{t('kalkulator')}</motion.button></li>
+src/App.tsx:3200:              <h5 className="font-bold text-lg mb-8 text-slate-900 dark:text-white">{t('program_utama')}</h5>
+src/App.tsx:3210:              <h5 className="font-bold text-lg mb-8 text-slate-900 dark:text-white">{t('hubungi')}</h5>
+src/App.tsx:3230:              &copy; 2026 LAZNAS Dewan Dakwah. {t('hak_cipta')}
+src/App.tsx:3323:                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent mix-blend-overlay"></div>
+src/App.tsx:3342:                    onChange={(e) => setProfileNameInput(e.target.value)}
+src/App.tsx:3352:                    onChange={(e) => setProfilePhoneInput(e.target.value)}
+src/App.tsx:3447:                          Rp {formatCurrencyForm(cartItems.reduce((acc, curr) => acc + parseInt(curr.amount), 0).toString())}
+src/App.tsx:3455:                          const total = cartItems.reduce((acc, curr) => acc + parseInt(curr.amount), 0);
+src/App.tsx:3456:                          setDonationAmount(formatCurrencyForm(total.toString()));
+src/App.tsx:3530:                      setTimeout(() => {
+src/App.tsx:3644:                          <span className="font-bold text-slate-600 dark:text-slate-300">#{Math.floor(Math.random() * 100000000).toString().padStart(8, '0')}</span>
+src/App.tsx:3663:                           setTimeout(() => {
+src/App.tsx:3752:                    e.preventDefault();
+src/App.tsx:3754:                        alert("Mohon isi nomor telepon Anda.");
+src/App.tsx:3760:                      const valAmount = parseInt(donationAmount.replace(/\D/g, ''));
+src/App.tsx:3762:                        alert("Nominal donasi tidak valid");
+src/App.tsx:3768:                      await new Promise(resolve => setTimeout(resolve, 800));
+src/App.tsx:3776:                       alert(err.message || "Terjadi kesalahan sistem pembayaran.");
+src/App.tsx:3786:                        <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }} key={amount} type="button" onClick={() => setDonationAmount(amount)} className={`transition-all duration-300 py-2 text-[12px] md:text-sm font-black rounded-xl border transition-all duration-300 ${donationAmount === amount ? 'border-primary-500 bg-primary-50 text-primary-700 ring-2 ring-primary-500/10' : 'border-slate-200 text-slate-500 hover:border-primary-200 bg-white'} transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}>
+src/App.tsx:3801:                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">{t('nama_sahabat')}</label>
+src/App.tsx:3802:                      <input required value={donorName} onChange={(e) => setDonorName(e.target.value)} type="text" placeholder={t('nama_anda')} className="w-full px-3 py-2 bg-slate-50/50 rounded-xl border border-slate-200 text-sm font-medium" />
+src/App.tsx:3805:                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">{t('telp')}</label>
+src/App.tsx:3806:                      <input required value={donorPhone} onChange={(e) => setDonorPhone(e.target.value)} type="tel" placeholder={t('placeholder_telp')} className="w-full px-3 py-2 bg-slate-50/50 rounded-xl border border-slate-200 text-sm font-medium" />
+src/App.tsx:3812:                      <label className="block text-[10px] md:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.15em] px-1 opacity-80 shrink-0">{t('metode_pembayaran')}</label>
+src/App.tsx:3819:                          placeholder={t('cari_payment')} 
+src/App.tsx:3856:                          <span className="text-xs font-medium text-slate-500">Metode \'{paymentSearchQuery}\' {t('tidak_ditemukan')}</span>
+src/App.tsx:3866:                          {t('qurban_atas_nama')} <span className="text-red-500">*</span>
+src/App.tsx:3886:                          {t('pilih_wilayah')} <span className="text-red-500">*</span>
+src/App.tsx:3899:                             <option value="" disabled>{t('pilih_wilayah')}</option>
+src/App.tsx:3913:                            {t('tipe_hewan')} <span className="text-red-500">*</span>
+src/App.tsx:3923:                               <option value="" disabled>{t('tipe_hewan')}</option>
+src/App.tsx:3936:                            {t('metode_penyaluran')} <span className="text-red-500">*</span>
+src/App.tsx:3946:                               <option value="" disabled>{t('metode_penyaluran')}</option>
+src/App.tsx:3961:                            {t('jumlah_keberkahan')}
+src/App.tsx:3978:                              {t('untuk_orang_tua')}
+src/App.tsx:3988:                      <span>{t('titip_doa')}</span>
+src/App.tsx:3989:                      <span className="text-slate-400 capitalize normal-case text-[9px] font-medium italic">{t('tampil_live')}</span>
+src/App.tsx:3996:                        placeholder={t('placeholder_doa')} 
+src/App.tsx:4012:                        {t('rangkai_doa')}
+src/App.tsx:4040:                        {t('memproses')}
+src/App.tsx:4044:                        {selectedProgramForDonation.category === 'Qurban' ? t('donasi_qurban_btn') : t('donasi_sedekah_btn')} 
+src/App.tsx:4077:                    <h3 className="font-bold text-slate-800 dark:text-slate-200">{t('kalkulator')}</h3>
+src/App.tsx:4078:                    <p className="text-xs text-slate-500 dark:text-slate-400">{t('hitung_zakat')}</p>
+src/App.tsx:4092:                  { id: 'penghasilan', label: t('penghasilan') },
+src/App.tsx:4093:                  { id: 'maal', label: t('maal') },
+src/App.tsx:4094:                  { id: 'perdagangan', label: t('ekonomi') },
+src/App.tsx:4095:                  { id: 'saham', label: t('saham') },
+src/App.tsx:4096:                  { id: 'rikaz', label: t('rikaz') },
+src/App.tsx:4117:                      {t('harga_emas')}
+src/App.tsx:4151:                            { label: t('pendapatan_bulan'), val: zakatIncome, set: setZakatIncome },
+src/App.tsx:4152:                            { label: t('bonus_thr'), val: zakatBonus, set: setZakatBonus }
+src/App.tsx:4163:                                  onChange={(e) => f.set(e.target.value.replace(/\D/g, ''))}
+src/App.tsx:4176:                            { label: t('tunai_tabungan'), val: maalTabungan, set: setMaalTabungan },
+src/App.tsx:4177:                            { label: t('nilai_emas'), val: maalEmas, set: setMaalEmas },
+src/App.tsx:4178:                            { label: t('properti_non_primer'), val: maalProperti, set: setMaalProperti },
+src/App.tsx:4179:                            { label: t('hutang_jatuh_tempo'), val: maalHutang, set: setMaalHutang, isDeduction: true }
+src/App.tsx:4190:                                  onChange={(e) => f.set(e.target.value)}
+src/App.tsx:4203:                            { label: t('modal_diputar'), val: dagangModal, set: setDagangModal },
+src/App.tsx:4204:                            { label: t('untung_dagang'), val: dagangUntung, set: setDagangUntung },
+src/App.tsx:4205:                            { label: t('piutang_lancar'), val: dagangPiutang, set: setDagangPiutang },
+src/App.tsx:4206:                            { label: t('hutang_jatuh_tempo'), val: dagangHutang, set: setDagangHutang, isDeduction: true }
+src/App.tsx:4217:                                  onChange={(e) => f.set(e.target.value)}
+src/App.tsx:4230:                            { label: t('nilai_saham'), val: sahamNilai, set: setSahamNilai },
+src/App.tsx:4231:                            { label: t('dividen'), val: sahamDividen, set: setSahamDividen }
+src/App.tsx:4242:                                  onChange={(e) => f.set(e.target.value)}
+src/App.tsx:4256:                              {t('rikaz_info')}
+src/App.tsx:4260:                            { label: t('nilai_rikaz'), val: rikazNilai, set: setRikazNilai }
+src/App.tsx:4271:                                  onChange={(e) => f.set(e.target.value)}
+src/App.tsx:4285:                              {t('fidyah_info')}
+src/App.tsx:4289:                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">{t('jenis_kewajiban')}</label>
+src/App.tsx:4294:                              >{t('fidyah_puasa')}</motion.button>
+src/App.tsx:4298:                              >{t('kafarat_sumpah')}</motion.button>
+src/App.tsx:4302:                            { label: fidyahType === 'fidyah' ? t('jumlah_hari') : t('jumlah_pelanggaran'), val: fidyahDays, set: setFidyahDays, prefix: '' },
+src/App.tsx:4303:                            { label: fidyahType === 'fidyah' ? t('harga_fidyah') : t('harga_kafarat'), val: fidyahRate, set: setFidyahRate, prefix: 'Rp' }
+src/App.tsx:4316:                                  onChange={(e) => f.set(e.target.value.replace(/\D/g, ''))}
+src/App.tsx:4332:                          <FileText className="w-3.5 h-3.5" /> {t('rincian')}
+src/App.tsx:4337:                              {parseInt(zakatIncome.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('pendapatan')}</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(zakatIncome)}</span></div>}
+src/App.tsx:4338:                              {parseInt(zakatBonus.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">Bonus/THR</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(zakatBonus)}</span></div>}
+src/App.tsx:4343:                              {parseInt(maalTabungan.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('tabungan')}</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(maalTabungan)}</span></div>}
+src/App.tsx:4344:                              {parseInt(maalEmas.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('emas_perak')}</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(maalEmas)}</span></div>}
+src/App.tsx:4345:                              {parseInt(maalProperti.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('properti_kendaraan')}</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(maalProperti)}</span></div>}
+src/App.tsx:4346:                              {parseInt(maalHutang.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('hutang_label')}</span><span className="font-medium text-red-500">-Rp {formatCurrencyForm(maalHutang)}</span></div>}
+src/App.tsx:4351:                              {parseInt(dagangModal.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('modal_diputar_label')}</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(dagangModal)}</span></div>}
+src/App.tsx:4352:                              {parseInt(dagangUntung.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('keuntungan')}</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(dagangUntung)}</span></div>}
+src/App.tsx:4353:                              {parseInt(dagangPiutang.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('piutang_lancar_label')}</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(dagangPiutang)}</span></div>}
+src/App.tsx:4354:                              {parseInt(dagangHutang.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('hutang_label')}</span><span className="font-medium text-red-500">-Rp {formatCurrencyForm(dagangHutang)}</span></div>}
+src/App.tsx:4359:                              {parseInt(sahamNilai.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('nilai_saham')}</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(sahamNilai)}</span></div>}
+src/App.tsx:4360:                              {parseInt(sahamDividen.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('dividen')}</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(sahamDividen)}</span></div>}
+src/App.tsx:4365:                              {parseInt(rikazNilai.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{t('nilai_temuan')}</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(rikazNilai)}</span></div>}
+src/App.tsx:4370:                              {parseInt(fidyahDays.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">{fidyahType === 'fidyah' ? 'Hari Ditinggalkan' : 'Jumlah Pelanggaran'}</span><span className="font-medium text-slate-800 dark:text-slate-200">{fidyahDays}</span></div>}
+src/App.tsx:4371:                              {parseInt(fidyahRate.replace(/\D/g, '')) > 0 && <div className="flex justify-between text-xs"><span className="text-slate-600 dark:text-slate-300">Tarif per {fidyahType === 'fidyah' ? 'Hari' : 'Pelanggaran'}</span><span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(fidyahRate)}</span></div>}
+src/App.tsx:4381:                          <Calculator className="w-3.5 h-3.5" /> {t('perhitungan_nisab')}
+src/App.tsx:4386:                              {t('desc_penghasilan')}
+src/App.tsx:4391:                              {t('desc_maal')}
+src/App.tsx:4410:                            <span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm((parseInt(goldPrice.replace(/\D/g, '')) * 85).toString())} / tahun</span>
+src/App.tsx:4415:                              <span className="font-medium text-slate-800 dark:text-slate-200">Rp {formatCurrencyForm(Math.floor((parseInt(goldPrice.replace(/\D/g, '')) * 85) / 12).toString())} / bulan</span>
+src/App.tsx:4424:                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{zakatTab === 'fidyah' ? t('total_tagihan') : t('total_harta')}</span>
+src/App.tsx:4429:                          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t('batas_nisab')} {zakatTab === 'rikaz' ? '(Tidak Ada)' : zakatTab === 'penghasilan' ? '(Bulan)' : '(Tahun)'}</span>
+src/App.tsx:4444:                        <CheckCircle2 className="w-3.5 h-3.5" /> {zakatTab === 'fidyah' ? t('wajib_dibayar') : `${t('wajib_zakat_rate')} (${zakatTab === 'rikaz' ? '20%' : '2.5%'})`}
+src/App.tsx:4447:                      <p className="text-xs font-medium text-emerald-700/80 dark:text-emerald-400/80 leading-relaxed px-4">{zakatTab === 'fidyah' ? (fidyahType === 'fidyah' ? t('fidyah_desc_result') : t('kafarat_desc_result')) : zakatTab === 'rikaz' ? t('rikaz_desc_result') : t('zakat_cleanse')}</p>
+src/App.tsx:4455:                      <p className="text-xs font-medium text-slate-600 dark:text-slate-400 leading-relaxed">{t('harta_kurang')}</p>
+src/App.tsx:4467:                    setTimeout(() => {
+src/App.tsx:4474:                  {isEligibleZakat ? t('tunaikan_zakat_btn') : t('penuhi_nisab_btn')}
+src/translations.ts:277:      ekor_kambing_pilihan: "Selected Goat(s)",
+src/translations.ts:294:      ekor_kambing: "Goat(s)",
