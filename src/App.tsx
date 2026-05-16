@@ -102,6 +102,7 @@ import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
 import { ZakatPage } from "./components/ZakatPage";
 import { QurbanPage } from "./components/QurbanPage";
 import { ProgramDetailPage } from "./components/ProgramDetailPage";
+import { TokoPage } from "./components/TokoPage";
 import { InteractiveDonationCarousel } from "./components/InteractiveDonationCarousel";
 import { PohonKebaikanInteractive } from "./components/PohonKebaikanInteractive";
 import QuranPage from "./components/QuranPage";
@@ -782,23 +783,22 @@ export const formatCurrencyForm = (val: string) => {
 };
 
 const ProgramCardSkeleton = () => (
-  <div className="bg-white dark:bg-slate-800 rounded-[28px] overflow-hidden shadow-sm flex flex-col border border-slate-100 dark:border-slate-700 animate-pulse h-full transition-colors duration-300">
-    <div className="relative aspect-[4/3] sm:aspect-[3/2] md:aspect-auto md:h-[160px] bg-slate-200 shrink-0"></div>
-    <div className="px-5 pt-5 pb-6 md:px-6 md:pt-6 md:pb-7 flex-1 flex flex-col">
-      <div className="h-2 w-1/3 bg-slate-200 rounded mb-2.5 mt-0.5"></div>
-      <div className="h-4 bg-slate-200 rounded mb-2"></div>
-      <div className="h-4 bg-slate-200 rounded w-2/3 mb-3"></div>
-
-      <div className="flex flex-col gap-1 mb-2">
-        <div className="h-3 w-full bg-slate-200 rounded mb-1"></div>
-        <div className="h-3 w-5/6 bg-slate-200 rounded"></div>
+  <div className="bg-white dark:bg-slate-800 rounded-[24px] overflow-hidden shadow-sm flex flex-col border border-slate-100 dark:border-slate-700 animate-pulse h-full transition-colors duration-300">
+    <div className="relative aspect-[4/3] bg-slate-200 dark:bg-slate-700 shrink-0"></div>
+    <div className="p-5 flex-1 flex flex-col">
+      <div className="h-2 w-1/3 bg-slate-200 dark:bg-slate-700 rounded mb-2"></div>
+      <div className="h-3 w-3/4 bg-slate-200 dark:bg-slate-700 rounded mb-4"></div>
+      
+      <div className="flex flex-col gap-1.5 mb-4">
+        <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded mb-1"></div>
+        <div className="h-2 w-5/6 bg-slate-200 dark:bg-slate-700 rounded"></div>
       </div>
 
-      <div className="mt-auto pt-2 grid gap-2.5">
-        <div className="h-9 w-full bg-slate-200 rounded-full"></div>
+      <div className="mt-auto pt-2 grid gap-3">
+        <div className="h-4 w-full bg-slate-200 dark:bg-slate-700 rounded-full"></div>
         <div className="flex gap-2">
-          <div className="h-9 flex-1 bg-slate-200 rounded-full"></div>
-          <div className="w-[32px] h-9 bg-slate-200 rounded-full shrink-0"></div>
+          <div className="h-9 flex-1 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+          <div className="w-10 h-9 bg-slate-200 dark:bg-slate-700 rounded-xl shrink-0"></div>
         </div>
       </div>
     </div>
@@ -829,11 +829,11 @@ const ProgramCard: React.FC<{
         y: -4,
         transition: { duration: 0.3, ease: "easeOut" },
       }}
-      className="bg-white dark:bg-slate-800 rounded-[28px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 flex flex-col border border-slate-100 dark:border-slate-700 h-full"
+      className="bg-white dark:bg-slate-800 rounded-[24px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col border border-slate-100 dark:border-slate-700 h-full group"
     >
       <Link
         to={`/program/${p.id}`}
-        className="block relative aspect-[4/3] sm:aspect-[3/2] md:aspect-auto md:h-[160px] shrink-0 outline-none"
+        className="block relative aspect-[4/3] shrink-0 outline-none overflow-hidden"
       >
         {p.video ? (
           <video
@@ -843,12 +843,12 @@ const ProgramCard: React.FC<{
             muted
             playsInline
             poster={p.image}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
         ) : (
           <img
             src={p.image}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             alt={p.title}
           />
         )}
@@ -877,39 +877,39 @@ const ProgramCard: React.FC<{
         </div>
       </Link>
 
-      <div className="px-3.5 pt-4 pb-4 md:px-5 md:pt-5 md:pb-6 flex-1 flex flex-col bg-white dark:bg-slate-800">
-        <div className="flex justify-between items-center mb-1.5">
-          <p className="text-[#1799dc] font-bold text-[10px] md:text-xs capitalize tracking-wide">
+      <div className="p-4 md:p-5 flex-1 flex flex-col bg-white dark:bg-slate-800">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#1799dc] bg-[#1799dc]/10 px-2.5 py-1 rounded-full">
             {p.category}
-          </p>
+          </span>
         </div>
 
         <Link
           to={`/program/${p.id}`}
           className="outline-none hover:text-[#1799dc] transition-colors"
         >
-          <h3 className="font-bold text-slate-800 dark:text-slate-100 text-[13px] md:text-[16px] leading-snug mb-1.5 line-clamp-2">
+          <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm md:text-base leading-snug mb-2 line-clamp-2">
             {p.title}
           </h3>
         </Link>
 
-        <p className="text-slate-600 dark:text-slate-400 text-[11px] md:text-xs leading-relaxed line-clamp-2 mb-3 md:mb-4">
+        <p className="text-slate-500 dark:text-slate-400 text-xs md:text-sm leading-relaxed line-clamp-2 mb-4">
           {p.description}
         </p>
 
-        <div className="mb-3">
-          <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 md:h-2 mb-2 overflow-hidden">
+        <div className="mb-4">
+          <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 mb-2 overflow-hidden">
             <div
-              className="bg-[#1799dc] h-full rounded-full"
+              className="bg-gradient-to-r from-[#1799dc] to-blue-400 h-full rounded-full"
               style={{
                 width: `${Math.min((p.collected / p.target) * 100, 100)}%`,
               }}
             ></div>
           </div>
-          <div className="flex justify-between items-center text-[9px] md:text-[10px]">
-            <span className="text-slate-500 font-medium tracking-tight">
+          <div className="flex justify-between items-center text-[10px] md:text-xs">
+            <span className="text-slate-500 font-medium">
               Terkumpul{" "}
-              <strong>
+              <strong className="text-slate-700 dark:text-slate-300">
                 Rp {new Intl.NumberFormat("id-ID").format(p.collected)}
               </strong>
             </span>
@@ -919,7 +919,7 @@ const ProgramCard: React.FC<{
           </div>
         </div>
 
-        <div className="mt-auto pt-2 flex flex-col gap-1.5 md:gap-2">
+        <div className="mt-auto pt-2 flex flex-col gap-2 md:gap-3">
           {p.collected >= p.target ? (
             <div className="flex flex-col gap-2 mt-2">
               <div className="w-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-center text-[10px] md:text-xs py-2 rounded-lg flex items-center justify-center gap-1.5">
@@ -936,20 +936,19 @@ const ProgramCard: React.FC<{
             <>
               <motion.button
                 whileTap={{ scale: 0.98 }}
-                whileHover={{ scale: 1.02 }}
                 onClick={() =>
                   setLocalDonationAmount(
                     p.category === "Qurban" ? "2.500.000" : "100.000",
                   )
                 }
-                className="w-full bg-[#1799dc]/5 text-[#1799dc] hover:bg-[#1799dc]/10 font-bold text-[9px] md:text-xs py-1.5 md:py-2.5 rounded-full transition-colors active:scale-95 whitespace-nowrap overflow-hidden text-ellipsis px-1.5 md:px-2"
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 text-slate-500 hover:text-blue-600 hover:border-blue-200 dark:hover:border-blue-900/50 font-bold text-[10px] md:text-xs py-2 rounded-xl transition-all active:scale-95 text-center"
               >
                 {p.category === "Qurban" ? "Harga 1 Saham" : "Paket Spesial"}
               </motion.button>
 
-              <div className="flex gap-1 md:gap-2 h-7 md:h-10">
-                <div className="flex-1 flex items-center border border-slate-200 dark:border-slate-700 rounded-full overflow-hidden bg-slate-50/50 dark:bg-slate-900/50 focus-within:border-[#1799dc] focus-within:ring-1 focus-within:ring-[#1799dc] transition-all">
-                  <span className="pl-2.5 md:pl-4 pr-1 md:pr-1.5 text-slate-400 font-bold text-[9px] md:text-[11px] select-none">
+              <div className="flex gap-2 mt-1">
+                <div className="flex-1 flex items-center border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-900 focus-within:border-[#1799dc] transition-all">
+                  <span className="pl-3 pr-2 text-slate-400 font-bold text-xs select-none">
                     Rp
                   </span>
                   <motion.input
@@ -958,19 +957,19 @@ const ProgramCard: React.FC<{
                     onChange={(e) => setLocalDonationAmount(e.target.value)}
                     animate={
                       isPulsing
-                        ? { scale: 1.05, color: "#1799dc" }
+                        ? { scale: 1.02, color: "#1799dc" }
                         : { scale: 1 }
                     }
                     transition={{ duration: 0.15 }}
-                    className="w-full h-full bg-transparent outline-none pr-1 md:pr-3 text-[10px] md:text-sm font-bold text-slate-800 dark:text-slate-100 placeholder:text-slate-400 min-w-0"
+                    className="w-full h-10 bg-transparent outline-none pr-3 text-xs md:text-sm font-black text-slate-800 dark:text-slate-100 placeholder:text-slate-400 min-w-0"
                     placeholder="0"
                   />
                 </div>
 
-                <div className="flex flex-col w-[22px] md:w-[34px] border border-[#1799dc]/20 bg-[#1799dc]/5 rounded-full overflow-hidden shrink-0 text-[#1799dc]">
+                <div className="flex flex-col w-[32px] border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-xl overflow-hidden shrink-0 text-slate-500">
                   <motion.button
                     whileTap={{ scale: 0.9 }}
-                    className="flex-1 flex items-center justify-center hover:bg-[#1799dc]/10 font-black border-b border-[#1799dc]/10 text-[8px] md:text-xs leading-none"
+                    className="flex-1 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 font-black border-b border-slate-200 dark:border-slate-700 text-xs"
                     onClick={() => {
                       const val = parseInt(
                         localDonationAmount.replace(/\D/g, "") || "0",
@@ -982,7 +981,7 @@ const ProgramCard: React.FC<{
                   </motion.button>
                   <motion.button
                     whileTap={{ scale: 0.9 }}
-                    className="flex-1 flex items-center justify-center hover:bg-[#1799dc]/10 font-black text-[8px] md:text-xs leading-none"
+                    className="flex-1 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 font-black text-xs"
                     onClick={() => {
                       const val = parseInt(
                         localDonationAmount.replace(/\D/g, "") || "0",
@@ -996,17 +995,17 @@ const ProgramCard: React.FC<{
                 </div>
               </div>
 
-              <div className="flex gap-1.5 md:gap-2">
+              <div className="flex gap-2">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() =>
                     onAddToCart(p, localDonationAmount.replace(/\D/g, ""))
                   }
-                  className="w-8 h-8 md:w-10 md:h-10 shrink-0 bg-[#1799dc] hover:bg-[#1588c4] text-white flex items-center justify-center rounded-full shadow-sm transition-colors"
+                  className="w-10 h-10 shrink-0 bg-blue-50 dark:bg-slate-900 border border-blue-100 dark:border-slate-700 text-[#1799dc] flex items-center justify-center rounded-xl shadow-sm transition-colors hover:bg-[#1799dc] hover:text-white group"
                   title="Masukkan ke Kantung Donasi"
                 >
-                  <ShoppingBag className="w-3.5 h-3.5 md:w-4 md:h-4 fill-white/20" />
+                  <ShoppingBag className="w-4 h-4 transition-transform group-hover:scale-110" />
                 </motion.button>
 
                 <motion.button
@@ -1015,9 +1014,9 @@ const ProgramCard: React.FC<{
                   onClick={() =>
                     onQuickDonate(p, localDonationAmount.replace(/\D/g, ""))
                   }
-                  className="flex-1 h-8 md:h-10 bg-gradient-to-r from-[#f29f05] to-[#f09a00] hover:from-[#d98f04] hover:to-[#df8f00] text-white font-extrabold text-[11px] md:text-[13px] rounded-full flex items-center justify-center gap-1 md:gap-1.5 shadow-[0_4px_14px_0_rgba(242,159,5,0.3)] active:scale-[0.98] transition-all whitespace-nowrap px-1 md:px-2"
+                  className="flex-1 h-10 bg-gradient-to-r from-orange-400 to-amber-500 hover:from-orange-500 hover:to-amber-600 text-white font-black text-[11px] md:text-sm rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-all whitespace-nowrap uppercase tracking-widest px-2"
                 >
-                  <Heart className="w-3 h-3 md:w-4 md:h-4 fill-white/80 shrink-0" />
+                  <Heart className="w-3.5 h-3.5 fill-white/20 shrink-0" />
                   <span className="hidden sm:inline">Kebaikan Cepat</span>
                   <span className="sm:hidden">Donasi</span>
                 </motion.button>
@@ -2003,6 +2002,11 @@ export default function App() {
                                   path: "/history",
                                   icon: HistoryIcon,
                                 },
+                                {
+                                  title: "Toko Kebaikan",
+                                  path: "/toko",
+                                  icon: ShoppingBag,
+                                },
                               ].filter((p) =>
                                 p.title.toLowerCase().includes(query),
                               );
@@ -2372,6 +2376,7 @@ export default function App() {
                 {[
                   { name: "Beranda", icon: Home, id: "beranda" },
                   { name: "Program", icon: HandHeart, id: "program" },
+                  { name: "Toko Kebaikan", icon: ShoppingBag, path: "/toko" },
                   {
                     name: "Amaliyah",
                     icon: LayoutDashboard,
@@ -2546,6 +2551,10 @@ export default function App() {
               onOpenCart={() => setIsCartOpen(true)}
             />
           }
+        />
+        <Route
+          path="/toko/*"
+          element={<TokoPage />}
         />
         <Route
           path="/donasi"
@@ -4621,7 +4630,7 @@ export default function App() {
       </footer>
 
       {/* Mobile Bottom Navigation Menu */}
-      {!location.pathname.startsWith("/program/") && (
+      {!location.pathname.startsWith("/program/") && !location.pathname.match(/^\/toko\/.+/) && (
         <div
           className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200/50 dark:border-slate-800/50 shadow-[0_-10px_30px_rgba(0,0,0,0.08)]"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
@@ -4684,16 +4693,16 @@ export default function App() {
               whileTap={{ scale: 0.95 }}
               whileHover={{ scale: 1.05 }}
               onClick={() => {
-                navigate("/artikel");
+                navigate("/toko");
                 window.scrollTo(0, 0);
               }}
-              className={`transition-all duration-300 flex flex-col items-center justify-center gap-1 w-12 ${location.pathname === "/artikel" ? "text-primary-600 dark:text-primary-400" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"} transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}
+              className={`transition-all duration-300 flex flex-col items-center justify-center gap-1 w-12 ${location.pathname === "/toko" ? "text-primary-600 dark:text-primary-400" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"} transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}
             >
-              <FileText
+              <ShoppingBag
                 className="w-5 h-5"
-                strokeWidth={location.pathname === "/artikel" ? 2.5 : 2}
+                strokeWidth={location.pathname === "/toko" ? 2.5 : 2}
               />
-              <span className="text-[9px] font-bold tracking-tight">Artikel</span>
+              <span className="text-[9px] font-bold tracking-tight">Toko</span>
             </motion.button>
 
             <motion.button
