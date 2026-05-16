@@ -27,7 +27,7 @@ export default function QuranPage() {
         return (params.get('tab') as any) || 'quran';
     };
 
-    const [activeTab, setActiveTab] = useState<'quran' | 'hadits' | 'doa' | 'dzikir' | 'kisahnabi' | 'makhraj'>(getTabFromUrl());
+    const [activeTab, setActiveTab] = useState<'quran' | 'hadits' | 'doa' | 'dzikir' | 'kisahnabi' | 'makhraj' | 'buku'>(getTabFromUrl());
     
     useEffect(() => {
         const tab = getTabFromUrl();
@@ -92,6 +92,52 @@ export default function QuranPage() {
     const [loadingKisah, setLoadingKisah] = useState(false);
     const [searchKisah, setSearchKisah] = useState('');
     const [selectedKisah, setSelectedKisah] = useState<any | null>(null);
+
+    // Pilihan Koleksi Buku Islami Lokal Gratis
+    const curatedBooks = [
+        {
+            title: 'Ar-Rahiq Al-Makhtum',
+            author: 'Syaikh Shafiyyurrahman Al-Mubarakfuri',
+            description: 'Buku Sirah Nabawiyah terlengkap dan memenangkan juara pertama lomba seerah yang diselenggarakan oleh Rabithah Alam Islami.',
+            readUrl: 'https://d1.islamhouse.com/data/id/ih_books/single/id_Ar_Rahiq_Al_Makhtum.pdf',
+            source: 'Sirah Nabawiyah'
+        },
+        {
+            title: 'Ringkasan Sirah Nabawiyah',
+            author: 'Berbagai Ulama',
+            description: 'Ringkasan perjalanan hidup Nabi Muhammad ﷺ.',
+            readUrl: 'https://d1.islamhouse.com/data/id/ih_books/single/id_Ringkasan_Sirah_Nabawiyah.pdf',
+            source: 'Sirah Nabawiyah'
+        },
+        {
+            title: 'Tafsir Ibnu Katsir',
+            author: 'Al-Hafizh Ibnu Katsir',
+            description: 'Rujukan utama umat Islam untuk tafsir Al-Quran dengan riwayat sanad terpercaya.',
+            readUrl: 'https://d1.islamhouse.com/data/id/ih_books/single/id_Tafsir_Ibnu_Katsir_Jilid_1.pdf',
+            source: 'Tafsir'
+        },
+        {
+            title: 'Bulughul Maram',
+            author: 'Al-Hafizh Ibnu Hajar Al-Asqalani',
+            description: 'Kumpulan hadits-hadits tentang hukum fiqih kehidupan sehari-hari.',
+            readUrl: 'https://d1.islamhouse.com/data/id/ih_books/single/id_Bulughul_Maram.pdf',
+            source: 'Hadits Fiqih'
+        },
+        {
+            title: 'Riyadhus Shalihin',
+            author: 'Imam An-Nawawi',
+            description: 'Kitab kumpulan hadits-hadits shahih tentang akhlak, adab, dan penyucian jiwa.',
+            readUrl: 'https://d1.islamhouse.com/data/id/ih_books/single/id_Riyadhus_Shalihin.pdf',
+            source: 'Hadits Akhlak'
+        },
+        {
+            title: 'Sifat Shalat Nabi',
+            author: 'Syaikh Muhammad Nashiruddin Al-Albani',
+            description: 'Buku yang menjelaskan tata cara shalat Nabi Muhammad ﷺ secara rinci dari takbir hingga salam.',
+            readUrl: 'https://d1.islamhouse.com/data/id/ih_books/single/id_Sifat_Shalat_Nabi.pdf',
+            source: 'Fiqih Ibadah'
+        }
+    ];
 
     const [copiedId, setCopiedId] = useState<string | null>(null);
     const [bookmark, setBookmark] = useState<any | null>(null);
@@ -301,6 +347,8 @@ export default function QuranPage() {
                 });
         }
     }, [activeTab]);
+
+
 
     useEffect(() => {
         const audio = audioRef.current;
@@ -1267,7 +1315,7 @@ export default function QuranPage() {
 
     const toArabicNumber = (n: number) => n.toString().replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d as any]);
 
-    const changeTab = (tab: 'quran' | 'hadits' | 'doa' | 'dzikir' | 'kisahnabi' | 'makhraj') => {
+    const changeTab = (tab: 'quran' | 'hadits' | 'doa' | 'dzikir' | 'kisahnabi' | 'makhraj' | 'buku') => {
         setActiveTab(tab);
         setSelectedDoa(null);
         setSelectedDzikir(null);
@@ -1379,6 +1427,12 @@ export default function QuranPage() {
                                     className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${activeTab === 'makhraj' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400'}`}
                                 >
                                     <Sparkles className="w-3.5 h-3.5 hidden sm:block" /> Makhraj
+                                </button>
+                                <button 
+                                    onClick={() => changeTab('buku')}
+                                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${activeTab === 'buku' ? 'bg-[#1799dc] text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+                                >
+                                    Buku Islami
                                 </button>
                             </div>
                         </div>
@@ -3089,6 +3143,65 @@ export default function QuranPage() {
                                     )}
                                 </div>
                             )}
+                        </div>
+                    )}
+                    {activeTab === 'buku' && (
+                        <div className="animate-fade-in-up">
+                            <div className="mb-8 p-6 lg:p-8 bg-gradient-to-br from-[#1799dc] to-[#1384c2] rounded-3xl shadow-lg relative overflow-hidden text-white">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-3xl -mr-32 -mt-32 rounded-full"></div>
+                                <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 blur-2xl -ml-24 -mb-24 rounded-full"></div>
+                                <div className="relative z-10 flex flex-col md:flex-row gap-6 items-center">
+                                    <div className="bg-white/20 p-4 rounded-2xl backdrop-blur-sm hidden md:block">
+                                        <Book className="w-12 h-12 text-white" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-3xl font-black mb-2 flex items-center gap-3">
+                                            Perpustakaan Islami Gratis
+                                        </h2>
+                                        <p className="text-white/80 font-medium leading-relaxed max-w-2xl text-sm md:text-base">
+                                            Koleksi kitab-kitab utama umat Islam yang dapat Anda baca secara gratis dan legal. Disertai dengan tautan untuk mengunduh atau membaca e-book langsung dari sumber aslinya.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+                                {curatedBooks.map((book, idx) => (
+                                    <div key={idx} className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col h-full hover:shadow-md hover:border-[#1799dc]/40 transition-all group relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-24 h-24 bg-[#1799dc]/5 rounded-bl-full -z-0"></div>
+                                        
+                                        <div className="flex-1 relative z-10">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <span className="px-2.5 py-1 bg-[#1799dc]/10 dark:bg-[#1799dc]/20 text-[#1799dc] dark:text-[#3db2f0] text-[10px] font-black uppercase tracking-widest rounded-md">
+                                                    {book.source}
+                                                </span>
+                                            </div>
+                                            
+                                            <h4 className="font-bold text-slate-800 dark:text-slate-100 text-xl mb-1.5 leading-tight group-hover:text-[#1799dc] transition-colors">{book.title}</h4>
+                                            
+                                            <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 mb-4 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg border border-slate-100 dark:border-slate-800/50">
+                                                <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
+                                                    <span className="font-bold">{book.author.charAt(0)}</span>
+                                                </div>
+                                                <span className="truncate">{book.author}</span>
+                                            </div>
+                                            
+                                            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">{book.description}</p>
+                                        </div>
+                                        
+                                        <div className="relative z-10 pt-4 border-t border-slate-100 dark:border-slate-700/50 mt-auto">
+                                            <a 
+                                                href={book.readUrl} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="w-full py-3 bg-[#1799dc] hover:bg-[#1384c2] text-white font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2 shadow-sm shadow-[#1799dc]/20"
+                                            >
+                                                <BookOpen className="w-4 h-4" /> Baca PDF
+                                            </a>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
                     {activeTab === 'makhraj' && (
