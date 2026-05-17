@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BookOpen, Book, ArrowLeft, Search, Bookmark, BookmarkPlus, AlignRight, AlignLeft, FileText, ChevronRight, ChevronLeft, ChevronDown, PlayCircle, Play, Pause, Loader2, Mic, Square, Activity, Sparkles, Copy, Check, X, MapPin, Volume2, BrainCircuit, Eye, CheckCircle2, ArrowRight } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -9,16 +9,26 @@ import dzikirData from '../data/dzikir.json';
 import MakhrajPage from './MakhrajPage';
 
 const RECITERS = [
-    { id: "01", name: "Syaikh Abdullah Al-Juhany" },
-    { id: "02", name: "Syaikh Abdul Muhsin Al-Qasim" },
-    { id: "03", name: "Syaikh Abdurrahman as-Sudais" },
-    { id: "04", name: "Syaikh Ibrahim Al-Dossari" },
-    { id: "05", name: "Syaikh Misyari Rasyid Al-Afasi" },
+    { id: "7", name: "Syaikh Mishari Rashid Al-Afasy", fallback: "05" },
+    { id: "3", name: "Syaikh Abdurrahman as-Sudais", fallback: "03" },
+    { id: "10", name: "Syaikh Saud ash-Shuraym" },
+    { id: "4", name: "Syaikh Abu Bakr Al-Shatri" },
+    { id: "5", name: "Syaikh Hani ar-Rifai" },
+    { id: "6", name: "Syaikh Mahmoud Khalil Al-Husary", style: "Murattal" },
+    { id: "12", name: "Syaikh Mahmoud Khalil Al-Husary", style: "Muallim (Guru)" },
+    { id: "2", name: "Syaikh AbdulBaset AbdulSamad", style: "Murattal" },
+    { id: "1", name: "Syaikh AbdulBaset AbdulSamad", style: "Mujawwad" },
+    { id: "9", name: "Syaikh Mohamed Siddiq al-Minshawi", style: "Murattal" },
+    { id: "8", name: "Syaikh Mohamed Siddiq al-Minshawi", style: "Mujawwad" },
+    { id: "11", name: "Syaikh Mohamed al-Tablawi" },
+    { id: "01", name: "Syaikh Abdullah Al-Juhany (ID Source)" },
+    { id: "02", name: "Syaikh Abdul Muhsin Al-Qasim (ID Source)" },
+    { id: "04", name: "Syaikh Ibrahim Al-Dossari (ID Source)" }
 ];
 
 export default function QuranPage() {
     const navigate = useNavigate();
-    const [selectedReciter, setSelectedReciter] = useState<string>("05");
+    const [selectedReciter, setSelectedReciter] = useState<string>("7");
     const location = useLocation();
     
     // Read initial from URL or default to 'quran'
@@ -63,6 +73,7 @@ export default function QuranPage() {
     const [selectedSurah, setSelectedSurah] = useState<any | null>(null);
     const [surahDetail, setSurahDetail] = useState<any | null>(null);
     const [loadingSurahDetail, setLoadingSurahDetail] = useState(false);
+    const [loadingAudioUpdate, setLoadingAudioUpdate] = useState(false);
 
     // Hadits State
     const [books, setBooks] = useState<any[]>([]);
@@ -92,6 +103,117 @@ export default function QuranPage() {
     const [loadingKisah, setLoadingKisah] = useState(false);
     const [searchKisah, setSearchKisah] = useState('');
     const [selectedKisah, setSelectedKisah] = useState<any | null>(null);
+    const [activeKisahStep, setActiveKisahStep] = useState(0);
+
+    useEffect(() => {
+        setActiveKisahStep(0);
+    }, [selectedKisah]);
+
+    const kisahTimeline = useMemo(() => {
+        if (!selectedKisah) return [];
+        const text = selectedKisah.description || "";
+        const name = selectedKisah.name.toLowerCase();
+
+        // Preset waypoints for specific prophets to create a "Map" feel
+        let waypoints = [];
+        if (name.includes('muhammad')) {
+            waypoints = [
+                { location: 'Mekkah', desc: 'Masa kecil hingga diangkat menjadi Rasul dan berdakwah secara sembunyi & terang-terangan.' },
+                { location: 'Gua Hira', desc: 'Menerima wahyu pertama (Al-Alaq) melalui Malaikat Jibril.' },
+                { location: 'Thaif', desc: 'Perjalanan dakwah yang penuh ujian dan penolakan dari penduduk Thaif.' },
+                { location: 'Madinah', desc: 'Peristiwa Hijrah, membangun masjid pertama, dan mendirikan masyarakat madani.' },
+                { location: 'Mekkah', desc: 'Fathu Makkah (Pembebasan kota Mekkah) tanpa pertumpahan darah.' }
+            ];
+        } else if (name.includes('musa')) {
+            waypoints = [
+                { location: 'Istana Firaun, Mesir', desc: 'Ditemukan oleh istri Firaun dan dibesarkan di lingkungan istana.' },
+                { location: 'Madyan', desc: 'Melarikan diri ke Madyan, menikah, dan bekerja pada Nabi Syuaib.' },
+                { location: 'Lembah Thuwa', desc: 'Mendapat mukjizat dan wahyu pertama untuk berdakwah ke Firaun.' },
+                { location: 'Laut Merah', desc: 'Pelarian Bani Israil dan mukjizat membelah lautan.' },
+                { location: 'Gurun Sinai', desc: 'Pengembaraan bersama Bani Israil dan menerima Taurat.' }
+            ];
+        } else if (name.includes('ibrahim')) {
+            waypoints = [
+                { location: 'Babilonia', desc: 'Perjuangan mencari Tuhan dan menghancurkan berhala kaumnya.' },
+                { location: 'Tungku Api', desc: 'Mukjizat selamat dari api hukuman Raja Namrud.' },
+                { location: 'Mesir & Syam', desc: 'Hijrah untuk menyebarkan dakwah tauhid.' },
+                { location: 'Mekkah (Bakkah)', desc: 'Meninggalkan Siti Hajar & Ismail, hingga mukjizat Zamzam.' },
+                { location: 'Baitullah', desc: 'Perintah qurban dan membangun Ka\'bah bersama Nabi Ismail.' }
+            ];
+        } else if (name.includes('yusuf')) {
+            waypoints = [
+                { location: 'Kanaan', desc: 'Kisah mimpi 11 bintang dan kecemburuan saudara-saudaranya.' },
+                { location: 'Sumur', desc: 'Dibuang ke sumur lalu diselamatkan oleh musafir.' },
+                { location: 'Istana Al-Aziz', desc: 'Dijual sebagai budak di Mesir dan fitnah Zulaikha.' },
+                { location: 'Penjara Mesir', desc: 'Menafsirkan mimpi tahanan dan bersabar bertahun-tahun.' },
+                { location: 'Istana Raja', desc: 'Menjadi bendahara negara (Menteri) dan berkumpul kembali dengan keluarga.' }
+            ];
+        } else if (name.includes('isa')) {
+            waypoints = [
+                { location: 'Baitlehem', desc: 'Lahir melalui mukjizat dari Maryam tanpa seorang ayah.' },
+                { location: 'Nazaret', desc: 'Masa kecil dan tanda-tanda kenabian mulai terlihat.' },
+                { location: 'Baitul Maqdis', desc: 'Berdakwah kepada Bani Israil dengan berbagai mukjizat (menyembuhkan, menghidupkan yang mati).' },
+                { location: 'Bukit Zaitun', desc: 'Kisah pengkhianatan Yudas dan pengangkatan Nabi Isa ke langit.' }
+            ];
+        } else if (name.includes('yunus')) {
+            waypoints = [
+                { location: 'Ninawa', desc: 'Berdakwah kepada kaumnya namun ditolak.' },
+                { location: 'Tepi Pantai', desc: 'Meninggalkan kaumnya dalam keadaan marah karena mereka tidak mau beriman.' },
+                { location: 'Kapal', desc: 'Badai besar dan pengundian yang menyebabkan beliau dilempar ke laut.' },
+                { location: 'Perut Paus', desc: 'Bertobat dengan doa "La ilaha illa anta, subhanaka inni kuntu minaz-zalimin".' },
+                { location: 'Terdampar', desc: 'Diselamatkan ke daratan dan kembali mendapati kaumnya telah beriman.' }
+            ];
+        } else if (name.includes('nuh')) {
+            waypoints = [
+                { location: 'Pemukiman Kaum', desc: 'Berdakwah siang dan malam selama 950 tahun, namun hanya sedikit yang beriman.' },
+                { location: 'Dataran Tinggi', desc: 'Mendapat perintah membuat bahtera besar jauh dari perairan yang diejek kaumnya.' },
+                { location: 'Banjir Besar', desc: 'Azab air bah menenggelamkan semua yang ingkar, termasuk putranya Kan\'an.' },
+                { location: 'Gunung Judi', desc: 'Bahtera berlabuh dengan selamat bersama orang-orang beriman dan hewan-hewan.' }
+            ];
+        } else if (name.includes('sulaiman')) {
+            waypoints = [
+                { location: 'Yerusalem', desc: 'Mewarisi kerajaan dari Nabi Daud dan membangun Baitul Maqdis.' },
+                { location: 'Lembah Semut', desc: 'Perjalanan pasukan, mukjizat memahami bahasa hewan dan tunduknya angin.' },
+                { location: 'Istana Kaca', desc: 'Menerima Ratu Balqis (Saba) dan menaklukkannya dengan kebijaksanaan.' },
+                { location: 'Singgasana', desc: 'Wafat dalam keadaan berdiri bertongkat, tak diketahui jin hingga tongkatnya keropos.' }
+            ];
+        }
+
+        let blocks = text.split(/\n\s*\n/).filter((b: string) => b.trim().length > 20);
+        if (blocks.length < 3) {
+            const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+            blocks = [];
+            let currentBlock = "";
+            for (const item of sentences) {
+                currentBlock += item + " ";
+                if (currentBlock.length > 250) {
+                    blocks.push(currentBlock.trim());
+                    currentBlock = "";
+                }
+            }
+            if (currentBlock.trim().length > 0) {
+                blocks.push(currentBlock.trim());
+            }
+        }
+
+        // Merge waypoints with actual text blocks to spread the story
+        const numBlocks = blocks.length;
+        if (waypoints.length > 0) {
+            return waypoints.map((wp, i) => {
+                const proportion = Math.floor((i / waypoints.length) * numBlocks);
+                const proportionNext = Math.floor(((i + 1) / waypoints.length) * numBlocks);
+                const storySnippet = blocks.slice(proportion, proportionNext).join('\n\n') || wp.desc;
+                return { location: wp.location, title: wp.desc, content: storySnippet };
+            });
+        }
+
+        // Generic Map Fallback
+        return blocks.map((b: string, i: number) => ({
+            location: `Wilayah ${i + 1}`,
+            title: `Bagian Perjalanan ${i + 1}`,
+            content: b
+        }));
+    }, [selectedKisah]);
 
     // Pilihan Koleksi Buku Islami Lokal Gratis
     const curatedBooks = [
@@ -244,8 +366,24 @@ export default function QuranPage() {
         return () => window.speechSynthesis.removeEventListener('voiceschanged', handleVoicesChanged);
     }, []);
 
-    const activeWordRef = useRef<{ ayahNumber: number, wordIndex: number } | null>(null);
+    const activeWordRef = useRef<{ ayahNumber: number, startWord: number, endWord: number } | null>(null);
     const rqAnimRef = useRef<number | null>(null);
+
+    const setWordHighlight = (ayahNumber: number, start: number, end: number, active: boolean) => {
+        for (let i = start; i < end; i++) {
+            const ids = [`word-${ayahNumber}-${i}`, `word-modal-${ayahNumber}-${i}`];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (active) {
+                        el.classList.add('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
+                    } else {
+                        el.classList.remove('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
+                    }
+                }
+            });
+        }
+    };
 
     // Fetch Surahs
     useEffect(() => {
@@ -366,13 +504,62 @@ export default function QuranPage() {
         return () => audio.removeEventListener('ended', handleEnded);
     }, [quranViewMode, tahfidzStep]);
 
+    const getAudioUrl = (ayah: any) => {
+        if (!ayah) return "";
+
+        // If explicitly choosing an Indonesian source reciter
+        if (selectedReciter.startsWith('0')) {
+            const url = ayah?.audio?.[selectedReciter] || ayah?.audio?.['01'];
+            return url || (ayah?.audio ? Object.values(ayah.audio)[0] : "");
+        }
+
+        if (ayah?.quranComAudio?.url) {
+            let url = ayah.quranComAudio.url;
+            if (url.startsWith('//')) {
+                url = `https:${url}`;
+            } else if (!url.startsWith('http')) {
+                url = `https://verses.quran.com/${url}`;
+            }
+            
+            // Rewrite mirrors.quranicaudio.com to everyayah.com to avoid Indonesian ISP blocking & CORS proxy errors
+            if (url.includes('mirrors.quranicaudio.com/everyayah/')) {
+                url = url.replace('mirrors.quranicaudio.com/everyayah/', 'everyayah.com/data/');
+            }
+            
+            return url;
+        }
+        
+        // Fallback to equran.id audio if available for this reciter mapping
+        const reciter = RECITERS.find(r => r.id === selectedReciter);
+        if (reciter?.fallback && ayah?.audio?.[reciter.fallback]) {
+            return ayah.audio[reciter.fallback];
+        }
+        
+        // Final fallback to the first available audio from equran.id if quran.com fails
+        if (ayah?.audio) {
+            const indonesianFallback = ayah.audio['01'] || ayah.audio['05'] || Object.values(ayah.audio)[0];
+            if (indonesianFallback) return indonesianFallback;
+        }
+
+        // Try quranComWords audio if available (sometimes it's there)
+        if (ayah?.quranComWords && Array.isArray(ayah.quranComWords)) {
+            const firstWordAudio = ayah.quranComWords.find((w: any) => w.audio_url)?.audio_url;
+            if (firstWordAudio) {
+                if (firstWordAudio.startsWith('//')) return `https:${firstWordAudio}`;
+                return firstWordAudio.startsWith('http') ? firstWordAudio : `https://verses.quran.com/${firstWordAudio}`;
+            }
+        }
+        
+        return "";
+    };
+
     const handleSelectSurah = (surah: any) => {
         setSelectedSurah(surah);
         setLoadingSurahDetail(true);
         
         Promise.all([
             fetch(`https://equran.id/api/v2/surat/${surah.nomor}`).then(res => res.json()),
-            fetch(`https://api.quran.com/api/v4/verses/by_chapter/${surah.nomor}?words=true&audio=7&word_fields=text_uthmani_tajweed&per_page=300`).then(res => res.json()),
+            fetch(`https://api.quran.com/api/v4/verses/by_chapter/${surah.nomor}?words=true&audio=${selectedReciter}&word_fields=text_uthmani_tajweed&per_page=300`).then(res => res.json()),
             fetch(`https://equran.id/api/v2/tafsir/${surah.nomor}`).then(res => res.json())
         ])
         .then(([equranData, quranComData, tafsirData]) => {
@@ -401,18 +588,47 @@ export default function QuranPage() {
         .finally(() => setLoadingSurahDetail(false));
     };
 
+    useEffect(() => {
+        if (!selectedSurah) return;
+        
+        setLoadingAudioUpdate(true);
+        fetch(`https://api.quran.com/api/v4/verses/by_chapter/${selectedSurah.nomor}?words=true&audio=${selectedReciter}&word_fields=text_uthmani_tajweed&per_page=300`)
+            .then(res => res.json())
+            .then(quranComData => {
+                setSurahDetail(prev => {
+                    if (!prev) return prev;
+                    const mergedAyahs = prev.ayat.map((ayah: any) => {
+                        const verseInfo = quranComData.verses?.find((v: any) => v.verse_number === ayah.nomorAyat);
+                        return {
+                            ...ayah,
+                            quranComAudio: verseInfo?.audio || null, // Clear old audio if new one is missing
+                        };
+                    });
+                    return { ...prev, ayat: mergedAyahs };
+                });
+            })
+            .catch(console.error)
+            .finally(() => setLoadingAudioUpdate(false));
+    }, [selectedReciter, selectedSurah]);
+
     const [playingAudio, setPlayingAudio] = useState<string | null>(null);
     const [openTafsirAyah, setOpenTafsirAyah] = useState<number | null>(null);
 
     const toggleAudio = (audioUrl: string, ayahNumber?: number, audioSegments?: any[], stopEarlyMs?: number) => {
+        const audioEl = audioRef.current || document.getElementById('quran-audio') as HTMLAudioElement;
+        if (!audioEl) return;
+
+        const isIndonesianSource = selectedReciter.startsWith('0');
+        const finalAyahNumber = isIndonesianSource ? undefined : ayahNumber;
+        const finalSegments = isIndonesianSource ? undefined : audioSegments;
+
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
         }
 
         // Remove existing highlight if any
         if (activeWordRef.current) {
-            const el = document.getElementById(`word-${activeWordRef.current.ayahNumber}-${activeWordRef.current.wordIndex}`);
-            if (el) el.classList.remove('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
+            setWordHighlight(activeWordRef.current.ayahNumber, activeWordRef.current.startWord, activeWordRef.current.endWord, false);
             activeWordRef.current = null;
         }
         if (rqAnimRef.current) {
@@ -422,110 +638,128 @@ export default function QuranPage() {
 
         if (playingAudio === audioUrl) {
             setPlayingAudio(null);
-            const audioEl = document.getElementById('quran-audio') as HTMLAudioElement;
-            if (audioEl) {
-                audioEl.pause();
-                audioEl.onplay = null;
-            }
+            audioEl.pause();
+            audioEl.onplay = null;
+            audioEl.onended = null;
+            audioEl.onerror = null;
         } else {
-            setPlayingAudio(audioUrl);
-            const audioEl = document.getElementById('quran-audio') as HTMLAudioElement;
-            if (audioEl) {
-                audioEl.src = audioUrl;
-                audioEl.play().catch(console.error);
-                audioEl.onended = () => {
-                    setPlayingAudio(null);
-                    if (activeWordRef.current) {
-                        const el = document.getElementById(`word-${activeWordRef.current.ayahNumber}-${activeWordRef.current.wordIndex}`);
-                        if (el) el.classList.remove('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
-                        activeWordRef.current = null;
-                    }
-                    if (rqAnimRef.current) {
-                        cancelAnimationFrame(rqAnimRef.current);
-                        rqAnimRef.current = null;
-                    }
-                };
-                
-                if (ayahNumber && audioSegments) {
-                    const updateHighlight = () => {
-                        if (!audioEl || audioEl.paused) return;
-                        const currentTimeMs = audioEl.currentTime * 1000;
-                        if (stopEarlyMs && currentTimeMs >= stopEarlyMs) {
-                            audioEl.pause();
-                            setPlayingAudio(null);
-                            if (activeWordRef.current) {
-                                const el = document.getElementById(`word-${activeWordRef.current.ayahNumber}-${activeWordRef.current.wordIndex}`);
-                                if (el) el.classList.remove('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
-                                activeWordRef.current = null;
-                            }
-                            if (rqAnimRef.current) {
-                                cancelAnimationFrame(rqAnimRef.current);
-                                rqAnimRef.current = null;
-                            }
-                            audioEl.dispatchEvent(new Event('ended'));
-                            return;
-                        }
+            if (!audioUrl || audioUrl === "undefined") {
+                alert("Audio tidak tersedia untuk ayat ini. Silakan coba qari lain atau pilih sumber audio yang berbeda.");
+                return;
+            }
 
-                        let newActiveWord: { ayahNumber: number, wordIndex: number } | null = null;
-                        
-                        for (let i = 0; i < audioSegments.length; i++) {
-                            const seg = audioSegments[i];
-                            if (seg && seg.length >= 4) {
-                                const startMs = seg[2];
-                                const endMs = seg[3];
-                                if (currentTimeMs >= startMs && currentTimeMs <= endMs) {
-                                    newActiveWord = { ayahNumber, wordIndex: seg[0] };
-                                    break;
-                                }
-                            }
+            setPlayingAudio(audioUrl);
+            
+            // Clean up previous listeners
+            audioEl.onplay = null;
+            audioEl.onended = null;
+            
+            audioEl.onerror = (e: any) => {
+                console.error("Audio Load Error:", e);
+                setPlayingAudio(null);
+                alert("Gagal memuat audio dari server internasional (mungkin diblokir provider). Silakan coba Syaikh dengan label '(ID Source)'.");
+            };
+
+            audioEl.src = audioUrl;
+            audioEl.load();
+
+            audioEl.play().catch(err => {
+                if (err.name !== 'AbortError') {
+                    console.error("Playback failed:", err);
+                    setPlayingAudio(null);
+                    // If it's a "no supported source" error, it's often a 404 or format issue
+                    alert("Gagal memutar audio. Sumber audio mungkin tidak tersedia saat ini.");
+                }
+            });
+
+            audioEl.onended = () => {
+                setPlayingAudio(null);
+                if (activeWordRef.current) {
+                    setWordHighlight(activeWordRef.current.ayahNumber, activeWordRef.current.startWord, activeWordRef.current.endWord, false);
+                    activeWordRef.current = null;
+                }
+                if (rqAnimRef.current) {
+                    cancelAnimationFrame(rqAnimRef.current);
+                    rqAnimRef.current = null;
+                }
+            };
+            
+            if (finalAyahNumber && finalSegments) {
+                const updateHighlight = () => {
+                    if (!audioEl || audioEl.paused) return;
+                    const currentTimeMs = audioEl.currentTime * 1000;
+                    if (stopEarlyMs && currentTimeMs >= stopEarlyMs) {
+                        audioEl.pause();
+                        setPlayingAudio(null);
+                        if (activeWordRef.current) {
+                            setWordHighlight(activeWordRef.current.ayahNumber, activeWordRef.current.startWord, activeWordRef.current.endWord, false);
+                            activeWordRef.current = null;
                         }
-                        
-                        const prev = activeWordRef.current;
-                        if (newActiveWord?.wordIndex !== prev?.wordIndex || newActiveWord?.ayahNumber !== prev?.ayahNumber) {
-                            if (prev) {
-                                const el = document.getElementById(`word-${prev.ayahNumber}-${prev.wordIndex}`);
-                                if (el) el.classList.remove('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
-                            }
-                            if (newActiveWord) {
-                                const el = document.getElementById(`word-${newActiveWord.ayahNumber}-${newActiveWord.wordIndex}`);
-                                if (el) el.classList.add('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
-                            }
-                            activeWordRef.current = newActiveWord;
+                        if (rqAnimRef.current) {
+                            cancelAnimationFrame(rqAnimRef.current);
+                            rqAnimRef.current = null;
                         }
-                        
-                        rqAnimRef.current = requestAnimationFrame(updateHighlight);
-                    };
-                    audioEl.onplay = () => {
-                        rqAnimRef.current = requestAnimationFrame(updateHighlight);
-                    };
-                    if (!audioEl.paused) {
-                        rqAnimRef.current = requestAnimationFrame(updateHighlight);
+                        audioEl.dispatchEvent(new Event('ended'));
+                        return;
                     }
-                } else {
-                    if (stopEarlyMs) {
-                        const updateEarlyStop = () => {
-                            if (!audioEl || audioEl.paused) return;
-                            if (audioEl.currentTime * 1000 >= stopEarlyMs) {
-                                audioEl.pause();
-                                setPlayingAudio(null);
-                                if (rqAnimRef.current) {
-                                    cancelAnimationFrame(rqAnimRef.current);
-                                    rqAnimRef.current = null;
-                                }
-                                audioEl.dispatchEvent(new Event('ended'));
-                                return;
+
+                    let newActiveWord: { ayahNumber: number, startWord: number, endWord: number } | null = null;
+                    
+                    for (let i = 0; i < finalSegments.length; i++) {
+                        const seg = finalSegments[i];
+                        if (seg && seg.length >= 4) {
+                            const startMs = Number(seg[2]);
+                            const endMs = Number(seg[3]);
+                            if (currentTimeMs >= startMs && currentTimeMs <= endMs) {
+                                newActiveWord = { 
+                                    ayahNumber: finalAyahNumber, 
+                                    startWord: Number(seg[0]), 
+                                    endWord: Number(seg[1]) 
+                                };
+                                break;
                             }
-                            rqAnimRef.current = requestAnimationFrame(updateEarlyStop);
-                        };
-                        audioEl.onplay = () => {
-                            rqAnimRef.current = requestAnimationFrame(updateEarlyStop);
-                        };
-                        if (!audioEl.paused) {
-                            rqAnimRef.current = requestAnimationFrame(updateEarlyStop);
                         }
-                    } else {
-                        audioEl.onplay = null;
                     }
+                    
+                    const prev = activeWordRef.current;
+                    if (newActiveWord?.startWord !== prev?.startWord || newActiveWord?.endWord !== prev?.endWord || newActiveWord?.ayahNumber !== prev?.ayahNumber) {
+                        if (prev) {
+                            setWordHighlight(prev.ayahNumber, prev.startWord, prev.endWord, false);
+                        }
+                        if (newActiveWord) {
+                            setWordHighlight(newActiveWord.ayahNumber, newActiveWord.startWord, newActiveWord.endWord, true);
+                        }
+                        activeWordRef.current = newActiveWord;
+                    }
+                    
+                    rqAnimRef.current = requestAnimationFrame(updateHighlight);
+                };
+                audioEl.onplay = () => {
+                    rqAnimRef.current = requestAnimationFrame(updateHighlight);
+                };
+                if (!audioEl.paused) {
+                    rqAnimRef.current = requestAnimationFrame(updateHighlight);
+                }
+            } else if (stopEarlyMs) {
+                const updateEarlyStop = () => {
+                    if (!audioEl || audioEl.paused) return;
+                    if (audioEl.currentTime * 1000 >= stopEarlyMs) {
+                        audioEl.pause();
+                        setPlayingAudio(null);
+                        if (rqAnimRef.current) {
+                            cancelAnimationFrame(rqAnimRef.current);
+                            rqAnimRef.current = null;
+                        }
+                        audioEl.dispatchEvent(new Event('ended'));
+                        return;
+                    }
+                    rqAnimRef.current = requestAnimationFrame(updateEarlyStop);
+                };
+                audioEl.onplay = () => {
+                    rqAnimRef.current = requestAnimationFrame(updateEarlyStop);
+                };
+                if (!audioEl.paused) {
+                    rqAnimRef.current = requestAnimationFrame(updateEarlyStop);
                 }
             }
         }
@@ -699,8 +933,7 @@ export default function QuranPage() {
                     rqAnimRef.current = null;
                 }
                 if (activeWordRef.current) {
-                    const el = document.getElementById(`word-${activeWordRef.current.ayahNumber}-${activeWordRef.current.wordIndex}`);
-                    if (el) el.classList.remove('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
+                    setWordHighlight(activeWordRef.current.ayahNumber, activeWordRef.current.startWord, activeWordRef.current.endWord, false);
                     activeWordRef.current = null;
                 }
             }
@@ -1100,24 +1333,28 @@ export default function QuranPage() {
             return <p className={className} dir="rtl">{isPotongan ? getPotonganAyat(ayah.teksArab) : ayah.teksArab}{isPotongan && ' ...'}</p>;
         }
 
-        let words = ayah.quranComWords.filter((w: any) => w.char_type_name !== 'end');
+        let wordCountToDisplay = ayah.quranComWords.length;
         if (isPotongan) {
             const limit = ayah.teksArab.split(' ').length <= 3 ? 1 : Math.ceil(ayah.teksArab.split(' ').length / 3);
-            words = words.slice(0, limit);
+            wordCountToDisplay = limit;
         }
 
         return (
             <p className={className} dir="rtl">
-                {words.map((word: any, wIndex: number) => (
-                    <span key={`tahfidz-word-${ayah.nomorAyat}-${wIndex}`}>
-                        <span 
-                            id={`word-${ayah.nomorAyat}-${wIndex}`}
-                            className="inline transition-colors duration-300 rounded"
-                            dangerouslySetInnerHTML={{ __html: word.text_uthmani_tajweed || word.text_uthmani || word.text }}
-                        />
-                        {" "}
-                    </span>
-                ))}
+                {ayah.quranComWords.map((word: any, wIndex: number) => {
+                    if (word.char_type_name === 'end') return null;
+                    if (isPotongan && wIndex >= wordCountToDisplay) return null;
+                    return (
+                        <span key={`tahfidz-word-${ayah.nomorAyat}-${wIndex}`}>
+                            <span 
+                                id={`word-${ayah.nomorAyat}-${wIndex}`}
+                                className="inline transition-colors duration-300 rounded"
+                                dangerouslySetInnerHTML={{ __html: word.text_uthmani_tajweed || word.text_uthmani || word.text }}
+                            />
+                            {" "}
+                        </span>
+                    );
+                })}
                 {isPotongan && <span className="text-slate-400">...</span>}
             </p>
         );
@@ -1174,7 +1411,7 @@ export default function QuranPage() {
                 }));
                 
                 if (ayah) {
-                    const audioUrl = (selectedReciter === "05" && ayah.quranComAudio) ? "https://verses.quran.com/" + ayah.quranComAudio.url : ayah.audio[selectedReciter];
+                    const audioUrl = getAudioUrl(ayah);
                     toggleAudio(audioUrl, ayah.nomorAyat, ayah.quranComAudio?.segments);
                 }
                 setEvaluatingAyah(null);
@@ -1289,7 +1526,7 @@ export default function QuranPage() {
                         [ayahNumber]: feedbackText
                     }));
                     
-                    speakFeedbackAndPlayCorrect(feedbackText, ayah.audio[selectedReciter], ayahNumber);
+                    speakFeedbackAndPlayCorrect(feedbackText, getAudioUrl(ayah), ayahNumber);
                     
                 } catch (e) {
                     console.error("Evaluation error", e);
@@ -1554,15 +1791,18 @@ export default function QuranPage() {
                                             if (playingAudio) toggleAudio(playingAudio);
                                             setSelectedReciter(e.target.value);
                                         }}
-                                        className="bg-transparent text-xs font-bold text-slate-600 dark:text-slate-300 w-full pl-3 pr-8 py-1.5 focus:outline-none appearance-none cursor-pointer"
+                                        className={`bg-transparent text-xs font-bold text-slate-600 dark:text-slate-300 w-full pl-3 pr-8 py-1.5 focus:outline-none appearance-none cursor-pointer ${loadingAudioUpdate ? 'opacity-50' : ''}`}
                                         style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
+                                        disabled={loadingAudioUpdate}
                                     >
                                         {RECITERS.map(r => (
-                                            <option key={r.id} value={r.id} className="text-slate-800 dark:text-slate-800">{r.name}</option>
+                                            <option key={r.id} value={r.id} className="text-slate-800 dark:text-slate-800">
+                                                {r.name} {r.style ? `(${r.style})` : ''}
+                                            </option>
                                         ))}
                                     </select>
                                     <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                        <ChevronDown className="w-4 h-4" />
+                                        {loadingAudioUpdate ? <Loader2 className="w-4 h-4 animate-spin text-[#1799dc]" /> : <ChevronDown className="w-4 h-4" />}
                                     </div>
                                 </div>
 
@@ -1704,9 +1944,9 @@ export default function QuranPage() {
                                         }
 
                                         return filteredAyat.map((ayah: any) => {
-                                        const currentAudioUrl = (selectedReciter === "05" && ayah.quranComAudio) ? "https://verses.quran.com/" + ayah.quranComAudio.url : ayah.audio[selectedReciter];
+                                        const currentAudioUrl = getAudioUrl(ayah);
                                         const segments = ayah.quranComAudio ? ayah.quranComAudio.segments : undefined;
-                                        const isAyahPlaying = playingAudio === currentAudioUrl || playingAudio === ayah.audio[selectedReciter];
+                                        const isAyahPlaying = playingAudio !== null && playingAudio === currentAudioUrl;
 
                                         return (
                                         <div id={`ayah-${ayah.nomorAyat}`} key={ayah.nomorAyat} className={`bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border relative transition-all duration-300 ${isAyahPlaying ? 'border-[#1799dc] ring-4 ring-[#1799dc]/10 dark:ring-[#1799dc]/20' : 'border-slate-100 dark:border-slate-700'}`}>
@@ -1763,7 +2003,8 @@ export default function QuranPage() {
                                                 <div className="flex-1 ml-6 text-right">
                                                     {ayah.quranComWords ? (
                                                         <p className="font-arabic text-3xl md:text-4xl leading-[2.2] md:leading-[2.5] text-slate-800 dark:text-slate-100" dir="rtl">
-                                                            {ayah.quranComWords.filter((w: any) => w.char_type_name !== 'end').map((word: any, wIndex: number) => {
+                                                            {ayah.quranComWords.map((word: any, wIndex: number) => {
+                                                                if (word.char_type_name === 'end') return null;
                                                                 return (
                                                                     <span key={`word-list-${ayah.nomorAyat}-${wIndex}`}>
                                                                         <span 
@@ -1788,7 +2029,7 @@ export default function QuranPage() {
                                                 </div>
                                             </div>
                                             <div className="border-t border-slate-100 dark:border-slate-700/50 pt-4 mt-6">
-                                                <p className={`text-sm font-medium mb-2 transition-colors duration-300 ${playingAudio === ayah.audio[selectedReciter] ? 'text-[#1799dc] dark:text-[#38bdf8]' : 'text-primary-600 dark:text-primary-400'}`}>{ayah.teksLatin}</p>
+                                                <p className={`text-sm font-medium mb-2 transition-colors duration-300 ${playingAudio === getAudioUrl(ayah) ? 'text-[#1799dc] dark:text-[#38bdf8]' : 'text-primary-600 dark:text-primary-400'}`}>{ayah.teksLatin}</p>
                                                 <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm md:text-base mb-4">{ayah.teksIndonesia}</p>
                                                 
                                                 {ayah.tafsir && (
@@ -1946,8 +2187,8 @@ export default function QuranPage() {
 
                                                     <div className="font-arabic text-[30px] sm:text-[34px] md:text-[40px] leading-[2.1] sm:leading-[2.2] md:leading-[2.3] text-[#2c241b] dark:text-[#f7fafc] text-right relative z-10" dir="rtl">
                                                         {mushafPages[mushafPageIdx]?.map((ayah: any) => {
-                                                            const currentAudioUrl = (selectedReciter === "05" && ayah.quranComAudio) ? "https://verses.quran.com/" + ayah.quranComAudio.url : ayah.audio[selectedReciter];
-                                                            const isAyahPlaying = playingAudio === currentAudioUrl || playingAudio === ayah.audio[selectedReciter];
+                                                            const currentAudioUrl = getAudioUrl(ayah);
+                                                            const isAyahPlaying = playingAudio !== null && playingAudio === currentAudioUrl;
                                                             return (
                                                             <span 
                                                                 key={ayah.nomorAyat} 
@@ -1956,12 +2197,19 @@ export default function QuranPage() {
                                                             >
                                                                 {ayah.quranComWords ? (
                                                                     <>
-                                                                        {ayah.quranComWords.filter((w: any) => w.char_type_name !== 'end').map((word: any, wIndex: number) => (
-                                                                            <span key={`word-mushaf-${ayah.nomorAyat}-${wIndex}`}>
-                                                                                <span dangerouslySetInnerHTML={{ __html: word.text_uthmani_tajweed || word.text_uthmani || word.text }} />
-                                                                                {" "}
-                                                                            </span>
-                                                                        ))}
+                                                                        {ayah.quranComWords.map((word: any, wIndex: number) => {
+                                                                            if (word.char_type_name === 'end') return null;
+                                                                            return (
+                                                                                <span key={`word-mushaf-${ayah.nomorAyat}-${wIndex}`}>
+                                                                                    <span 
+                                                                                        id={`word-${ayah.nomorAyat}-${wIndex}`}
+                                                                                        className="inline transition-colors duration-200"
+                                                                                        dangerouslySetInnerHTML={{ __html: word.text_uthmani_tajweed || word.text_uthmani || word.text }} 
+                                                                                    />
+                                                                                    {" "}
+                                                                                </span>
+                                                                            );
+                                                                        })}
                                                                     </>
                                                                 ) : ayah.teksTajweed ? (
                                                                     <span dangerouslySetInnerHTML={{ __html: ayah.teksTajweed + " " }} />
@@ -2086,13 +2334,13 @@ export default function QuranPage() {
                                                                     setTahfidzAyahIdx(randIdx);
                                                                     setTahfidzStep('SHEIKH');
                                                                     const firstAyah = surahDetail.ayat[randIdx];
-                                                                    const audioUrl = (selectedReciter === "05" && firstAyah.quranComAudio) ? "https://verses.quran.com/" + firstAyah.quranComAudio.url : firstAyah.audio[selectedReciter];
+                                                                    const audioUrl = getAudioUrl(firstAyah);
                                                                     toggleAudio(audioUrl, firstAyah.nomorAyat, firstAyah.quranComAudio?.segments);
                                                                 } else {
                                                                     setTahfidzAyahIdx(0);
                                                                     setTahfidzStep('SHEIKH');
                                                                     const firstAyah = surahDetail.ayat[0];
-                                                                    const audioUrl = (selectedReciter === "05" && firstAyah.quranComAudio) ? "https://verses.quran.com/" + firstAyah.quranComAudio.url : firstAyah.audio[selectedReciter];
+                                                                    const audioUrl = getAudioUrl(firstAyah);
                                                                     toggleAudio(audioUrl, firstAyah.nomorAyat, firstAyah.quranComAudio?.segments);
                                                                 }
                                                             }}
@@ -2156,7 +2404,7 @@ export default function QuranPage() {
                                                                                 onClick={() => {
                                                                                     const ayah = surahDetail.ayat[tahfidzAyahIdx + 1];
                                                                                     if (ayah) {
-                                                                                        const audioUrl = (selectedReciter === "05" && ayah.quranComAudio) ? "https://verses.quran.com/" + ayah.quranComAudio.url : ayah.audio[selectedReciter];
+                                                                                        const audioUrl = getAudioUrl(ayah);
                                                                                         const stopEarlyMs = getPotonganEndTimeMs(ayah.teksArab, ayah.quranComAudio?.segments);
                                                                                         toggleAudio(audioUrl, ayah.nomorAyat, ayah.quranComAudio?.segments, stopEarlyMs);
                                                                                     }
@@ -2164,7 +2412,7 @@ export default function QuranPage() {
                                                                                 className="w-10 h-10 bg-amber-200 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center hover:bg-amber-300 dark:hover:bg-amber-800 transition-colors shadow-sm"
                                                                                 title="Putar Audio"
                                                                             >
-                                                                                {playingAudio === ((selectedReciter === "05" && surahDetail.ayat[tahfidzAyahIdx + 1]?.quranComAudio) ? "https://verses.quran.com/" + surahDetail.ayat[tahfidzAyahIdx + 1]?.quranComAudio.url : surahDetail.ayat[tahfidzAyahIdx + 1]?.audio[selectedReciter]) ? (
+                                                                                {playingAudio === getAudioUrl(surahDetail.ayat[tahfidzAyahIdx + 1]) ? (
                                                                                     <Square className="w-4 h-4" fill="currentColor" />
                                                                                 ) : (
                                                                                     <Volume2 className="w-5 h-5" fill="currentColor" />
@@ -2185,7 +2433,7 @@ export default function QuranPage() {
                                                                             setTahfidzStep('CHECK');
                                                                             const nextAyah = surahDetail.ayat[tahfidzAyahIdx + 1];
                                                                             if (nextAyah) {
-                                                                                const audioUrl = (selectedReciter === "05" && nextAyah.quranComAudio) ? "https://verses.quran.com/" + nextAyah.quranComAudio.url : nextAyah.audio[selectedReciter];
+                                                                                const audioUrl = getAudioUrl(nextAyah);
                                                                                 toggleAudio(audioUrl, nextAyah.nomorAyat, nextAyah.quranComAudio?.segments);
                                                                             }
                                                                         }}
@@ -2226,14 +2474,14 @@ export default function QuranPage() {
                                                                             onClick={() => {
                                                                                 const ayah = surahDetail.ayat[tahfidzAyahIdx + 1];
                                                                                 if (ayah) {
-                                                                                    const audioUrl = (selectedReciter === "05" && ayah.quranComAudio) ? "https://verses.quran.com/" + ayah.quranComAudio.url : ayah.audio[selectedReciter];
+                                                                                    const audioUrl = getAudioUrl(ayah);
                                                                                     toggleAudio(audioUrl, ayah.nomorAyat, ayah.quranComAudio?.segments);
                                                                                 }
                                                                             }}
                                                                             className="w-10 h-10 bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center hover:bg-green-200 dark:hover:bg-green-800 transition-colors shadow-sm"
                                                                             title="Putar Audio"
                                                                         >
-                                                                            {playingAudio === ((selectedReciter === "05" && surahDetail.ayat[tahfidzAyahIdx + 1]?.quranComAudio) ? "https://verses.quran.com/" + surahDetail.ayat[tahfidzAyahIdx + 1]?.quranComAudio.url : surahDetail.ayat[tahfidzAyahIdx + 1]?.audio[selectedReciter]) ? (
+                                                                            {playingAudio === getAudioUrl(surahDetail.ayat[tahfidzAyahIdx + 1]) ? (
                                                                                 <Square className="w-4 h-4" fill="currentColor" />
                                                                             ) : (
                                                                                 <Play className="w-4 h-4 ml-1" fill="currentColor" />
@@ -2269,7 +2517,7 @@ export default function QuranPage() {
                                                                                 setTahfidzAyahIdx(randIdx);
                                                                                 setTahfidzStep('SHEIKH');
                                                                                 const firstAyah = surahDetail.ayat[randIdx];
-                                                                                const audioUrl = (selectedReciter === "05" && firstAyah.quranComAudio) ? "https://verses.quran.com/" + firstAyah.quranComAudio.url : firstAyah.audio[selectedReciter];
+                                                                                const audioUrl = getAudioUrl(firstAyah);
                                                                                 toggleAudio(audioUrl, firstAyah.nomorAyat, firstAyah.quranComAudio?.segments);
                                                                             } else {
                                                                                 if (tahfidzAyahIdx + 2 < surahDetail.ayat.length) {
@@ -2278,7 +2526,7 @@ export default function QuranPage() {
                                                                                     setTahfidzAyahIdx(nextSheikhIdx);
                                                                                     setTahfidzStep('SHEIKH');
                                                                                     const nextAyah = surahDetail.ayat[nextSheikhIdx];
-                                                                                    const audioUrl = (selectedReciter === "05" && nextAyah.quranComAudio) ? "https://verses.quran.com/" + nextAyah.quranComAudio.url : nextAyah.audio[selectedReciter];
+                                                                                    const audioUrl = getAudioUrl(nextAyah);
                                                                                     toggleAudio(audioUrl, nextAyah.nomorAyat, nextAyah.quranComAudio?.segments);
                                                                                 } else {
                                                                                     setTahfidzStep('IDLE');
@@ -2362,9 +2610,10 @@ export default function QuranPage() {
                                                 <div className="my-4 text-right">
                                                     {ayah.quranComWords ? (
                                                         <p className="font-arabic text-2xl md:text-3xl leading-[2.2] md:leading-[2.5] text-slate-800 dark:text-slate-100" dir="rtl">
-                                                            {ayah.quranComWords.filter((w: any) => w.char_type_name !== 'end').map((word: any, wIndex: number) => {
+                                                            {ayah.quranComWords.map((word: any, wIndex: number) => {
+                                                                if (word.char_type_name === 'end') return null;
                                                                 return (
-                                                                    <span key={`word-tahfidz-${ayah.nomorAyat}-${wIndex}`}>
+                                                                    <span key={`word-modal-wrap-${ayah.nomorAyat}-${wIndex}`}>
                                                                         <span 
                                                                             id={`word-modal-${ayah.nomorAyat}-${wIndex}`}
                                                                             className={`inline transition-colors duration-200`}
@@ -2469,13 +2718,13 @@ export default function QuranPage() {
                                             <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
                                                 <button 
                                                     onClick={() => {
-                                                        const currentAudioUrl = (selectedReciter === "05" && ayah.quranComAudio) ? "https://verses.quran.com/" + ayah.quranComAudio.url : ayah.audio[selectedReciter];
+                                                        const currentAudioUrl = getAudioUrl(ayah);
                                                         const segments = ayah.quranComAudio ? ayah.quranComAudio.segments : undefined;
                                                         toggleAudio(currentAudioUrl, ayah.nomorAyat, segments);
                                                     }}
-                                                    className={`px-4 py-2 rounded-xl flex items-center gap-2 font-bold text-sm transition-all ${((selectedReciter === "05" && ayah.quranComAudio && playingAudio === "https://verses.quran.com/" + ayah.quranComAudio.url) || playingAudio === ayah.audio[selectedReciter]) ? 'bg-[#1799dc] text-white shadow-md shadow-[#1799dc]/20' : 'bg-[#1799dc]/10 text-[#1799dc] hover:bg-[#1799dc]/20'}`}
+                                                    className={`px-4 py-2 rounded-xl flex items-center gap-2 font-bold text-sm transition-all ${(playingAudio !== null && playingAudio === getAudioUrl(ayah)) ? 'bg-[#1799dc] text-white shadow-md shadow-[#1799dc]/20' : 'bg-[#1799dc]/10 text-[#1799dc] hover:bg-[#1799dc]/20'}`}
                                                 >
-                                                    {((selectedReciter === "05" && ayah.quranComAudio && playingAudio === "https://verses.quran.com/" + ayah.quranComAudio.url) || playingAudio === ayah.audio[selectedReciter]) ? <span className="w-3 h-3 bg-white rounded-sm animate-pulse"></span> : <PlayCircle className="w-4 h-4" />}
+                                                    {(playingAudio !== null && playingAudio === getAudioUrl(ayah)) ? <span className="w-3 h-3 bg-white rounded-sm animate-pulse"></span> : <PlayCircle className="w-4 h-4" />}
                                                     <span className="hidden sm:inline">Putar Murottal</span>
                                                     <span className="sm:hidden">Murottal</span>
                                                 </button>
@@ -3070,10 +3319,95 @@ export default function QuranPage() {
                                                 </button>
                                             </div>
 
-                                            <div className="prose prose-slate dark:prose-invert prose-lg md:prose-xl max-w-none prose-headings:font-bold prose-a:text-[#1799dc]">
-                                                <p className="text-slate-700 dark:text-slate-300 leading-loose whitespace-pre-wrap font-medium">
-                                                    {selectedKisah.description}
-                                                </p>
+                                            <div className="mt-8 relative">
+                                                {/* Mini Map Overview */}
+                                                <div className="mb-10 px-2">
+                                                    <h3 className="text-xl font-black mb-4 flex items-center gap-2 text-slate-800 dark:text-slate-100">
+                                                        <MapPin className="w-5 h-5 text-[#1799dc]" />
+                                                        Peta Perjalanan
+                                                    </h3>
+                                                    <div className="relative pt-6 pb-4 overflow-x-auto scrollbar-hide">
+                                                        <div className="absolute top-9 left-4 right-4 h-1 bg-slate-200 dark:bg-slate-700 rounded-full z-0"></div>
+                                                        {activeKisahStep > 0 && (
+                                                            <div 
+                                                                className="absolute top-9 left-4 h-1 bg-[#1799dc] rounded-full z-0 transition-all duration-500 delay-100"
+                                                                style={{ width: `calc(${(activeKisahStep / (kisahTimeline.length - 1)) * 100}% - 2rem)` }}
+                                                            ></div>
+                                                        )}
+                                                        
+                                                        <div className="relative z-10 flex justify-between min-w-[max-content] md:min-w-full gap-8 px-4">
+                                                            {kisahTimeline.map((block, idx) => (
+                                                                <button
+                                                                    key={`map-node-${idx}`}
+                                                                    onClick={() => setActiveKisahStep(idx)}
+                                                                    className={`flex flex-col items-center gap-3 group transition-all duration-300 ${activeKisahStep === idx ? 'scale-110' : 'opacity-60 hover:opacity-100'}`}
+                                                                >
+                                                                    <div className={`w-5 h-5 rounded-full border-4 transition-all duration-300 ${activeKisahStep >= idx ? 'border-[#1799dc] bg-white dark:bg-slate-800 shadow-[0_0_15px_rgba(23,153,220,0.5)]' : 'border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-700'}`}></div>
+                                                                    <div className={`text-[10px] md:text-xs font-black uppercase tracking-widest whitespace-nowrap px-3 py-1 rounded-full ${activeKisahStep === idx ? 'bg-[#1799dc] text-white shadow-md' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
+                                                                        {block.location}
+                                                                    </div>
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="absolute left-[2.2rem] top-40 bottom-8 w-1 bg-gradient-to-b from-[#1799dc]/20 via-[#1799dc]/10 to-transparent rounded-full hidden md:block"></div>
+                                                <div className="space-y-4 md:space-y-6">
+                                                    {kisahTimeline.map((block, idx) => (
+                                                        <motion.div 
+                                                            key={idx}
+                                                            className={`relative md:pl-24 transition-all duration-500 cursor-pointer ${activeKisahStep === idx ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`}
+                                                            onClick={() => setActiveKisahStep(idx)}
+                                                        >
+                                                            {/* Custom Timeline Dot */}
+                                                            <div className={`hidden md:block absolute left-[1.95rem] top-8 w-3 h-3 rounded-full transition-all duration-500 z-10 ${activeKisahStep === idx ? 'bg-[#1799dc] scale-150 ring-4 ring-[#1799dc]/20' : 'bg-slate-300 dark:bg-slate-600'}`}></div>
+                                                            
+                                                            <div className={`bg-white dark:bg-slate-800 p-5 md:p-6 rounded-3xl md:rounded-[2rem] border transition-all duration-500 ${activeKisahStep === idx ? 'border-[#1799dc] shadow-xl shadow-[#1799dc]/10 ring-2 ring-[#1799dc]/5' : 'border-slate-100 dark:border-slate-700'}`}>
+                                                                <div className="flex justify-between items-center mb-2">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="text-xs font-black text-[#1799dc] uppercase tracking-widest bg-[#1799dc]/10 px-4 py-1.5 rounded-full flex flex-col items-center">
+                                                                            <MapPin className="w-4 h-4 mb-1" />
+                                                                            {block.location}
+                                                                        </div>
+                                                                    </div>
+                                                                    <button 
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setActiveKisahStep(idx);
+                                                                            toggleSpeechAudio(block.content, `kisah-step-${idx}`, 'id-ID');
+                                                                        }}
+                                                                        className={`w-10 h-10 rounded-full flex shrink-0 items-center justify-center transition-all duration-300 ${playingAudio === `kisah-step-${idx}` ? 'bg-[#8b5cf6] text-white shadow-lg shadow-[#8b5cf6]/30 scale-110' : 'bg-slate-50 dark:bg-slate-700/50 text-[#8b5cf6] hover:bg-[#8b5cf6]/20'}`}
+                                                                        title="Putar Audio Bagian Ini"
+                                                                    >
+                                                                        {playingAudio === `kisah-step-${idx}` ? (
+                                                                            <div className="flex items-center gap-0.5">
+                                                                                <div className="w-1 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                                                                <div className="w-1 h-4 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                                                                <div className="w-1 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <Volume2 className="w-4 h-4 ml-0.5" />
+                                                                        )}
+                                                                    </button>
+                                                                </div>
+                                                                
+                                                                <h4 className="font-bold text-lg md:text-xl text-slate-800 dark:text-slate-100 mb-2 mt-4">{block.title}</h4>
+
+                                                                <div className={`grid transition-all duration-500 overflow-hidden ${activeKisahStep === idx ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0 mt-0'}`}>
+                                                                    <div className="min-h-0 text-slate-700 dark:text-slate-300 leading-relaxed font-medium text-base md:text-lg whitespace-pre-wrap">
+                                                                        {block.content}
+                                                                    </div>
+                                                                </div>
+                                                                {activeKisahStep !== idx && (
+                                                                    <p className="text-slate-500 dark:text-slate-400 leading-relaxed font-medium text-sm md:text-base line-clamp-2 mt-2">
+                                                                        {block.content}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        </motion.div>
+                                                    ))}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

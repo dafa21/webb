@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -247,6 +248,279 @@ async function startServer() {
     } catch (error) {
       console.error("Evaluation Error:", error);
       res.status(500).json({ error: error instanceof Error ? error.message : "Internal Server Error" });
+    }
+  });
+
+  app.post("/api/spiritual-first-aid", async (req, res) => {
+    try {
+      const { emotion } = req.body;
+
+      if (!emotion) {
+        return res.status(400).json({ error: "Missing required field: emotion" });
+      }
+
+      const staticResponses: Record<string, any[]> = {
+        "Sedih 😢": [
+          {
+            "penenang": "Kesedihanmu adalah bukti bahwa kamu memiliki hati yang lembut. Allah tidak akan membebani hamba-Nya di luar batas kemampuannya.",
+            "quran": {
+              "surah": "At-Tawbah:40",
+              "arab": "لَا تَحْزَنْ إِنَّ ٱللَّهَ مَعَنَا",
+              "arti": "Janganlah engkau bersedih, sesungguhnya Allah bersama kita."
+            },
+            "hadits": {
+              "sumber": "HR. Bukhari & Muslim",
+              "arab": "مَا يُصِيبُ الْمُسْلِمَ مِنْ نَصَبٍ وَلَا وَصَبٍ وَلَا هَمٍّ وَلَا حُزْنٍ وَلَا أَذًى وَلَا غَمٍّ حَتَّى الشَّوْكَةِ يُشَاكُهَا إِلَّا كَفَّرَ اللَّهُ بِهَا مِنْ خَطَايَاهُ",
+              "arti": "Tidaklah seorang muslim tertimpa kelelahan, penyakit, kesedihan, gangguan, gundah gulana, hingga duri yang menusuknya, melainkan Allah akan menghapus dosa-dosanya dengan semua itu."
+            },
+            "dzikir": {
+              "arab": "إِنَّا لِلّهِ وَإِنَّـا إِلَيْهِ رَاجِعونَ، اللَّهُمَّ أْجُرْنِي فِي مُصِيبَتِي",
+              "arti": "Sesungguhnya kami milik Allah dan kepada-Nya kami kembali. Ya Allah, berilah pahala dalam musibahku ini.",
+              "cara_baca": "Inna lillahi wa inna ilaihi raji'un, Allahumma'jurni fi musibati"
+            }
+          },
+          {
+            "penenang": "Air matamu adalah doa ketika bibirmu tak sanggup berkata-kata. Menangislah, Allah Maha Mendengar rintihan hamba-Nya.",
+            "quran": {
+              "surah": "Al-Baqarah:286",
+              "arab": "لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا",
+              "arti": "Allah tidak membebani seseorang melainkan sesuai dengan kesanggupannya."
+            },
+            "hadits": {
+              "sumber": "HR. Muslim",
+              "arab": "عَجَبًا لأَمْرِ الْمُؤْمِنِ إِنَّ أَمْرَهُ كُلَّهُ خَيْرٌ",
+              "arti": "Sungguh menakjubkan urusan seorang mukmin, semua urusannya adalah baik."
+            },
+            "dzikir": {
+              "arab": "حَسْبِيَ اللَّهُ لَا إِلَهَ إِلَّا هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ",
+              "arti": "Cukuplah Allah bagiku, tidak ada Tuhan selain Dia. Hanya kepada-Nya aku bertawakkal dan Dia adalah Tuhan Pemilik 'Arsy yang agung.",
+              "cara_baca": "Hasbiyallahu la ilaha illa huwa 'alaihi tawakkaltu wa huwa rabbul 'arsyil 'azhim"
+            }
+          },
+          {
+            "penenang": "Setelah hujan pasti ada pelangi. Bersabarlah, kebahagiaan sedang menantimu di depan.",
+            "quran": {
+              "surah": "Asy-Syarh:5-6",
+              "arab": "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا ۝ إِنَّ مَعَ الْعُسْرِ يُسْرًا",
+              "arti": "Karena sesungguhnya sesudah kesulitan itu ada kemudahan. Sesungguhnya sesudah kesulitan itu ada kemudahan."
+            },
+            "hadits": {
+              "sumber": "HR. Ahmad",
+              "arab": "وَاعْلَمْ أَنَّ فِي الصَّبْرِ عَلَى مَا تَكْرَهُ خَيْرًا كَثِيرًا وَأَنَّ النَّصْرَ مَعَ الصَّبْرِ وَأَنَّ الْفَرَجَ مَعَ الْكَرْبِ وَأَنَّ مَعَ الْعُسْرِ يُسْرًا",
+              "arti": "Ketahuilah bahwa dalam kesabaran terhadap apa yang engkau benci terdapat kebaikan yang banyak, dan bahwa pertolongan datang bersama kesabaran, dan kelapangan bersama kesempitan, dan kemudahan bersama kesulitan."
+            },
+            "dzikir": {
+              "arab": "يَا حَيُّ يَا قَيُّوْمُ بِرَحْمَتِكَ أَسْتَغِيْثُ",
+              "arti": "Wahai Rabb Yang Maha Hidup, wahai Rabb Yang Berdiri Sendiri tidak butuh segala sesuatu, dengan rahmat-Mu aku minta pertolongan.",
+              "cara_baca": "Ya Hayyu Ya Qayyum birahmatika astaghits"
+            }
+          }
+        ],
+        "Marah 😠": [
+          {
+            "penenang": "Tarik napas perlahan. Orang yang kuat bukanlah yang pandai bergulat, tetapi yang mampu menahan amarahnya.",
+            "quran": {
+              "surah": "Ali 'Imran:134",
+              "arab": "وَٱلْكَٰظِمِينَ ٱلْغَيْظَ وَٱلْعَافِينَ عَنِ ٱلنَّاسِ ۗ وَٱللَّهُ يُحِبُّ ٱلْمُحْسِنِينَ",
+              "arti": "Dan orang-orang yang menahan amarahnya dan memaafkan (kesalahan) orang. Allah menyukai orang-orang yang berbuat kebajikan."
+            },
+            "hadits": {
+              "sumber": "HR. Bukhari",
+              "arab": "لَيْسَ الشَّدِيدُ بِالصُّرَعَةِ، إِنَّمَا الشَّدِيدُ الَّذِي يَمْلِكُ نَفْسَهُ عِنْدَ الْغَضَبِ",
+              "arti": "Orang yang kuat bukanlah yang pandai bergulat, namun orang yang kuat adalah orang yang mampu menahan dirinya tatkala marah."
+            },
+            "dzikir": {
+              "arab": "أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ",
+              "arti": "Aku berlindung kepada Allah dari godaan setan yang terkutuk.",
+              "cara_baca": "A'udzu billahi minasy-syaitanir-rajim"
+            }
+          },
+          {
+            "penenang": "Amarah adalah api yang bisa membakar akal sehat. Basuhlah dirimu dan tenangkan hatimu bilamana api itu datang.",
+            "quran": {
+              "surah": "Asy-Syura:37",
+              "arab": "وَإِذَا مَا غَضِبُوا۟ هُمْ يَغْفِرُونَ",
+              "arti": "Dan apabila mereka marah mereka memberi maaf."
+            },
+            "hadits": {
+              "sumber": "HR. Abu Dawud",
+              "arab": "إِنَّ الْغَضَبَ مِنَ الشَّيْطَانِ وَإِنَّ الشَّيْطَانَ خُلِقَ مِنَ النَّارِ وَإِنَّمَا تُطْفَأُ النَّارُ بِالْمَاءِ فَإِذَا غَضِبَ أَحَدُكُمْ فَلْيَتَوَضَّأْ",
+              "arti": "Sesungguhnya amarah itu dari setan, dan setan diciptakan dari api, dan api hanya bisa dipadamkan dengan air. Maka jika salah seorang dari kalian marah, hendaklah ia berwudhu."
+            },
+            "dzikir": {
+              "arab": "اللَّهُمَّ اغْفِرْ لِي ذَنْبِي وَأَذْهِبْ غَيْظَ قَلْبِي",
+              "arti": "Ya Allah, ampunilah dosaku dan hilangkanlah kemarahan hatiku.",
+              "cara_baca": "Allahummaghfir lii dzanbii wa adzhib ghaizha qalbii"
+            }
+          }
+        ],
+        "Overthinking 🤯": [
+          {
+            "penenang": "Masa depan ada di tangan Allah. Rencanamu takkan mendahului takdir-Nya, maka serahkanlah segalanya kepada Sang Pengatur Semesta.",
+            "quran": {
+              "surah": "Al-Baqarah:216",
+              "arab": "وَعَسَىٰ أَن تَكْرَهُوا۟ شَيْـًٔا وَهُوَ خَيْرٌ لَّكُمْ",
+              "arti": "Boleh jadi kamu membenci sesuatu, padahal ia amat baik bagimu..."
+            },
+            "hadits": {
+              "sumber": "HR. Tirmidzi",
+              "arab": "إِذَا سَأَلْتَ فَاسْأَلْ اللَّهَ، وَإِذَا اسْتَعَنْتَ فَاسْتَعِنْ بِاللَّهِ",
+              "arti": "Jika engkau memohon, mohonlah kepada Allah, dan jika engkau meminta pertolongan, mintalah kepada Allah."
+            },
+            "dzikir": {
+              "arab": "حَسْبُنَا اللهُ وَنِعْمَ الْوَكِيْلُ",
+              "arti": "Cukuplah Allah menjadi Penolong kami dan Allah adalah sebaik-baik Pelindung.",
+              "cara_baca": "Hasbunallah wa ni'mal-wakil"
+            }
+          },
+          {
+            "penenang": "Pikiran yang terlalu berkeliaran hanya akan memenjarakanmu. Percayalah bahwa Allah sebaik-baiknya perencana.",
+            "quran": {
+              "surah": "Ali 'Imran:54",
+              "arab": "وَٱللَّهُ خَيْرُ ٱلْمَٰكِرِينَ",
+              "arti": "Dan Allah adalah sebaik-baik pembalas tipu daya."
+            },
+            "hadits": {
+              "sumber": "HR. Bukhari",
+              "arab": "أَنَا عِنْدَ ظَنِّ عَبْدِي بِي",
+              "arti": "Allah berfirman: Aku sesuai prasangka hamba-Ku kepada-Ku."
+            },
+            "dzikir": {
+              "arab": "بِسْمِ اللهِ تَوَكَّلْتُ عَلَى اللهِ لاَ حَوْلَ وَلاَ قُوَّةَ إِلاَّ بِاللهِ",
+              "arti": "Dengan nama Allah, aku bertawakkal kepada Allah. Tiada daya dan kekuatan kecuali dengan (pertolongan) Allah.",
+              "cara_baca": "Bismillahi tawakkaltu 'alallahi la hawla wa la quwwata illa billah"
+            }
+          }
+        ],
+        "Cemas Rezeki 💸": [
+          {
+            "penenang": "Rezekimu telah tertulis bahkan sebelum kamu lahir. Jangan biarkan kecemasan mencuri kedamaian hari ini.",
+            "quran": {
+              "surah": "Hud:6",
+              "arab": "وَمَا مِن دَآبَّةٍ فِى ٱلْأَرْضِ إِلَّا عَلَى ٱللَّهِ رِزْقُهَا",
+              "arti": "Dan tidak ada suatu binatang melata pun di bumi melainkan Allah-lah yang memberi rezekinya."
+            },
+            "hadits": {
+              "sumber": "HR. Ibnu Majah",
+              "arab": "فَإِنَّ نَفْسًا لَنْ تَمُوتَ حَتَّى تَسْتَوْفِيَ رِزْقَهَا",
+              "arti": "Sesungguhnya satu jiwa tidak akan mati hingga rezekinya disempurnakan."
+            },
+            "dzikir": {
+              "arab": "يَا حَيُّ يَا قَيُّوْمُ بِرَحْمَتِكَ أَسْتَغِيْثُ",
+              "arti": "Wahai Dzat yang Maha Hidup, wahai Dzat yang Berdiri Sendiri, dengan rahmat-Mu aku memohon pertolongan.",
+              "cara_baca": "Ya Hayyu Ya Qayyum, birahmatika astaghits"
+            }
+          },
+          {
+            "penenang": "Kunci rezeki ada di tangan Allah. Jangan cemaskan apa yang berada di luar kendalimu, cukup berusaha semampumu.",
+            "quran": {
+              "surah": "An-Najm:39",
+              "arab": "وَأَن لَّيْسَ لِلْإِنسَٰنِ إِلَّا مَا سَعَىٰ",
+              "arti": "Dan bahwasanya seorang manusia tiada memperoleh selain apa yang telah diusahakannya."
+            },
+            "hadits": {
+              "sumber": "HR. Tirmidzi",
+              "arab": "لَوْ أَنَّكُمْ تَتَوَكَّلُونَ عَلَى اللَّهِ حَقَّ تَوَكُّلِهِ لَرَزَقَكُمْ كَمَا يَرْزُقُ الطَّيْرَ تَغْدُو خِمَاصاً وَتَرُوحُ بِطَاناً",
+              "arti": "Seandainya kalian bertawakkal kepada Allah dengan sebenar-benar tawakkal, niscaya Allah akan memberikan rezeki kepada kalian sebagaimana burung yang pergi di pagi hari dalam keadaan lapar dan pulang di sore hari dalam keadaan kenyang."
+            },
+            "dzikir": {
+              "arab": "اللَّهُمَّ إِنِّي أَسْأَلُكَ عِلْمًا نَافِعًا، وَرِزْقًا طَيِّبًا، وَعَمَلًا مُتَقَبَّلًا",
+              "arti": "Ya Allah, aku memohon kepada-Mu ilmu yang bermanfaat, rezeki yang baik dan amalan yang diterima.",
+              "cara_baca": "Allahumma inni as-aluka 'ilman nafi'an, wa rizqan thayyiban, wa 'amalan mutaqabbalan"
+            }
+          }
+        ],
+        "Kesepian 🥺": [
+          {
+            "penenang": "Kamu tak pernah sendirian. Allah selalu lebih dekat daripadamu, bahkan lebih dekat dari urat lehermu.",
+            "quran": {
+              "surah": "Qaf:16",
+              "arab": "وَنَحْنُ أَقْرَبُ إِلَيْهِ مِنْ حَبْلِ ٱلْوَرِيدِ",
+              "arti": "Dan Kami lebih dekat kepadanya daripada urat lehernya."
+            },
+            "hadits": {
+              "sumber": "HR. Bukhari",
+              "arab": "أَنَا مَعَهُ إِذَا ذَكَرَنِي",
+              "arti": "Allah berfirman: Aku bersamanya apabila ia mengingat-Ku."
+            },
+            "dzikir": {
+              "arab": "رَبِّ لَا تَذَرْنِيْ فَرْدًا وَّاَنْتَ خَيْرُ الْوَارِثِيْنَ",
+              "arti": "Ya Tuhanku, janganlah Engkau biarkan aku hidup seorang diri, dan Engkaulah pewaris yang paling baik.",
+              "cara_baca": "Rabbi la tazarni fardaw wa anta khairul-warisin"
+            }
+          },
+          {
+            "penenang": "Merasa hening? Itu adalah waktu bagi Allah untuk berbicara denganmu melalui tanda-tanda kebesaran-Nya.",
+            "quran": {
+              "surah": "Al-Baqarah:186",
+              "arab": "وَإِذَا سَأَلَكَ عِبَادِى عَنِّى فَإِنِّى قَرِيبٌ",
+              "arti": "Dan apabila hamba-hamba-Ku bertanya kepadamu tentang Aku, maka (jawablah), bahwasanya Aku adalah dekat."
+            },
+            "hadits": {
+              "sumber": "HR. Tirmidzi",
+              "arab": "تَعَرَّفْ إِلَى اللَّهِ فِي الرَّخَاءِ يَعْرِفْكَ فِي الشِّدَّةِ",
+              "arti": "Kenalilah Allah di masa lapang (senang), niscaya Allah akan mengenalimu di masa sempit (sulit)."
+            },
+            "dzikir": {
+              "arab": "لَا إِلَهَ إِلَّا أَنْتَ سُبْحَانَكَ إِنِّي كُنْتُ مِنَ الظَّالِمِينَ",
+              "arti": "Tidak ada Tuhan selain Engkau, Maha Suci Engkau, sesungguhnya aku adalah termasuk orang-orang yang zalim.",
+              "cara_baca": "La ilaha illa anta, subhanaka inni kuntu minadz dholimin"
+            }
+          }
+        ],
+        "Lelah Batin 🥀": [
+          {
+            "penenang": "Istirahatlah, jiwa yang lelah. Serahkan sejenak bebanmu kepada-Nya. Shalatlah, dan rasakan ketenangannya.",
+            "quran": {
+              "surah": "Ar-Ra'd:28",
+              "arab": "أَلَا بِذِكْرِ ٱللَّهِ تَطْمَئِنُّ ٱلْقُلُوبُ",
+              "arti": "Ingatlah, hanya dengan mengingati Allah-lah hati menjadi tenteram."
+            },
+            "hadits": {
+              "sumber": "HR. Abu Dawud",
+              "arab": "يَا بِلَالُ أَرِحْنَا بِالصَّلَاةِ",
+              "arti": "Wahai Bilal, istirahatkanlah kami dengan shalat."
+            },
+            "dzikir": {
+              "arab": "لا حَوْلَ وَلا قُوَّةَ إِلا بِاللهِ",
+              "arti": "Tidak ada daya dan upaya kecuali dengan pertolongan Allah.",
+              "cara_baca": "La hawla wa la quwwata illa billah"
+            }
+          },
+          {
+            "penenang": "Jika pundakmu terasa berat, bersujudlah. Bumi yang kau pijak akan menjadi saksi bahwa kau telah bersandar kepada Pemiliknya.",
+            "quran": {
+              "surah": "Al-Baqarah:153",
+              "arab": "يَٰٓأَيُّهَا ٱلَّذِينَ ءَامَنُوا۟ ٱسْتَعِينُوا۟ بِٱلصَّبْرِ وَٱلصَّلَوٰةِ ۚ إِنَّ ٱللَّهَ مَعَ ٱلصَّٰبِرِينَ",
+              "arti": "Hai orang-orang yang beriman, jadikanlah sabar dan shalat sebagai penolongmu, sesungguhnya Allah beserta orang-orang yang sabar."
+            },
+            "hadits": {
+              "sumber": "HR. Muslim",
+              "arab": "أَقْرَبُ مَا يَكُونُ الْعَبْدُ مِنْ رَبِّهِ وَهُوَ سَاجِدٌ فَأَكْثِرُوا الدُّعَاءَ",
+              "arti": "Keadaan paling dekat seorang hamba dengan Tuhannya adalah ketika ia sedang bersujud, maka perbanyaklah doa."
+            },
+            "dzikir": {
+              "arab": "اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ، وَشُكْرِكَ، وَحُسْنِ عِبَادَتِكَ",
+              "arti": "Ya Allah, tolonglah aku untuk mengingat-Mu, bersyukur kepada-Mu, dan beribadah dengan baik kepada-Mu.",
+              "cara_baca": "Allahumma a'inni 'ala dzikrika wa syukrika wa husni 'ibadatik"
+            }
+          }
+        ]
+      };
+
+      const emotionVariations = staticResponses[emotion];
+      if (!emotionVariations || emotionVariations.length === 0) {
+        return res.status(404).json({ error: "Emosi tidak ditemukan dalam database." });
+      }
+
+      // Pick a random response
+      const randIndex = Math.floor(Math.random() * emotionVariations.length);
+      const result = emotionVariations[randIndex];
+
+      setTimeout(() => res.json(result), 1000); // Simulate subtle delay
+    } catch (error: any) {
+      console.error("Spiritual First Aid Error:", error);
+      res.status(500).json({ error: "Internal Server Error" });
     }
   });
 

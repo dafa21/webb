@@ -21,6 +21,7 @@ import {
   Plus,
   Minus,
   ShoppingBag,
+  Share2,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -143,169 +144,141 @@ const MosqueCard = ({ mosque, idx, onAddToCart, onQuickDonate, onOpenDetail }: {
   onOpenDetail: (m: any) => void;
   key?: any;
 }) => {
-  const [localAmount, setLocalAmount] = useState("50.000");
-  const [selectedTarget, setSelectedTarget] = useState<string>("kas");
   const [isHovered, setIsHovered] = useState(false);
-  
-  const adjustAmount = (delta: number) => {
-    const current = parseInt(localAmount.replace(/\D/g, "")) || 0;
-    const next = Math.max(10000, current + delta);
-    setLocalAmount(formatCurrencyForm(next.toString()));
-  };
+  // Remove isFeatured to make size consistent
+  const nominals = ["25.000", "50.000", "100.000"];
+  const [selectedNominal, setSelectedNominal] = useState("50.000");
 
-  const handleCardAction = (type: 'cart' | 'donate') => {
-    let program: any;
-    if (selectedTarget === "kas") {
-      program = {
+  const handleDonate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onQuickDonate) {
+      onQuickDonate({
         id: parseInt(mosque.id.replace('masjid-', '')) + 1000,
         title: `Kas Umum - ${mosque.name}`,
         category: "Masjid",
         image: mosque.image,
-        description: `Sedekah untuk operasional dan kemakmuran ${mosque.name}`,
-        collected: mosque.cashBalance,
-        target: mosque.cashBalance * 2,
-        donors: 0
-      };
-    } else {
-      const camp = mosque.campaigns.find((c: any) => c.id === selectedTarget);
-      if (camp) {
-        program = {
-          ...camp,
-          category: "Masjid",
-          description: camp.title,
-          donors: 0
-        };
-      }
-    }
-
-    if (program) {
-      if (type === 'cart' && onAddToCart) {
-        onAddToCart(program, localAmount.replace(/\D/g, ""));
-      } else if (type === 'donate' && onQuickDonate) {
-        onQuickDonate(program, localAmount);
-      }
+      }, selectedNominal);
     }
   };
 
-  const availableTargets = [
-    { id: "kas", title: "Kas Masjid" },
-    ...mosque.campaigns.slice(0, 2).map((c: any) => ({ id: c.id, title: c.title.split(' ').slice(0, 1).join(' ') }))
-  ];
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onAddToCart) {
+      onAddToCart({
+        id: parseInt(mosque.id.replace('masjid-', '')) + 1000,
+        title: `Kas Umum - ${mosque.name}`,
+        category: "Masjid",
+        image: mosque.image,
+      }, selectedNominal);
+    }
+  };
 
   return (
     <motion.div
       layout
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      transition={{ duration: 0.4, delay: (idx % 8) * 0.05 }}
-      className="group relative bg-white dark:bg-slate-900 rounded-[2rem] p-1.5 
-                 transform-gpu transition-all duration-500 hover:-translate-y-1.5
-                 shadow-lg shadow-slate-200/40 dark:shadow-none
-                 border border-slate-100 dark:border-slate-800"
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.6, delay: (idx % 8) * 0.05, ease: [0.22, 1, 0.36, 1] }}
+      onClick={() => onOpenDetail(mosque)}
+      className="group col-span-1 flex flex-col bg-slate-900 overflow-hidden cursor-pointer rounded-2xl transform-gpu transition-all duration-700 shadow-sm hover:shadow-xl"
     >
-      <div 
-        onClick={() => onOpenDetail(mosque)}
-        className="relative h-40 md:h-44 rounded-[1.6rem] overflow-hidden cursor-pointer"
-      >
-        <img 
-          src={mosque.image} 
-          alt={mosque.name} 
-          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-        
-        <div className="absolute bottom-4 left-4 right-4 focus-within:opacity-0 transition-opacity">
-          <p className="text-emerald-300 font-black text-[7px] tracking-widest uppercase mb-1 drop-shadow-md">
-            {mosque.location}
-          </p>
-          <h3 className="text-white font-black text-xs leading-tight line-clamp-1 drop-shadow-md">{mosque.name}</h3>
+      <div className="relative aspect-[4/3] w-full overflow-hidden">
+        <motion.div 
+          animate={{ scale: isHovered ? 1.05 : 1 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          className="w-full h-full"
+        >
+          <img 
+            src={mosque.image} 
+            alt={mosque.name} 
+            className="w-full h-full object-cover"
+          />
+        </motion.div>
+
+        {/* Elegant Gradients */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent transition-opacity duration-500"></div>
+
+        <div className="absolute top-4 left-4 flex gap-2">
+          {mosque.isFeatured && (
+             <div className="px-2.5 py-1 rounded-full bg-amber-500/90 backdrop-blur-md text-white text-[8px] font-bold tracking-[0.2em] uppercase flex items-center gap-1 shadow-lg">
+                <Sparkles className="w-3 h-3" /> Rekomendasi
+             </div>
+          )}
+          <div className="px-2 py-1 rounded-full bg-emerald-500/90 backdrop-blur-md text-white text-[8px] font-bold tracking-[0.2em] uppercase flex items-center gap-1 shadow-lg">
+             <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> Terverifikasi
+          </div>
         </div>
-        
-        <div className="absolute top-3 right-3 bg-white/10 backdrop-blur-md rounded-xl p-1.5 border border-white/20 shadow-lg">
-          <Info className="w-3.5 h-3.5 text-white" />
+
+        <div className="absolute top-4 right-4">
+          <div className="w-8 h-8 md:w-10 md:h-10 bg-white/20 backdrop-blur-md text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <ArrowRight className="w-4 h-4 -rotate-45" />
+          </div>
+        </div>
+
+        <div className="absolute inset-x-0 bottom-0 p-4 md:p-5">
+           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 mb-2 hover:bg-white/20 transition-colors">
+             <MapPin className="w-3 h-3 text-emerald-300" />
+             <span className="text-white/90 text-[8px] md:text-[9px] font-bold tracking-[0.2em] uppercase">
+               {mosque.location}
+             </span>
+          </div>
+
+          <h3 className="font-serif text-white leading-tight drop-shadow-md mb-2 line-clamp-2 text-xl md:text-2xl font-medium">
+            {mosque.name}
+          </h3>
+          
+           <div className="flex items-center gap-4 border-t border-white/20 pt-3 text-white/80 text-[10px] md:text-xs">
+             <div className="flex items-center gap-1.5">
+               <Users className="w-3.5 h-3.5 text-amber-300" />
+               <span className="font-medium">{mosque.capacity.toLocaleString()}</span>
+             </div>
+             <div className="flex items-center gap-1.5">
+               <Calendar className="w-3.5 h-3.5 text-blue-300" />
+               <span className="font-medium">Est. {mosque.establishedYear}</span>
+             </div>
+           </div>
         </div>
       </div>
 
-      <div className="p-3 pt-4">
-        <div className="flex items-center justify-between mb-3 px-1">
-          <div className="flex items-center gap-1 text-slate-400 text-[9px] font-black uppercase">
-            <Users className="w-3 h-3 text-[#1799dc]" />
-            {mosque.capacity.toLocaleString()}
-          </div>
-          <div className="flex -space-x-1.5">
-            {mosque.campaigns.slice(0, 3).map((_, i) => (
-              <div key={i} className="w-5 h-5 rounded-full bg-[#1799dc] border border-white dark:border-slate-900 flex items-center justify-center shadow-sm">
-                <Heart className="w-2.5 h-2.5 fill-white text-white" />
-              </div>
+      {/* Quick Donation Section */}
+      <div className="p-4 md:p-5 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800" onClick={(e) => e.stopPropagation()}>
+         <div className="flex justify-between items-center mb-3">
+             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                <Heart className="w-3 h-3 text-amber-500" fill="currentColor" /> Donasi Cepat Kas
+             </span>
+         </div>
+         <div className="flex gap-2 mb-3">
+            {nominals.map(nom => (
+               <button
+                  key={nom}
+                  onClick={() => setSelectedNominal(nom)}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                     selectedNominal === nom 
+                     ? "bg-amber-50 dark:bg-amber-500/10 border-amber-500 text-amber-700 dark:text-amber-400 shadow-sm" 
+                     : "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300"
+                  }`}
+               >
+                 {nom}
+               </button>
             ))}
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          {/* Target Slider-like Selector */}
-          <div className="flex gap-1 overflow-x-auto pb-0.5 no-scrollbar scroll-smooth">
-            {availableTargets.map((target) => (
-              <button
-                key={target.id}
-                onClick={() => setSelectedTarget(target.id)}
-                className={`flex-shrink-0 px-2.5 py-1.5 rounded-full text-[8px] font-black uppercase tracking-tighter border transition-all ${
-                  selectedTarget === target.id
-                    ? "bg-[#1799dc] border-[#1799dc] text-white shadow-sm"
-                    : "bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400"
-                }`}
-              >
-                {target.title}
-              </button>
-            ))}
-          </div>
-
-          {/* New Compact Amount Control */}
-          <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 rounded-2xl p-1 border border-slate-100 dark:border-slate-700 gap-1">
-             <button 
-              onClick={() => adjustAmount(-10000)}
-              className="w-8 h-8 flex items-center justify-center bg-white dark:bg-slate-700 text-slate-400 rounded-xl shadow-sm hover:text-[#1799dc] transition-all active:scale-90"
-            >
-              <Minus className="w-3.5 h-3.5" />
-            </button>
-            
-            <div className="flex-1 text-center group/input">
-              <input
-                type="text"
-                value={`Rp ${localAmount}`}
-                onChange={(e) => {
-                  const val = e.target.value.replace('Rp ', '');
-                  setLocalAmount(formatCurrencyForm(val));
-                }}
-                className="w-full bg-transparent border-none outline-none text-[11px] font-black text-slate-900 dark:text-white text-center focus:ring-0 p-0"
-              />
-            </div>
-
+         </div>
+         <div className="flex gap-2 mt-4 mt-auto">
             <button 
-              onClick={() => adjustAmount(10000)}
-              className="w-8 h-8 flex items-center justify-center bg-white dark:bg-slate-700 text-slate-400 rounded-xl shadow-sm hover:text-[#1799dc] transition-all active:scale-90"
+               onClick={handleAddToCart}
+               className="w-10 h-10 flex-none rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700"
             >
-              <Plus className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => handleCardAction('cart')}
-              className="w-10 h-10 bg-blue-50 dark:bg-slate-800 text-[#1799dc] flex items-center justify-center rounded-[1.2rem] shadow-sm active:scale-90 transition-all border border-blue-100 dark:border-slate-700 hover:bg-[#1799dc] hover:text-white"
-            >
-              <ShoppingBag className="w-5 h-5" />
+               <ShoppingBag className="w-4 h-4" />
             </button>
             <button 
-              onClick={() => handleCardAction('donate')}
-              className="flex-1 h-10 bg-gradient-to-r from-orange-400 to-amber-500 text-white rounded-[1.2rem] text-[9px] font-black uppercase tracking-wider shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
+              onClick={handleDonate}
+              className="flex-1 h-10 bg-slate-900 dark:bg-slate-50 text-white dark:text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:-translate-y-0.5 shadow-md active:scale-95 transition-all"
             >
-              <Heart className="w-3.5 h-3.5 fill-white/20" /> Donasi
+              Tunaikan Misi <Heart className="w-3.5 h-3.5 opacity-70" />
             </button>
-          </div>
-        </div>
+         </div>
       </div>
     </motion.div>
   );
@@ -401,35 +374,30 @@ export const MosqueProfiles = ({
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 pt-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Profile Masjid */}
-        <div className="relative mb-12 rounded-[2.5rem] overflow-hidden bg-gradient-to-r from-blue-900 to-indigo-900 shadow-2xl">
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542382156909-9ae37b3f56fd?q=80&w=2000')] bg-cover bg-center opacity-20 mix-blend-overlay"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
-
-          <div className="relative z-10 px-8 py-16 md:py-24 text-center">
+        <div className="relative mb-16 md:mb-24 mt-4 md:mt-10 overflow-visible text-center">
+          <div className="relative z-10 px-4 md:px-8 text-center max-w-4xl mx-auto">
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 mb-6 text-white text-xs font-bold uppercase tracking-widest shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 mb-8 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em]"
             >
-              <Building2 className="w-4 h-4" /> Ensiklopedia Masjid Nusantara
+              <Building2 className="w-3.5 h-3.5" /> Ensiklopedia Masjid Nusantara
             </motion.div>
             <motion.h1
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.1 }}
-              className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight drop-shadow-2xl"
+              className="text-4xl md:text-6xl lg:text-7xl font-serif font-medium text-slate-900 dark:text-slate-100 mb-8 leading-[1.1] tracking-tight"
             >
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-cyan-200">
-                Merangkai Peradaban
-              </span>
+              Merangkai Peradaban
               <br />
-              Dari Mihrab ke Mihrab
+              <span className="italic text-slate-500 dark:text-slate-400">Dari Mihrab ke Mihrab.</span>
             </motion.h1>
             <motion.p
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="text-slate-200 text-sm md:text-lg max-w-2xl mx-auto font-medium leading-relaxed drop-shadow-md"
+              className="text-slate-500 dark:text-slate-400 text-sm md:text-lg max-w-2xl mx-auto font-medium leading-relaxed"
             >
               Eksplorasi profil 30 masjid pilihan di penjuru negeri. Bersama
               ciptakan jejak kebaikan melalui program pemakmuran masjid secara
@@ -440,25 +408,24 @@ export const MosqueProfiles = ({
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="max-w-xl mx-auto mt-10 relative group"
+              className="max-w-md mx-auto mt-12 relative group"
             >
-              <div className="absolute inset-0 bg-cyan-400/20 blur-xl rounded-full transition-all duration-300 group-hover:bg-cyan-400/30"></div>
-              <div className="relative flex items-center bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-2 shadow-2xl">
-                <Search className="w-5 h-5 text-white/70 ml-3" />
+              <div className="relative flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full p-2 shadow-[0_10px_30px_rgba(0,0,0,0.05)] transition-shadow group-focus-within:shadow-[0_10px_40px_rgba(0,0,0,0.1)]">
+                <Search className="w-5 h-5 text-slate-400 ml-4" />
                 <input
                   type="text"
-                  placeholder="Cari nama atau kota masjid..."
+                  placeholder="Cari nama masjid..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 bg-transparent border-none outline-none text-white px-4 py-2 placeholder-white/50 font-medium"
+                  className="flex-1 bg-transparent border-none outline-none text-slate-900 dark:text-slate-100 px-4 py-2 placeholder-slate-400 font-medium text-sm"
                 />
               </div>
             </motion.div>
           </div>
         </div>
 
-        {/* Grid 3D Cards - More Compact */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        {/* Grid Cards - 2 Columns Layout */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
           <AnimatePresence mode="popLayout">
             {paginatedMosques.map((mosque, idx) => (
               <MosqueCard 
@@ -535,46 +502,60 @@ export const MosqueProfiles = ({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full h-full md:h-[85vh] md:max-w-[1000px] bg-white dark:bg-slate-900 md:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col z-10 border border-slate-100 dark:border-slate-800"
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="relative w-full h-[90vh] md:h-[85vh] md:max-w-4xl bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col z-10"
             >
-              {/* Modal Header Cover */}
-              <div className="relative h-48 md:h-56 shrink-0">
+              {/* Immersive Header Cover */}
+              <div className="relative h-48 md:h-64 shrink-0">
                 <img
                   src={selectedMosque.image}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent"></div>
-                <button
-                  onClick={() => setSelectedMosque(null)}
-                  className="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors border border-white/20"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
+                
+                <div className="absolute top-4 right-4 flex items-center gap-2 z-20">
+                   <button
+                     className="w-10 h-10 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors border border-white/20 shadow-lg"
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       // Just a visual cue
+                       const origText = e.currentTarget.innerHTML;
+                       e.currentTarget.innerHTML = '<span class="text-[9px] font-bold tracking-widest uppercase">Tersalin</span>';
+                       setTimeout(() => e.currentTarget.innerHTML = origText, 2000);
+                     }}
+                   >
+                     <Share2 className="w-4 h-4" />
+                   </button>
+                   <button
+                     onClick={() => setSelectedMosque(null)}
+                     className="w-10 h-10 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors border border-white/20 shadow-lg"
+                   >
+                     <X className="w-5 h-5" />
+                   </button>
+                </div>
 
-                <div className="absolute bottom-5 left-5 right-5">
-                  <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-[#1799dc]/20 border border-[#1799dc]/50 text-cyan-100 text-[8px] font-black rounded-lg uppercase tracking-widest mb-2 backdrop-blur-md">
-                    <ShieldCheck className="w-3 h-3" /> Terverifikasi Laznas Dewan Da'wah
+                <div className="absolute bottom-6 left-6 right-6 md:bottom-8 md:left-8">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#1799dc]/20 border border-[#1799dc]/50 text-cyan-100 text-[10px] font-bold rounded-lg uppercase tracking-widest mb-3 backdrop-blur-md">
+                    <ShieldCheck className="w-3.5 h-3.5" /> Terverifikasi Laznas Dewan Da'wah
                   </div>
-                  <h2 className="text-2xl md:text-4xl font-black text-white mb-1 leading-tight drop-shadow-sm">
+                  <h2 className="text-2xl md:text-4xl lg:text-5xl font-serif font-medium text-white mb-1.5 leading-[1.1] drop-shadow-md">
                     {selectedMosque.name}
                   </h2>
-                  <p className="text-white/80 font-medium flex items-center gap-2 text-xs md:text-sm">
+                  <p className="text-white/90 font-medium flex items-center gap-1.5 text-sm md:text-base">
                     <MapPin className="w-3.5 h-3.5 text-emerald-400" /> {selectedMosque.location}
                   </p>
                 </div>
               </div>
 
               {/* Modal Content container */}
-              <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-white dark:bg-slate-950">
-                {/* Navigation: Horizontal on Mobile, Sidebar on Desktop */}
-                <div className="w-full md:w-64 border-b md:border-r border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col shrink-0">
-                  <div className="p-4 md:p-6 flex flex-col h-full">
-                    <div className="mb-0 md:mb-8">
-                      <h3 className="hidden md:block text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6 px-4">Menu Informasi</h3>
-                      
+              <div className="flex-1 flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
+                {/* Elegant Navigation Topbar */}
+                <div className="w-full border-b border-slate-200 dark:border-slate-800/50 bg-white dark:bg-slate-900 flex flex-col shrink-0">
+                  <div className="px-4 md:px-8 pt-4 pb-0 flex flex-col">
+                    <div className="flex items-center justify-between gap-4">
                       {/* Tabs List */}
-                      <div className="overflow-x-auto md:overflow-y-auto no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
-                        <div className="flex md:flex-col gap-1 md:gap-1.5 pb-1 md:pb-0">
+                      <div className="overflow-x-auto no-scrollbar w-full">
+                        <div className="flex items-center gap-2 pb-4">
                           {[
                             { id: "overview", label: "Profil", icon: Info },
                             { id: "studies", label: "Kajian", icon: BookOpen },
@@ -585,33 +566,31 @@ export const MosqueProfiles = ({
                             <button
                               key={tab.id}
                               onClick={() => setActiveTab(tab.id)}
-                              className={`flex items-center gap-3 px-4 py-3 rounded-xl md:rounded-2xl text-[9px] md:text-[11px] font-bold uppercase tracking-widest transition-all whitespace-nowrap shrink-0 md:shrink border ${
+                              className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-[0.1em] transition-all whitespace-nowrap shrink-0 border border-slate-200 dark:border-slate-800 hover:shadow-sm ${
                                 activeTab === tab.id
-                                  ? "bg-[#1799dc]/5 text-[#1799dc] border-[#1799dc]/20"
-                                  : "text-slate-400 border-transparent hover:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/30"
+                                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-transparent shadow-md"
+                                  : "text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50"
                               }`}
                             >
-                              <tab.icon className={`w-3.5 h-3.5 ${activeTab === tab.id ? "text-[#1799dc]" : "opacity-50"}`} />
+                              <tab.icon className={`w-3.5 h-3.5 ${activeTab === tab.id ? "opacity-100" : "opacity-50"}`} />
                               {tab.label}
                             </button>
                           ))}
                         </div>
                       </div>
-                    </div>
-                    
-                    {/* Stats Box - Desktop Only */}
-                    <div className="hidden md:block mt-auto pt-6 border-t border-slate-100 dark:border-slate-800">
-                      <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-[1.5rem] border border-slate-100 dark:border-slate-800">
-                        <p className="text-[8px] font-black uppercase text-slate-400 mb-2 tracking-widest">Saldo Kas</p>
-                        <p className="text-base font-black text-[#1799dc] tracking-tight">Rp{formatCurrencyForm(selectedMosque.cashBalance.toString())}</p>
+                      
+                      {/* Stats Box - Desktop Only */}
+                      <div className="hidden md:flex flex-col items-end shrink-0 pb-4">
+                        <p className="text-[9px] font-bold uppercase text-slate-500 mb-1 tracking-[0.15em]">Saldo Kas Berjalan</p>
+                        <p className="text-lg font-serif text-emerald-600 dark:text-emerald-400 tracking-tight leading-none bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 rounded-lg">Rp {formatCurrencyForm(selectedMosque.cashBalance.toString())}</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Main Content Area */}
-                <div className="flex-1 overflow-y-auto bg-slate-50/20 dark:bg-slate-950">
-                  <div className="max-w-4xl mx-auto p-5 md:p-10 lg:p-12">
+                <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 p-4 md:p-8">
+                  <div className="max-w-3xl mx-auto">
                     <AnimatePresence mode="wait">
                       {activeTab === "overview" && (
                         <motion.div
@@ -619,191 +598,213 @@ export const MosqueProfiles = ({
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -10 }}
-                          className="space-y-10"
+                          className="space-y-8"
                         >
-                          <div className="grid lg:grid-cols-5 gap-10 items-start">
-                            <div className="lg:col-span-3 space-y-8">
+                          <div className="grid md:grid-cols-12 gap-6 lg:gap-8 items-start">
+                            <div className="md:col-span-7 space-y-6 md:space-y-8">
                               <div>
-                                <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white mb-4 leading-tight tracking-tight">Mewujudkan Peradaban Qurani Berbasis Masjid.</h1>
-                                <p className="text-slate-500 dark:text-slate-400 leading-relaxed font-medium text-xs md:text-sm">
+                                <h1 className="text-2xl md:text-3xl font-serif font-medium text-slate-900 dark:text-white mb-4 leading-tight">Mewujudkan Peradaban Qurani.</h1>
+                                <p className="text-slate-600 dark:text-slate-300 leading-relaxed font-medium text-sm">
                                   {selectedMosque.description} Saat ini kami aktif mengelola program pendidikan dan sosial untuk masyarakat di {selectedMosque.location}.
                                 </p>
                               </div>
                               <div className="grid grid-cols-2 gap-4">
-                                <div className="p-5 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
-                                  <Users className="w-5 h-5 text-blue-500 mb-3" />
-                                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Kapasitas</p>
-                                  <p className="text-base font-black text-slate-900 dark:text-white">{selectedMosque.capacity.toLocaleString()}</p>
+                                <div className="p-4 md:p-5 bg-white dark:bg-slate-900 rounded-[1.5rem] border border-slate-200 dark:border-slate-800/50 shadow-sm transition-all hover:shadow-md">
+                                  <Users className="w-5 h-5 text-emerald-500 mb-2" />
+                                  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.15em] mb-1">Kapasitas Jamaah</p>
+                                  <p className="text-xl font-serif text-slate-900 dark:text-white">{selectedMosque.capacity.toLocaleString()}</p>
                                 </div>
-                                <div className="p-5 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
-                                  <Calendar className="w-5 h-5 text-emerald-500 mb-3" />
-                                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Didirikan</p>
-                                  <p className="text-base font-black text-slate-900 dark:text-white">{selectedMosque.establishedYear}</p>
+                                <div className="p-4 md:p-5 bg-white dark:bg-slate-900 rounded-[1.5rem] border border-slate-200 dark:border-slate-800/50 shadow-sm transition-all hover:shadow-md">
+                                  <Calendar className="w-5 h-5 text-blue-500 mb-2" />
+                                  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.15em] mb-1">Tahun Berdiri</p>
+                                  <p className="text-xl font-serif text-slate-900 dark:text-white">{selectedMosque.establishedYear}</p>
                                 </div>
-                                 <div className="md:hidden p-5 bg-[#1799dc] rounded-3xl text-white shadow-lg shadow-blue-500/20 col-span-2 flex items-center justify-between">
+                                 <div className="md:hidden p-5 bg-slate-900 dark:bg-white rounded-[1.5rem] text-white dark:text-slate-900 shadow-xl col-span-2 flex items-center justify-between">
                                   <div>
-                                     <p className="text-[8px] font-black uppercase tracking-widest opacity-70 mb-0.5">Kas Masjid</p>
-                                     <p className="text-base font-black">Rp{formatCurrencyForm(selectedMosque.cashBalance.toString())}</p>
+                                     <p className="text-[9px] font-bold uppercase tracking-[0.15em] opacity-80 mb-0.5">Kas Masjid</p>
+                                     <p className="text-lg font-serif">Rp {formatCurrencyForm(selectedMosque.cashBalance.toString())}</p>
                                   </div>
                                   <Wallet className="w-6 h-6 opacity-40" />
                                 </div>
                               </div>
 
                               {/* Donasi Cepat Section */}
-                              <div className="p-6 md:p-8 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 rounded-[2.5rem] border border-[#1799dc]/10 dark:border-white/5 shadow-xl shadow-blue-500/5 relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-[#1799dc]/5 blur-3xl rounded-full -mr-10 -mt-10"></div>
+                              <div className="p-6 md:p-8 bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800/50 shadow-xl shadow-slate-200/20 relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 blur-3xl rounded-full -mr-8 -mt-8"></div>
                                 
                                 <div className="relative z-10">
-                                  <div className="flex items-center gap-3 mb-6">
-                                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#1799dc] to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-                                      <Heart className="w-5 h-5 fill-white/20" />
+                                  <div className="flex items-center gap-4 mb-6">
+                                    <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700">
+                                      <Heart className="w-4 h-4" />
                                     </div>
                                     <div>
-                                      <h3 className="text-base font-black text-slate-900 dark:text-white leading-tight">Donasi Cepat</h3>
-                                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Titipkan Kebaikan Sekarang</p>
+                                      <h3 className="text-lg font-serif font-medium text-slate-900 dark:text-white mb-0.5">Donasi Cepat</h3>
+                                      <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.15em]">Titipkan Kebaikan Sekarang</p>
                                     </div>
                                   </div>
 
-                                  <div className="space-y-6">
-                                    {/* Pilih Kantung */}
-                                    <div>
-                                      <label className="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3">Pilih Kantung Kebaikan</label>
-                                      <div className="grid grid-cols-1 gap-2">
-                                        {kantungs.map((k) => (
-                                          <button
-                                            key={k.id}
-                                            onClick={() => setSelectedKantung(k.id)}
-                                            className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all text-left ${
-                                              selectedKantung === k.id
-                                                ? "bg-[#1799dc] border-[#1799dc] text-white shadow-lg shadow-blue-500/20"
-                                                : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-[#1799dc]/30"
-                                            }`}
-                                          >
-                                            <div className="flex flex-col">
-                                              <span className="text-[11px] font-black truncate max-w-[200px]">{k.title}</span>
-                                              <span className={`text-[8px] font-bold uppercase tracking-wider ${selectedKantung === k.id ? "text-white/70" : "text-slate-400"}`}>{k.desc}</span>
-                                            </div>
-                                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedKantung === k.id ? "border-white" : "border-slate-200 dark:border-slate-700"}`}>
-                                              {selectedKantung === k.id && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                                            </div>
-                                          </button>
-                                        ))}
+                                    <div className="space-y-4">
+                                      {/* Pilih Kantung */}
+                                      <div>
+                                        <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-[0.15em] mb-2.5">Pilih Kantung Kebaikan</label>
+                                        <div className="grid grid-cols-1 gap-2.5">
+                                          {kantungs.map((k) => (
+                                            <button
+                                              key={k.id}
+                                              onClick={() => setSelectedKantung(k.id)}
+                                              className={`flex items-center justify-between p-4 rounded-[1.5rem] border transition-all text-left ${
+                                                selectedKantung === k.id
+                                                  ? "bg-slate-900 border-slate-900 text-white shadow-lg"
+                                                  : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-400"
+                                              }`}
+                                            >
+                                              <div className="flex flex-col">
+                                                <span className="text-sm font-medium truncate max-w-[200px]">{k.title}</span>
+                                                <span className={`text-[10px] uppercase tracking-widest mt-1 ${selectedKantung === k.id ? "text-white/70" : "text-slate-400"}`}>{k.desc}</span>
+                                              </div>
+                                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedKantung === k.id ? "border-white" : "border-slate-300 dark:border-slate-600"}`}>
+                                                {selectedKantung === k.id && <div className="w-2 h-2 rounded-full bg-white" />}
+                                              </div>
+                                            </button>
+                                          ))}
+                                        </div>
                                       </div>
-                                    </div>
 
-                                    {/* Pilih Nominal */}
-                                    <div>
-                                      <label className="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3">Pilih Nominal</label>
-                                      <div className="grid grid-cols-3 gap-2">
-                                        {nominals.map((n) => (
-                                          <button
-                                            key={n}
-                                            onClick={() => setQuickAmount(n)}
-                                            className={`py-2.5 rounded-xl text-[10px] font-black border transition-all ${
-                                              quickAmount === n
-                                                ? "bg-[#1799dc]/10 border-[#1799dc] text-[#1799dc]"
-                                                : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-400"
-                                            }`}
-                                          >
-                                            Rp{n}
-                                          </button>
-                                        ))}
+                                      {/* Pilih Nominal */}
+                                      <div>
+                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-3">Pilih Nominal</label>
+                                        <div className="grid grid-cols-3 gap-2">
+                                          {nominals.map((n) => (
+                                            <button
+                                              key={n}
+                                              onClick={() => setQuickAmount(n)}
+                                              className={`py-3 rounded-2xl text-[11px] font-bold tracking-wide border transition-all ${
+                                                quickAmount === n
+                                                  ? "bg-slate-900 border-slate-900 text-white"
+                                                  : "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300"
+                                              }`}
+                                            >
+                                              Rp {n}
+                                            </button>
+                                          ))}
+                                        </div>
                                       </div>
-                                    </div>
 
-                                    {/* Amount Input with Plus/Minus */}
-                                    <div>
-                                      <label className="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Input Manual</label>
-                                      <div className="flex items-center gap-2">
-                                        <div className="relative flex-1 group">
-                                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <span className="text-slate-400 font-black text-[11px]">Rp</span>
+                                      {/* Amount Input with Plus/Minus */}
+                                      <div>
+                                        <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-[0.15em] mb-2.5">Input Manual</label>
+                                        <div className="flex items-center gap-2">
+                                          <div className="relative flex-1 group">
+                                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                              <span className="text-slate-400 font-medium text-sm">Rp</span>
+                                            </div>
+                                            <input
+                                              type="text"
+                                              value={quickAmount}
+                                              onChange={(e) => setQuickAmount(formatCurrencyForm(e.target.value))}
+                                              onFocus={() => { if(nominals.includes(quickAmount)) setQuickAmount("") }}
+                                              className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none text-sm font-serif text-slate-900 dark:text-white transition-all shadow-inner"
+                                              placeholder="0"
+                                            />
                                           </div>
-                                          <input
-                                            type="text"
-                                            value={quickAmount}
-                                            onChange={(e) => setQuickAmount(formatCurrencyForm(e.target.value))}
-                                            onFocus={() => { if(nominals.includes(quickAmount)) setQuickAmount("") }}
-                                            className="w-full pl-10 pr-4 py-3.5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 focus:ring-2 focus:ring-[#1799dc]/20 focus:border-[#1799dc] outline-none text-sm font-black text-slate-900 dark:text-white transition-all shadow-inner"
-                                            placeholder="0"
-                                          />
-                                        </div>
-                                        <div className="flex flex-col gap-1 bg-blue-50/50 dark:bg-slate-800 p-1 rounded-2xl border border-blue-100 dark:border-slate-700">
-                                          <button 
-                                            onClick={handleIncrement}
-                                            className="w-8 h-8 rounded-xl bg-white dark:bg-slate-700 text-[#1799dc] flex items-center justify-center hover:bg-[#1799dc] hover:text-white transition-all shadow-sm"
-                                          >
-                                            <Plus className="w-4 h-4" />
-                                          </button>
-                                          <button 
-                                            onClick={handleDecrement}
-                                            className="w-8 h-8 rounded-xl bg-white dark:bg-slate-700 text-[#1799dc] flex items-center justify-center hover:bg-[#1799dc] hover:text-white transition-all shadow-sm"
-                                          >
-                                            <Minus className="w-4 h-4" />
+                                          <div className="flex flex-col gap-0.5 bg-slate-50 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                                            <button 
+                                              onClick={handleIncrement}
+                                              className="w-6 h-6 rounded-lg bg-white dark:bg-slate-700 text-slate-900 flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all shadow-sm"
+                                            >
+                                              <Plus className="w-3 h-3" />
+                                            </button>
+                                            <button 
+                                              onClick={handleDecrement}
+                                              className="w-6 h-6 rounded-lg bg-white dark:bg-slate-700 text-slate-900 flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all shadow-sm"
+                                            >
+                                              <Minus className="w-3 h-3" />
                                           </button>
                                         </div>
                                       </div>
                                     </div>
 
-                                    <div className="flex items-center gap-3 mt-4">
-                                      <button 
-                                        onClick={() => handleAction('cart')}
-                                        className="w-14 h-14 bg-[#1799dc] text-white flex items-center justify-center rounded-2xl shadow-lg shadow-blue-500/20 active:scale-90 transition-all border border-[#1799dc]"
-                                      >
-                                        <ShoppingBag className="w-6 h-6" />
-                                      </button>
-                                      
-                                      <button 
-                                        onClick={() => handleAction('donate')}
-                                        className="flex-1 py-4 bg-gradient-to-r from-orange-400 to-amber-500 text-white font-black rounded-[2rem] text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-orange-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
-                                      >
-                                        <Heart className="w-5 h-5 fill-white/20" /> Donasi
-                                      </button>
-                                    </div>
+                                      <div className="flex items-center gap-2 mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 text-right">
+                                        <button 
+                                          onClick={() => handleAction('cart')}
+                                          className="flex-none w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white flex items-center justify-center rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all border border-slate-200 dark:border-slate-700"
+                                        >
+                                          <ShoppingBag className="w-5 h-5" />
+                                        </button>
+                                        
+                                        <button 
+                                          onClick={() => handleAction('donate')}
+                                          className="flex-1 h-12 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold text-[11px] uppercase tracking-widest rounded-xl shadow-md hover:shadow-lg hover:shadow-amber-500/20 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                        >
+                                          Lanjut Donasi <ChevronRight className="w-4 h-4 text-white/70" />
+                                        </button>
+                                      </div>
                                   </div>
                                 </div>
                               </div>
                             </div>
                             
-                            <div className="lg:col-span-2 bg-slate-900 rounded-[2.5rem] p-7 text-white relative overflow-hidden border border-slate-800 w-full">
-                               <div className="relative z-10 space-y-8">
+                            <div className="md:col-span-5 space-y-6">
+                            <div className="bg-slate-900 rounded-[2rem] p-6 text-white relative overflow-hidden border border-slate-800 shadow-lg w-full">
+                               <div className="relative z-10 space-y-6">
                                   <div className="flex items-center gap-4">
-                                     <div className="w-12 h-12 rounded-full border border-[#1799dc] p-1 shadow-[0_0_15px_rgba(23,153,220,0.2)]">
+                                     <div className="w-12 h-12 rounded-full border border-amber-500/30 p-1">
                                         <div className="w-full h-full rounded-full bg-slate-800 flex items-center justify-center">
-                                           <Users className="w-5 h-5 text-[#1799dc]" />
+                                           <Users className="w-5 h-5 text-amber-500" />
                                         </div>
                                      </div>
                                      <div>
-                                        <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest opacity-60">Imam</p>
-                                        <p className="text-base font-black">{selectedMosque.imam}</p>
+                                        <p className="text-[9px] font-bold text-amber-300 uppercase tracking-[0.15em] mb-0.5">Imam Utama</p>
+                                        <p className="text-lg font-serif text-white">{selectedMosque.imam}</p>
                                      </div>
                                   </div>
                                   
-                                  <div className="space-y-4">
-                                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Khatib Jumat</p>
-                                     <div className="grid gap-2.5">
+                                  <div className="space-y-3">
+                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.15em]">Khatib Jumat Bulan Ini</p>
+                                     <div className="grid gap-2">
                                         {selectedMosque.khatibs.map((khatib: any, i: number) => (
-                                           <div key={i} className="flex items-center justify-between p-3.5 bg-white/5 rounded-2xl border border-white/5 backdrop-blur-md">
-                                              <span className="text-[11px] font-bold text-slate-200">{khatib.name}</span>
-                                              <span className="text-[8px] font-black text-white bg-[#1799dc] px-2.5 py-1 rounded-lg uppercase tracking-widest">{khatib.date}</span>
+                                           <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10 backdrop-blur-md">
+                                              <span className="text-[11px] font-medium text-slate-200">{khatib.name}</span>
+                                              <span className="text-[8px] font-bold text-slate-900 bg-amber-500 px-2.5 py-1 rounded-md uppercase tracking-widest">{khatib.date}</span>
                                            </div>
                                         ))}
                                      </div>
                                   </div>
                                </div>
-                               <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-blue-500/10 blur-[60px] rounded-full" />
+                               <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-amber-500/10 blur-[60px] rounded-full" />
+                            </div>
+                            
+                            {selectedMosque.campaigns.length > 0 && (
+                               <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 text-slate-900 dark:text-white relative overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md cursor-pointer group" onClick={() => setActiveTab('campaigns')}>
+                                  <div className="flex justify-between items-center mb-4">
+                                     <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.15em] flex items-center gap-1.5"><Wallet className="w-3.5 h-3.5 text-emerald-500"/> Program Terbuka</p>
+                                     <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                                  </div>
+                                  <div className="flex gap-4 items-center">
+                                     <div className="w-16 h-16 rounded-[1rem] overflow-hidden shrink-0 shadow-inner">
+                                        <img src={selectedMosque.campaigns[0].image} className="w-full h-full object-cover" />
+                                     </div>
+                                     <div className="flex-1">
+                                        <h4 className="text-[13px] font-serif leading-snug line-clamp-2 mb-2 group-hover:text-amber-600 transition-colors">{selectedMosque.campaigns[0].title}</h4>
+                                        <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                           <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(100, (selectedMosque.campaigns[0].collected / selectedMosque.campaigns[0].target)*100)}%` }} />
+                                        </div>
+                                     </div>
+                                  </div>
+                               </div>
+                            )}
                             </div>
                           </div>
 
-                          <div className="pt-10 border-t border-slate-100 dark:border-slate-800">
-                             <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-8">Fasilitas Masjid</h4>
+                          <div className="pt-8 border-t border-slate-200 dark:border-slate-800/50">
+                             <h4 className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.15em] mb-6">Fasilitas Masjid</h4>
                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 {selectedMosque.facilities.map((fac: string, i: number) => (
-                                   <div key={i} className="flex flex-col items-center text-center gap-3 p-6 bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:border-[#1799dc] group">
-                                      <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-[#1799dc]/5 group-hover:text-[#1799dc] transition-all">
+                                   <div key={i} className="flex flex-col items-center text-center gap-3 p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800/50 shadow-sm transition-all hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-md group">
+                                      <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-slate-800 flex items-center justify-center text-amber-600 dark:text-amber-400 group-hover:bg-amber-100 dark:group-hover:bg-slate-700 transition-all">
                                          <Sparkles className="w-4 h-4" />
                                       </div>
-                                      <span className="text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-tight">{fac}</span>
+                                      <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">{fac}</span>
                                    </div>
                                 ))}
                              </div>
@@ -812,33 +813,33 @@ export const MosqueProfiles = ({
                       )}
 
 
-                      {activeTab === "studies" && (
+                       {activeTab === "studies" && (
                         <motion.div
                           key="studies"
                           initial={{ opacity: 0, scale: 0.98 }}
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.98 }}
-                          className="grid grid-cols-1 md:grid-cols-2 gap-5"
+                          className="grid grid-cols-1 md:grid-cols-2 gap-4"
                         >
                            {selectedMosque.studies.map((study: any, i: number) => (
-                              <div key={i} className="bg-white dark:bg-slate-900 p-7 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all hover:border-[#1799dc] group relative">
-                                 <div className="flex justify-between items-start mb-6">
-                                    <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 flex items-center justify-center font-black text-xl shadow-inner group-hover:bg-[#1799dc] group-hover:text-white transition-all">
+                              <div key={i} className="bg-white dark:bg-slate-900 p-5 rounded-[1.5rem] border border-slate-200 dark:border-slate-800/50 shadow-sm hover:shadow-md transition-all group relative">
+                                 <div className="flex justify-between items-start mb-4">
+                                    <div className="w-10 h-10 rounded-[1rem] bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-serif flex items-center justify-center text-lg transition-all group-hover:bg-slate-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-slate-900">
                                        {i + 1}
                                     </div>
-                                    <div className="flex flex-col items-end gap-1.5">
-                                       <span className="px-3.5 py-1.5 bg-[#1799dc] text-white rounded-xl text-[8px] font-black uppercase tracking-widest shadow-md shadow-blue-500/10">{study.date}</span>
-                                       <span className="px-3.5 py-1.5 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-xl text-[8px] font-black uppercase tracking-widest">{study.time}</span>
+                                    <div className="flex flex-col items-end gap-1">
+                                       <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-md text-[8px] md:text-[9px] font-bold uppercase tracking-[0.15em]">{study.date}</span>
+                                       <span className="text-slate-500 text-[9px] uppercase font-bold tracking-widest">{study.time}</span>
                                     </div>
                                  </div>
-                                 <h3 className="text-lg font-black text-slate-900 dark:text-white mb-5 leading-tight">{study.title}</h3>
-                                 <div className="flex items-center gap-3 p-3.5 bg-slate-50/50 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800/50">
-                                    <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center shadow-sm">
-                                       <Users className="w-3.5 h-3.5 text-[#1799dc]" />
+                                 <h3 className="text-lg font-serif text-slate-900 dark:text-white mb-4 leading-tight">{study.title}</h3>
+                                 <div className="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                    <div className="w-8 h-8 rounded-full bg-amber-50 dark:bg-slate-800 flex items-center justify-center shadow-sm">
+                                       <Users className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                                     </div>
                                     <div>
-                                       <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Pemateri</p>
-                                       <p className="text-xs font-bold text-slate-700 dark:text-slate-300">{study.speaker}</p>
+                                       <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Pemateri</p>
+                                       <p className="text-xs font-medium text-slate-800 dark:text-slate-200">{study.speaker}</p>
                                     </div>
                                  </div>
                               </div>
@@ -846,7 +847,7 @@ export const MosqueProfiles = ({
                         </motion.div>
                       )}
 
-                      {activeTab === "campaigns" && (
+                       {activeTab === "campaigns" && (
                         <motion.div
                           key="campaigns"
                           initial={{ opacity: 0, y: 10 }}
@@ -856,37 +857,38 @@ export const MosqueProfiles = ({
                            {selectedMosque.campaigns.map((camp: any) => {
                              const progress = Math.min(100, (camp.collected / camp.target) * 100);
                              return (
-                               <div key={camp.id} className="group grid lg:grid-cols-12 items-stretch bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-xl transition-all">
-                                  <div className="lg:col-span-4 h-56 lg:h-auto relative overflow-hidden">
+                               <div key={camp.id} className="group grid lg:grid-cols-12 items-stretch bg-white dark:bg-slate-900 rounded-[1.5rem] border border-slate-200 dark:border-slate-800/50 overflow-hidden shadow-sm hover:shadow-md transition-all">
+                                  <div className="lg:col-span-4 h-48 lg:h-auto relative overflow-hidden">
                                      <img src={camp.image} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                                     <div className="absolute top-6 left-6">
-                                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 text-white rounded-xl text-[8px] font-black uppercase tracking-widest">
-                                           <div className="w-1 h-1 bg-white rounded-full animate-pulse" /> Urgent
+                                     <div className="absolute inset-0 bg-slate-900/10 transition-opacity group-hover:opacity-0" />
+                                     <div className="absolute top-4 left-4">
+                                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900/80 backdrop-blur-md text-white rounded-lg text-[8px] md:text-[9px] font-bold uppercase tracking-widest">
+                                           <div className="w-1 h-1 bg-amber-400 rounded-full animate-pulse" /> Mendesak
                                         </div>
                                      </div>
                                   </div>
-                                  <div className="lg:col-span-8 p-7 md:p-9 flex flex-col justify-between">
+                                  <div className="lg:col-span-8 p-6 md:p-8 flex flex-col justify-between space-y-4">
                                      <div>
-                                        <h4 className="text-xl font-black text-slate-900 dark:text-white mb-6 leading-tight group-hover:text-[#1799dc] transition-colors">{camp.title}</h4>
-                                        <div className="grid grid-cols-2 gap-6 mb-6">
+                                        <h4 className="text-xl font-serif text-slate-900 dark:text-white mb-4 leading-tight group-hover:text-amber-600 transition-colors">{camp.title}</h4>
+                                        <div className="grid grid-cols-2 gap-4 mb-3">
                                            <div>
-                                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Terkumpul</p>
-                                              <p className="text-lg font-black text-slate-900 dark:text-white">Rp{formatCurrencyForm(camp.collected.toString())}</p>
+                                              <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.15em] mb-1">Terkumpul</p>
+                                              <p className="text-lg font-serif text-slate-900 dark:text-white">Rp {formatCurrencyForm(camp.collected.toString())}</p>
                                            </div>
                                            <div className="text-right">
-                                              <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-1">Capaian</p>
-                                              <p className="text-lg font-black text-emerald-500">{progress.toFixed(0)}%</p>
+                                              <p className="text-[9px] font-bold text-amber-600 uppercase tracking-[0.15em] mb-1">Capaian</p>
+                                              <p className="text-lg font-serif text-amber-600">{progress.toFixed(0)}%</p>
                                            </div>
                                         </div>
-                                        <div className="relative h-2.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full mb-8 overflow-hidden p-0.5 shadow-inner">
-                                           <motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} className="h-full bg-gradient-to-r from-blue-500 to-emerald-400 rounded-full" />
+                                        <div className="relative h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full mb-1 overflow-hidden shadow-inner">
+                                           <motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} className="h-full bg-amber-500 rounded-full" />
                                         </div>
                                      </div>
-                                     <div className="flex flex-col sm:flex-row items-center gap-4">
-                                        <button className="w-full sm:w-auto px-8 py-3.5 bg-[#1799dc] text-white font-black rounded-xl text-[9px] uppercase tracking-[0.2em] shadow-lg shadow-blue-500/20 active:scale-95 flex items-center justify-center gap-2">
-                                           Donasi Sekarang <ArrowRight className="w-3.5 h-3.5" />
+                                     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Kekurangan: Rp {formatCurrencyForm((camp.target - camp.collected).toString())}</span>
+                                        <button className="w-full sm:w-auto px-6 py-2.5 bg-slate-900 text-white font-bold rounded-xl text-[9px] uppercase tracking-[0.15em] shadow-sm active:scale-95 flex items-center justify-center gap-2 hover:bg-slate-800 transition-all">
+                                           Tunaikan Sedekah <ArrowRight className="w-3 h-3 text-emerald-400" />
                                         </button>
-                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Sisa: Rp{formatCurrencyForm((camp.target - camp.collected).toString())}</span>
                                      </div>
                                   </div>
                                </div>
@@ -895,57 +897,57 @@ export const MosqueProfiles = ({
                         </motion.div>
                       )}
 
-                      {activeTab === "transparency" && (
+                       {activeTab === "transparency" && (
                         <motion.div
                           key="transparency"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="space-y-10"
+                          className="space-y-6 md:space-y-8"
                         >
-                           <div className="bg-slate-900 rounded-[2.5rem] p-8 md:p-10 text-white relative overflow-hidden border border-slate-800 shadow-xl">
+                           <div className="bg-slate-900 rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-8 text-white relative overflow-hidden border border-slate-800 shadow-lg">
                               <div className="relative z-10">
-                                 <h3 className="text-2xl font-black mb-2">Statistik Kas Masjid</h3>
-                                 <p className="text-slate-400 text-[9px] font-black uppercase tracking-[0.3em] mb-10">Histori 6 Bulan Terakhir</p>
-                                 <div className="h-[250px] w-full">
+                                 <h3 className="text-xl md:text-2xl font-serif mb-2">Statistik Kas Masjid</h3>
+                                 <p className="text-slate-400 text-[9px] font-bold uppercase tracking-[0.15em] mb-6">Histori 6 Bulan Terakhir</p>
+                                 <div className="h-[200px] w-full">
                                     <ResponsiveContainer width="100%" height="100%">
                                        <AreaChart data={selectedMosque.impactData.growth}>
                                           <defs>
                                              <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#1799dc" stopOpacity={0.5}/>
-                                                <stop offset="95%" stopColor="#1799dc" stopOpacity={0}/>
+                                                <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4}/>
+                                                <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
                                              </linearGradient>
                                           </defs>
-                                          <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#475569', fontSize: 9, fontWeight: 800 }} />
-                                          <RechartsTooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '15px', padding: '10px 15px' }} />
-                                          <Area type="monotone" dataKey="amount" stroke="#1799dc" strokeWidth={4} fill="url(#areaGrad)" />
+                                          <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10, fontFamily: 'serif' }} />
+                                          <RechartsTooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '15px', padding: '10px 15px', color: '#fff', fontSize: '12px' }} separator=": Rp " />
+                                          <Area type="monotone" dataKey="amount" stroke="#f59e0b" strokeWidth={2} fill="url(#areaGrad)" />
                                        </AreaChart>
                                     </ResponsiveContainer>
                                  </div>
                               </div>
-                              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[100px] rounded-full" />
+                              <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/10 blur-[60px] rounded-full" />
                            </div>
 
-                           <div className="grid md:grid-cols-2 gap-6">
-                              <div className="p-8 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm">
-                                 <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-8">Penyaluran Dana</h4>
+                           <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+                              <div className="p-6 md:p-8 bg-white dark:bg-slate-900 rounded-[1.5rem] md:rounded-[2rem] border border-slate-200 dark:border-slate-800/50 shadow-sm">
+                                 <h4 className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.15em] mb-6">Penyaluran Dana</h4>
                                  <div className="h-[200px] w-full">
                                     <ResponsiveContainer width="100%" height="100%">
                                        <BarChart data={selectedMosque.impactData.disbursement}>
-                                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 9, fontWeight: 700 }} />
-                                          <RechartsTooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '15px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
-                                          <Bar dataKey="value" fill="#1799dc" radius={[10, 10, 0, 0]} barSize={28} />
+                                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10, fontFamily: 'serif' }} />
+                                          <RechartsTooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '15px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontSize: '12px' }} />
+                                          <Bar dataKey="value" fill="#0f172a" radius={[8, 8, 0, 0]} barSize={24} />
                                        </BarChart>
                                     </ResponsiveContainer>
                                  </div>
                               </div>
-                              <div className="p-8 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm">
-                                 <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-8 text-center">Penerima Manfaat</h4>
+                              <div className="p-6 md:p-8 bg-white dark:bg-slate-900 rounded-[1.5rem] md:rounded-[2rem] border border-slate-200 dark:border-slate-800/50 shadow-sm">
+                                 <h4 className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.15em] mb-6 text-center">Penerima Manfaat</h4>
                                  <div className="h-[200px] w-full">
                                     <ResponsiveContainer width="100%" height="100%">
                                        <PieChart>
-                                          <Pie data={selectedMosque.impactData.demographics} cx="50%" cy="50%" innerRadius={50} outerRadius={75} paddingAngle={10} dataKey="value">
+                                          <Pie data={selectedMosque.impactData.demographics} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={5} dataKey="value">
                                              {selectedMosque.impactData.demographics.map((entry: any, index: number) => (
-                                                <Cell key={`cell-${index}`} fill={["#1799dc", "#10b981", "#f59e0b", "#ef4444"][index % 4]} stroke="none" />
+                                                <Cell key={`cell-${index}`} fill={["#0f172a", "#f59e0b", "#64748b", "#cbd5e1"][index % 4]} stroke="none" />
                                              ))}
                                           </Pie>
                                           <Legend iconSize={8} wrapperStyle={{ fontSize: '9px', fontWeight: 'bold' }} />
@@ -957,40 +959,40 @@ export const MosqueProfiles = ({
                         </motion.div>
                       )}
 
-                      {activeTab === "qurban" && (
+                       {activeTab === "qurban" && (
                         <motion.div
                           key="qurban"
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="space-y-10"
+                          className="space-y-8"
                         >
-                           <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-8 border-b border-slate-100 dark:border-slate-800">
+                           <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
                               <div className="text-center md:text-left">
-                                 <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-1 flex items-center justify-center md:justify-start gap-4">
-                                    <Sparkles className="w-8 h-8 text-amber-500" /> Data Pequrban
+                                 <h3 className="text-2xl font-serif text-slate-900 dark:text-white mb-1.5 flex items-center justify-center md:justify-start gap-3">
+                                    <Sparkles className="w-6 h-6 text-amber-500" /> Data Pequrban
                                  </h3>
-                                 <p className="text-slate-400 font-black uppercase tracking-[0.3em] text-[8px]">Tahun 1447 Hijriah</p>
+                                 <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[8px] md:text-[9px]">Tahun 1447 Hijriah</p>
                               </div>
-                              <div className="px-6 py-2.5 bg-[#1799dc] text-white rounded-xl shadow-lg shadow-blue-500/20 font-black text-[10px] uppercase tracking-widest">
-                                 {selectedMosque.qurbanDonors.length} Donatur
+                              <div className="px-5 py-2.5 bg-slate-900 text-white rounded-xl shadow-md font-bold text-[9px] uppercase tracking-[0.15em]">
+                                 {selectedMosque.qurbanDonors.length} Donatur Qurban
                               </div>
                            </div>
 
                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                               {selectedMosque.qurbanDonors.map((donor: any, i: number) => (
-                                 <div key={i} className="group bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 transition-all hover:border-[#1799dc]">
-                                    <p className="text-[7px] font-black text-[#1799dc] uppercase mb-1 tracking-widest opacity-60 group-hover:opacity-100">{donor.type}</p>
-                                    <p className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">{donor.name}</p>
+                                 <div key={i} className="group bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-slate-500 dark:hover:border-slate-400 transition-all hover:shadow-sm">
+                                    <p className="text-[8px] md:text-[9px] font-bold text-amber-600 uppercase mb-1.5 tracking-[0.15em]">{donor.type}</p>
+                                    <p className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate">{donor.name}</p>
                                  </div>
                               ))}
                            </div>
                            
-                           <div className="p-8 bg-blue-50 dark:bg-blue-900/10 rounded-[2.5rem] border border-blue-100 dark:border-blue-800/30 flex flex-col md:flex-row items-center justify-between gap-6">
+                           <div className="p-6 md:p-8 bg-slate-50 dark:bg-slate-900 rounded-[1.5rem] md:rounded-[2rem] border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
                               <div>
-                                 <h4 className="text-lg font-black text-slate-900 dark:text-white mb-0.5">Daftar Pequrban?</h4>
-                                 <p className="text-slate-500 text-[9px] font-bold uppercase tracking-widest">Tersedia kuota terbatas Idul Adha 1447H</p>
+                                 <h4 className="text-xl font-serif text-slate-900 dark:text-white mb-1">Daftar Pequrban?</h4>
+                                 <p className="text-slate-500 text-[8px] md:text-[9px] font-bold uppercase tracking-[0.15em]">Tersedia kuota terbatas Idul Adha 1447H</p>
                               </div>
-                              <button className="px-8 py-3 bg-[#1799dc] text-white font-black rounded-xl text-[9px] uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all">
+                              <button className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-[9px] uppercase tracking-[0.15em] shadow-md hover:-translate-y-0.5 active:scale-95 transition-all">
                                  Hubungi Kami
                               </button>
                            </div>

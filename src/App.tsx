@@ -62,6 +62,7 @@ import {
   Compass,
   FileCheck2,
   Building2,
+  Leaf,
 } from "lucide-react";
 import { GoogleGenAI } from "@google/genai";
 import { motion, AnimatePresence, useScroll, useTransform } from "motion/react";
@@ -115,6 +116,8 @@ import { MosqueProfiles } from "./components/MosqueProfiles";
 import { ArtikelPage } from "./components/ArtikelPage";
 
 import { SedekahSubuhCard } from "./components/SedekahSubuhCard";
+
+import MindfulPage from "./components/MindfulPage";
 
 // Types
 export interface Program {
@@ -825,11 +828,11 @@ const ProgramCard: React.FC<{
   return (
     <motion.div
       whileHover={{
-        scale: 1.01,
-        y: -4,
+        scale: 1.02,
+        y: -6,
         transition: { duration: 0.3, ease: "easeOut" },
       }}
-      className="bg-white dark:bg-slate-800 rounded-[24px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col border border-slate-100 dark:border-slate-700 h-full group"
+      className="bg-white dark:bg-slate-800 rounded-[24px] overflow-hidden shadow-sm hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-300 flex flex-col border border-slate-100 dark:border-slate-700 h-full group"
     >
       <Link
         to={`/program/${p.id}`}
@@ -1867,7 +1870,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Navigation */}
-      {!location.pathname.startsWith("/program/") && (
+      {!location.pathname.startsWith("/program/") && !location.pathname.startsWith("/mindful") && (
         <nav
           aria-label="Navigasi Utama"
           className={`fixed left-0 right-0 z-50 transition-all duration-500 ease-in-out px-4 md:px-6 ${
@@ -1971,6 +1974,11 @@ export default function App() {
                                   title: "Zakat",
                                   path: "/zakat",
                                   icon: HandCoins,
+                                },
+                                {
+                                  title: "Mindful",
+                                  path: "/mindful",
+                                  icon: Moon,
                                 },
                                 {
                                   title: "Qurban",
@@ -2389,6 +2397,7 @@ export default function App() {
                     path: "/quran?tab=makhraj",
                   },
                   { name: "Zakat", icon: HandCoins, path: "/zakat" },
+                  { name: "Mindful & Healing", icon: Moon, path: "/mindful" },
                   { name: "Qurban", icon: Tent, path: "/qurban" },
                   { name: "Cari Masjid", icon: MapPin, path: "/mosques" },
                   { name: "Profil Masjid", icon: Building2, path: "/masjid" },
@@ -2832,6 +2841,13 @@ export default function App() {
                           color:
                             "from-amber-400 to-amber-500 text-white shadow-amber-500/20",
                           link: "/zakat",
+                        },
+                        {
+                          icon: Moon,
+                          label: "P3K Hati (AI)",
+                          color:
+                            "from-indigo-400 to-indigo-500 text-white shadow-indigo-500/20",
+                          link: "/mindful",
                         },
                         {
                           icon: Heart,
@@ -4412,10 +4428,12 @@ export default function App() {
           } 
         />
         <Route path="/artikel" element={<ArtikelPage />} />
+        <Route path="/mindful" element={<MindfulPage />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
 
       {/* Footer */}
+      {!location.pathname.startsWith("/program/") && !location.pathname.startsWith("/mindful") && !location.pathname.match(/^\/toko\/.+/) && (
       <footer className="bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 pt-20 pb-10 relative overflow-hidden border-t border-slate-200 dark:border-slate-800 transition-colors duration-300">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#1799dc] via-[#2db2f5] to-[#1799dc]"></div>
         <div className="max-w-7xl mx-auto px-4 relative z-10">
@@ -4628,9 +4646,10 @@ export default function App() {
           </div>
         </div>
       </footer>
+      )}
 
       {/* Mobile Bottom Navigation Menu */}
-      {!location.pathname.startsWith("/program/") && !location.pathname.match(/^\/toko\/.+/) && (
+      {!location.pathname.startsWith("/program/") && !location.pathname.startsWith("/mindful") && !location.pathname.match(/^\/toko\/.+/) && (
         <div
           className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200/50 dark:border-slate-800/50 shadow-[0_-10px_30px_rgba(0,0,0,0.08)]"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}

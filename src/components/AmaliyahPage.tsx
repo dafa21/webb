@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
@@ -28,7 +28,8 @@ import {
   TrendingUp,
   LogIn,
   Loader2,
-  RefreshCcw
+  RefreshCcw,
+  Leaf
 } from 'lucide-react';
 import { 
   collection, 
@@ -89,6 +90,23 @@ const DEEDS = [
   { id: 'sedekah', label: 'Sedekah', icon: <HandHeart className="w-5 h-5 text-rose-500" />, category: 'Amal' },
   { id: 'birrul_walidain', label: 'Berbakti Orang Tua', icon: <HeartPulse className="w-5 h-5 text-red-500" />, category: 'Akhlak' },
 ];
+
+// Util helpers for optimized state calculations (preventing O(N) array allocations)
+const getCompletedDeedsCount = (deeds: Record<string, boolean>): number => {
+  let count = 0;
+  for (const key in deeds) {
+    if (deeds[key]) count++;
+  }
+  return count;
+};
+
+const getSpecificDeedsCount = (deeds: Record<string, boolean>, targetIds: string[]): number => {
+  let count = 0;
+  for (let i = 0; i < targetIds.length; i++) {
+    if (deeds[targetIds[i]]) count++;
+  }
+  return count;
+};
 
 export default function AmaliyahPage() {
   const navigate = useNavigate();
@@ -321,7 +339,7 @@ export default function AmaliyahPage() {
 
   const pieData = React.useMemo(() => {
     const totalDeeds = DEEDS.length;
-    const completed = Object.values(todayDeeds).filter(Boolean).length;
+    const completed = getCompletedDeedsCount(todayDeeds);
     const remaining = totalDeeds - completed;
     
     return [
@@ -387,7 +405,7 @@ export default function AmaliyahPage() {
   };
 
   const getAiMuhasabah = async () => {
-    if (history.length === 0 && Object.values(todayDeeds).filter(Boolean).length === 0) {
+    if (history.length === 0 && getCompletedDeedsCount(todayDeeds) === 0) {
       setAiMuhasabah("Langkahkan kakimu hari ini dengan basmalah, maka setiap jejakmu akan menjadi saksi kebaikan.");
       return;
     }
@@ -413,58 +431,299 @@ export default function AmaliyahPage() {
     }
   };
 
-  const Garden = () => {
-    return (
-      <div className="w-full h-40 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900/50 dark:to-slate-900/20 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 mt-8 relative overflow-hidden flex items-end justify-center px-10">
-        <div className="absolute top-6 left-8 flex items-center gap-2">
-          <div className="w-1 h-4 bg-emerald-500 rounded-full" />
-          <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Taman Jiwa</p>
-            <p className="text-[8px] text-slate-400 opacity-60 font-medium">Visualisasi pertumbuhan amal hari ini</p>
-          </div>
-        </div>
+  const Garden = React.useMemo(() => {
+    return ({ todayDeeds }: { todayDeeds: Record<string, boolean> }) => {
+    // Determine completed specific deeds
+    // Extract derived logic via helper for better performance
+    const sholatCount = getSpecificDeedsCount(todayDeeds, ['shubuh', 'dzuhur', 'ashar', 'maghrib', 'isya']);
+    const isSholatComplete = sholatCount === 5;
+    
+    const isDzikirComplete = todayDeeds['dzikir_pagi'] || todayDeeds['dzikir_petang'];
+    const isTilawahComplete = todayDeeds['tilawah'];
+    const isSedekahComplete = todayDeeds['sedekah'];
+    
+    // Growth metrics
+    const treeScale = 0.5 + (sholatCount * 0.1); 
+    const treeLeavesAndFruitsOpacity = sholatCount / 5;
+
+    // Interaction states
+    const [pulse, setPulse] = useState(false);
+    const [floatingWords, setFloatingWords] = useState<{ id: number, text: string }[]>([]);
+    const [orbs, setOrbs] = useState<number[]>([]);
+    const [particles, setParticles] = useState<{ id: number, x: number, y: number, color: string }[]>([]);
+    
+    // Initialize lazily to prevent O(N) evaluation on every render
+    const prevDeedsCount = useRef<number | null>(null);
+    const completedSessionDeeds = useRef(0);
+
+    const colors = ['#f5a623', '#0fd171', '#ff95ba', '#ff6b9e', '#3b82f6'];
+
+    useEffect(() => {
+        const currentCount = getCompletedDeedsCount(todayDeeds);
         
-        <div className="flex items-end gap-1.5 mb-4 group px-4">
-          {Array.from({ length: DEEDS.length }).map((_, i) => {
-            const isActive = Object.values(todayDeeds).filter(Boolean).length > i;
-            return (
-              <motion.div
-                key={i}
-                initial={{ height: 0 }}
-                animate={{ height: isActive ? (20 + (Math.sin(i) * 15) + Math.random() * 20) : 6 }}
-                className={`w-2 md:w-2.5 rounded-t-full relative transition-all duration-1000 ${
-                  isActive 
-                    ? 'bg-gradient-to-t from-emerald-600 via-emerald-400 to-emerald-300 shadow-[0_-4px_10px_rgba(16,185,129,0.2)]' 
-                    : 'bg-slate-200 dark:bg-slate-800'
-                }`}
-              >
-                {isActive && (
-                  <motion.div 
+        // Only run the pulse effect if it's not the initial mount and a deed was added
+        if (prevDeedsCount.current !== null && currentCount > prevDeedsCount.current) {
+            // A deed was just added
+            completedSessionDeeds.current += 1;
+            const newId = Date.now();
+            
+            // Trigger Tree Pulse
+            setPulse(true);
+            setTimeout(() => setPulse(false), 800);
+
+            // Floating Words Quotes
+            const quotes = [
+                "MashaAllah ✨", "Alhamdulillah 🌿", "Barakallah 🌟", 
+                "Bertambah Cahaya 💡", "Tabungan Akhirat 🕊️", "Satu Kebaikan 🌸", 
+                "Istiqomah 💫", "Pahala Berlipat 💎", "Senyum Malaikat 🍃"
+            ];
+            
+            const newQuote = { id: newId, text: quotes[Math.floor(Math.random() * quotes.length)] };
+            setFloatingWords(prev => [...prev, newQuote]);
+            setTimeout(() => {
+                setFloatingWords(prev => prev.filter(w => w.id !== newId));
+            }, 3000);
+
+            // Crazy Idea: A magical Light Orb flies from bottom of screen into the tree every time!
+            setOrbs(prev => [...prev, newId]);
+            setTimeout(() => {
+                setOrbs(prev => prev.filter(id => id !== newId));
+            }, 2500); // the orb takes about 2.5s to reach tree
+
+            // Particle Explosion
+            const newParticles = Array.from({ length: 15 }).map((_, i) => ({
+                id: newId + i,
+                x: (Math.random() - 0.5) * 300,
+                y: (Math.random() - 0.5) * 300,
+                color: colors[Math.floor(Math.random() * colors.length)]
+            }));
+            setParticles(prev => [...prev, ...newParticles]);
+            setTimeout(() => {
+                setParticles(prev => prev.filter(p => !newParticles.find(np => np.id === p.id)));
+            }, 2000);
+        }
+        prevDeedsCount.current = currentCount;
+    }, [todayDeeds]);
+
+    // Form stable random values out of render cycle to prevent glitching
+    const memoizedWindParams = React.useMemo(() => {
+        return [...Array(6)].map(() => ({
+            y: Math.random() * 200,
+            yTarget1: Math.random() * 200,
+            yTarget2: Math.random() * 200 + 50,
+            duration: 8 + Math.random() * 10,
+            delay: Math.random() * 5
+        }));
+    }, []);
+
+    const memoizedRainParams = React.useMemo(() => {
+        // window.innerWidth isn't reliable here and changes, use percentages
+        return [...Array(15)].map(() => ({
+            x: Math.random() * 100, // percentage
+            duration: 1 + Math.random(),
+            delay: Math.random() * 2
+        }));
+    }, []);
+
+    return (
+      <div className="w-full h-64 md:h-80 bg-gradient-to-b from-sky-200/50 to-emerald-100/50 dark:from-cyan-950/30 dark:to-emerald-900/30 rounded-[2.5rem] mt-8 mb-8 relative overflow-hidden border border-white/40 dark:border-white/5 shadow-inner flex items-end justify-center">
+        {/* Sky/Sun for Tilawah */}
+        <AnimatePresence>
+            {isTilawahComplete && (
+                <motion.div 
+                    key="sun-glow"
+                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="absolute top-4 right-8 md:top-8 md:right-16 w-24 h-24 bg-amber-300 rounded-full blur-[30px] opacity-70 flex items-center justify-center pointer-events-none"
+                >
+                    <div className="w-12 h-12 bg-yellow-200 rounded-full blur-[10px]"></div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+
+        {isTilawahComplete && (
+            <motion.div 
+                animate={{ rotate: 360 }} 
+                transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+                className="absolute top-8 right-12 md:top-12 md:right-20 text-amber-400/50 dark:text-amber-300/30 pointer-events-none"
+            >
+                <Sun className="w-16 h-16" />
+            </motion.div>
+        )}
+
+        {/* Wind / Dzikir */}
+        {isDzikirComplete && (
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                {memoizedWindParams.map((params, i) => (
+                    <motion.div
+                        key={`wind-${i}`}
+                        initial={{ left: '-10%', y: params.y, opacity: 0 }}
+                        animate={{ 
+                            left: ['0%', '110%'], 
+                            y: [params.yTarget1, params.yTarget2],
+                            opacity: [0, 0.4, 0] 
+                        }}
+                        transition={{ duration: params.duration, repeat: Infinity, delay: params.delay }}
+                        className="absolute w-4 h-1 bg-white dark:bg-emerald-200 rounded-full blur-[2px]"
+                    />
+                ))}
+            </div>
+        )}
+
+        {/* Rain / Sedekah */}
+        {isSedekahComplete && (
+            <div className="absolute inset-0 pointer-events-none overflow-hidden text-blue-400/30 dark:text-cyan-400/40">
+                 {memoizedRainParams.map((params, i) => (
+                    <motion.div
+                        key={`rain-${i}`}
+                        initial={{ y: -20, left: `${params.x}%` }}
+                        animate={{ y: 500, opacity: [0, 0.7, 0] }}
+                        transition={{ duration: params.duration, repeat: Infinity, ease: "linear", delay: params.delay }}
+                        className="absolute w-0.5 h-3 bg-current rounded-full"
+                    />
+                ))}
+            </div>
+        )}
+
+        {/* The Tree (Sholat) */}
+        <motion.div 
+            animate={{ 
+                scale: pulse ? treeScale * 1.1 : treeScale,
+                filter: pulse ? 'brightness(1.2)' : 'brightness(1)'
+            }}
+            transition={{ type: "spring", stiffness: 300, damping: 15 }}
+            className="relative z-10 flex flex-col items-center origin-bottom transform-gpu"
+            style={{ transformOrigin: 'bottom center' }}
+        >
+            {/* Tree Crown */}
+            <motion.div 
+                className="relative w-40 h-40 md:w-56 md:h-56 mb-[-30px] md:mb-[-40px]"
+                animate={{ opacity: treeLeavesAndFruitsOpacity > 0 ? 1 : 0.3 }}
+            >
+                <svg viewBox="0 0 200 200" className="w-full h-full drop-shadow-2xl">
+                    <motion.path 
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{ duration: 1.5 }}
+                        d="M100 20 C40 20 10 70 30 120 C10 160 50 190 100 180 C150 190 190 160 170 120 C190 70 160 20 100 20 Z" 
+                        className={`transition-colors duration-1000 ${isSholatComplete ? 'fill-[#0fd171] drop-shadow-lg' : (sholatCount > 0 ? 'fill-[#0fd171]/80 drop-shadow-md' : 'fill-slate-200 dark:fill-slate-800')}`}
+                    />
+                    
+                    {/* Fruits or Flowers (Only if full Sholat) */}
+                    <AnimatePresence>
+                        {isSholatComplete && (
+                            <motion.g key="fruits">
+                                <motion.circle initial={{ scale: 0 }} animate={{ scale: 1 }} cx="70" cy="80" r="8" className="fill-[#ff6b9e]" />
+                                <motion.circle initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2 }} cx="120" cy="60" r="10" className="fill-[#f5a623]" />
+                                <motion.circle initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.4 }} cx="140" cy="110" r="9" className="fill-[#ff95ba]" />
+                                <motion.circle initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.6 }} cx="60" cy="130" r="7" className="fill-[#f5a623]" />
+                            </motion.g>
+                        )}
+                    </AnimatePresence>
+                </svg>
+
+                {/* Particle Explosion */}
+                <AnimatePresence>
+                    {particles.map(particle => (
+                        <motion.div
+                            key={particle.id}
+                            initial={{ x: 0, y: 0, scale: 0, opacity: 1 }}
+                            animate={{ 
+                                x: particle.x, 
+                                y: particle.y, 
+                                scale: [0, Math.random() * 1.5 + 0.5, 0], 
+                                opacity: [1, 0.8, 0],
+                                rotate: Math.random() * 360
+                            }}
+                            transition={{ duration: 1.5 + Math.random(), ease: "easeOut" }}
+                            className="absolute top-1/2 left-1/2 w-3 h-3 rounded-full pointer-events-none z-50 mix-blend-screen"
+                            style={{ backgroundColor: particle.color, boxShadow: `0 0 10px ${particle.color}` }}
+                        />
+                    ))}
+                </AnimatePresence>
+
+                {/* Floating Words on Tree */}
+                <AnimatePresence>
+                    {floatingWords.map((word) => (
+                        <motion.div
+                            key={word.id}
+                            initial={{ opacity: 0, y: 50, scale: 0.5 }}
+                            animate={{ opacity: 1, y: 0, scale: 1.2 }}
+                            exit={{ opacity: 0, y: -40, scale: 0.8 }}
+                            transition={{ duration: 2, ease: "easeOut" }}
+                            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap px-3 py-1 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm rounded-full text-sm font-black text-emerald-600 dark:text-emerald-400 shadow-2xl border border-emerald-200 dark:border-emerald-700 z-50 pointer-events-none"
+                        >
+                            {word.text}
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
+            </motion.div>
+            
+            {/* Tree Trunk */}
+            <div className="w-6 md:w-8 h-24 md:h-32 bg-gradient-to-t from-amber-900 to-amber-700 dark:from-slate-800 dark:to-amber-900/80 rounded-t-lg relative z-0">
+                {/* Branch */}
+                <div className="absolute top-6 -right-6 w-8 h-2 bg-amber-800 dark:bg-amber-900/80 -rotate-45 rounded-full z-[-1]"></div>
+                <div className="absolute top-12 -left-5 w-7 h-2 bg-amber-800 dark:bg-amber-900/80 rotate-45 rounded-full z-[-1]"></div>
+            </div>
+        </motion.div>
+
+        {/* Magical Orbs of Good Deeds (Ide Gila) */}
+        <AnimatePresence>
+            {orbs.map((orbId) => (
+                <motion.div
+                    key={orbId}
+                    initial={{ left: '50%', bottom: '0px', opacity: 0, scale: 0 }}
                     animate={{ 
-                      scale: [0.8, 1.2, 0.8],
-                      opacity: [0.3, 0.6, 0.3]
+                        left: ['50%', '30%', '60%', '50%'],
+                        bottom: ['0px', '40%', '60%', '80%'],
+                        opacity: [0, 1, 1, 0],
+                        scale: [0, 1.5, 1, 3]
                     }}
-                    transition={{
-                      duration: 3 + Math.random() * 2,
-                      repeat: Infinity,
-                      delay: i * 0.1
-                    }}
-                    className="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-emerald-400 rounded-full blur-[6px]"
-                  />
+                    transition={{ duration: 2.5, ease: "easeInOut" }}
+                    className="absolute z-50 pointer-events-none drop-shadow-2xl mix-blend-screen"
+                >
+                    {/* Glowing Aura around Orb */}
+                    <div className="absolute inset-0 bg-yellow-300 rounded-full blur-[10px] opacity-80 scale-[3] animate-pulse"></div>
+                    <div className="w-4 h-4 bg-white rounded-full shadow-[0_0_20px_#fde047]"></div>
+                </motion.div>
+            ))}
+        </AnimatePresence>
+
+        {/* Ground */}
+        <div className="absolute bottom-0 left-0 right-0 h-6 md:h-8 bg-emerald-600/20 dark:bg-emerald-950/80 backdrop-blur-md z-20 shadow-[0_-10px_30px_rgba(16,185,129,0.2)]" />
+        
+        {/* Flower bed (Dzikir) */}
+        <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 w-full max-w-sm flex justify-around z-30 px-10 pointer-events-none">
+             <AnimatePresence>
+                {todayDeeds['dzikir_pagi'] && (
+                    <motion.div key="dzikir_pagi" initial={{ scale: 0, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0, opacity: 0 }} className="text-pink-400 dark:text-pink-500">
+                        <Sparkles className="w-6 h-6 fill-current" />
+                    </motion.div>
                 )}
-              </motion.div>
-            );
-          })}
+                {todayDeeds['dzikir_petang'] && (
+                    <motion.div key="dzikir_petang" initial={{ scale: 0, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0, opacity: 0 }} className="text-indigo-400 dark:text-indigo-500">
+                        <Sparkles className="w-6 h-6 fill-current" />
+                    </motion.div>
+                )}
+             </AnimatePresence>
         </div>
-        <div className="absolute bottom-0 left-0 w-full h-1 bg-emerald-500/10" />
+
+        <div className="absolute top-4 left-6 max-w-xs text-slate-600 dark:text-slate-300 md:block hidden z-40 bg-white/40 dark:bg-slate-900/40 p-3 rounded-2xl backdrop-blur-sm shadow-sm border border-white/20 dark:border-white/5 pointer-events-none">
+            <h3 className="font-serif font-bold text-sm mb-1 flex items-center gap-2">Taman Syurga <Leaf className="w-3 h-3 text-emerald-500" /></h3>
+            <p className="text-[10px] leading-relaxed opacity-80 font-medium">
+                Pohon tumbuh dengan sholat fardhu. Mentari bersinar dengan tilawah. Hujan rahmat turun dengan sedekah. Bunga merekah dengan dzikir.
+            </p>
+        </div>
       </div>
     );
   };
+  }, []);
 
   const { totalPoints, levelName, pointsToNext } = React.useMemo(() => {
     const historyPast = history.filter(r => r.date !== todayStr);
     const pastDeedsCount = historyPast.reduce((acc, curr) => acc + Object.values(curr.deeds || {}).filter(Boolean).length, 0);
-    const currentDeedsCount = Object.values(todayDeeds).filter(Boolean).length;
+    const currentDeedsCount = getCompletedDeedsCount(todayDeeds);
     const points = (pastDeedsCount + currentDeedsCount) * 10;
     
     let level = 'Mubtadi (Pemula)';
@@ -570,14 +829,14 @@ export default function AmaliyahPage() {
         </div>
 
         {/* Hub/Menu Grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-8">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 md:gap-3 mb-6 md:mb-8">
           {[
-            { name: "Qur'an", icon: BookOpen, path: '/quran', color: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' },
-            { name: "Hadits", icon: BookOpen, path: '/quran?tab=hadits', color: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' },
-            { name: "Doa", icon: HandHeart, path: '/quran?tab=doa', color: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400' },
-            { name: "Dzikir", icon: HeartPulse, path: '/quran?tab=dzikir', color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' },
-            { name: "Sholat", icon: CalendarIcon, path: '/sholat', color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
-            { name: "Makhraj", icon: Sparkles, path: '/quran?tab=makhraj', color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' },
+            { name: "Qur'an", icon: BookOpen, path: '/quran', color: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400' },
+            { name: "Hadits", icon: BookOpen, path: '/quran?tab=hadits', color: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400' },
+            { name: "Doa", icon: HandHeart, path: '/quran?tab=doa', color: 'bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400' },
+            { name: "Dzikir", icon: HeartPulse, path: '/quran?tab=dzikir', color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400' },
+            { name: "Sholat", icon: CalendarIcon, path: '/sholat', color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400' },
+            { name: "Makhraj", icon: Sparkles, path: '/quran?tab=makhraj', color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-400' },
           ].map((item, index) => (
             <motion.button
               key={index}
@@ -590,12 +849,12 @@ export default function AmaliyahPage() {
               transition={{ delay: index * 0.05 }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="flex flex-col items-center justify-center p-3 sm:p-4 bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 gap-2 hover:shadow-md transition-all group"
+              className="flex flex-col items-center justify-center p-2.5 sm:p-4 bg-white dark:bg-slate-800 rounded-[1.25rem] shadow-sm border border-slate-100 dark:border-slate-700 gap-1.5 hover:shadow-md transition-all group"
             >
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold ${item.color} group-hover:scale-110 transition-transform`}>
-                <item.icon className="w-6 h-6" />
+              <div className={`w-10 h-10 md:w-12 md:h-12 rounded-[0.8rem] flex items-center justify-center font-bold ${item.color} group-hover:scale-110 transition-transform`}>
+                <item.icon className="w-5 h-5 md:w-6 md:h-6" />
               </div>
-              <span className="text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 text-center leading-tight whitespace-nowrap">{item.name}</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-300 text-center leading-tight whitespace-nowrap">{item.name}</span>
             </motion.button>
           ))}
         </div>
@@ -674,6 +933,20 @@ export default function AmaliyahPage() {
           </motion.div>
         </div>
 
+        <AnimatePresence mode="wait">
+          {activeView === 'today' && (
+            <motion.div
+              key="garden"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden mb-8"
+            >
+              <Garden todayDeeds={todayDeeds} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Main Content Area */}
         <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-700">
           <AnimatePresence mode="wait">
@@ -684,25 +957,34 @@ export default function AmaliyahPage() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
               >
-                <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-                  <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto no-scrollbar pb-2 md:pb-0">
+                <div className="flex items-center justify-between gap-3 mb-5 p-3 md:p-4 rounded-[1.5rem] bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-1 md:gap-2">
                     <button 
                       onClick={() => {
                         const d = new Date(currentDate);
                         d.setDate(d.getDate() - 1);
                         setCurrentDate(d);
                       }}
-                      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors active:scale-95 shrink-0"
+                      className="p-1.5 md:p-2 hover:bg-white dark:hover:bg-slate-800 shadow-sm md:shadow-none hover:shadow-sm rounded-full transition-all active:scale-95 shrink-0 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
                     >
-                      <ChevronLeft className="w-5 h-5 text-slate-500" />
+                      <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
                     </button>
-                    <div className="flex items-center justify-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700 w-full md:w-auto shrink-0 min-w-max">
-                      <CalendarIcon className="w-5 h-5 text-primary-500" />
-                      <span className="font-bold text-slate-700 dark:text-slate-200">
-                        {currentDate.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })}
-                        {formatDate(currentDate) === formatDate(new Date()) && " (Today)"}
-                      </span>
+                    
+                    <div className="flex flex-col min-w-[100px] text-center md:text-left">
+                       <span className="text-[9px] md:text-[10px] font-bold text-primary-500/80 uppercase tracking-widest hidden md:block">
+                         {formatDate(currentDate) === formatDate(new Date()) ? 'Hari Ini' : currentDate.toLocaleDateString('id-ID', { weekday: 'long' })}
+                       </span>
+                       <span className="text-[10px] md:hidden font-bold text-primary-500/80 uppercase tracking-widest mb-0.5">
+                         {formatDate(currentDate) === formatDate(new Date()) ? 'Hari Ini' : currentDate.toLocaleDateString('id-ID', { weekday: 'short' })}
+                       </span>
+                       <div className="flex items-center justify-center md:justify-start gap-1.5">
+                         <CalendarIcon className="w-3 h-3 text-slate-400 hidden md:block" />
+                         <span className="text-xs md:text-sm font-black text-slate-700 dark:text-slate-200">
+                           {currentDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                         </span>
+                       </div>
                     </div>
+
                     <button 
                       onClick={() => {
                         const d = new Date(currentDate);
@@ -712,29 +994,31 @@ export default function AmaliyahPage() {
                         }
                       }}
                       disabled={formatDate(currentDate) === formatDate(new Date())}
-                      className={`p-2 rounded-full transition-colors shrink-0 ${formatDate(currentDate) === formatDate(new Date()) ? 'opacity-20 cursor-not-allowed' : 'hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95'}`}
+                      className={`p-1.5 md:p-2 rounded-full transition-all shrink-0 ${formatDate(currentDate) === formatDate(new Date()) ? 'opacity-20 cursor-not-allowed text-slate-300' : 'hover:bg-white dark:hover:bg-slate-800 shadow-sm md:shadow-none hover:shadow-sm active:scale-95 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300'}`}
                     >
-                      <ChevronRight className="w-5 h-5 text-slate-500" />
+                      <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
                     </button>
-                    
+                  </div>
+                  
+                  <div className="flex items-center gap-2 md:gap-4 shrink-0">
                     {formatDate(currentDate) !== formatDate(new Date()) && (
                       <button 
                         onClick={() => setCurrentDate(new Date())}
-                        className="text-[11px] font-bold text-primary-500 hover:text-primary-600 transition-colors ml-2 bg-primary-50 px-3 py-1.5 rounded-full shrink-0"
+                        className="text-[9px] md:text-[10px] font-bold text-primary-600 hover:text-primary-700 transition-colors bg-primary-100 hover:bg-primary-200 px-2 py-1 md:px-3 md:py-1.5 rounded-lg active:scale-95"
                       >
-                        Hari Ini
+                        Kembali
                       </button>
                     )}
-                  </div>
-                  
-                  <div className="flex items-center md:justify-end gap-3 w-full md:w-auto">
-                     <span className="text-[10px] w-full md:w-auto text-center font-black text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-slate-900/50 px-3 py-1.5 rounded-full border border-slate-100 dark:border-slate-800 shrink-0">
-                      {Object.values(todayDeeds).filter(Boolean).length} / {DEEDS.length} TERLAKSANA
-                    </span>
+                    <div className="text-right flex flex-col md:block">
+                      <span className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">Progress</span>
+                      <div className="text-xs md:text-sm font-black text-primary-500 bg-white dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-100 dark:border-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+                        {getCompletedDeedsCount(todayDeeds)} <span className="text-slate-300 dark:text-slate-600 font-normal mx-0.5">/</span> {DEEDS.length}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-8 pb-8 border-b border-slate-100 dark:border-slate-700 mb-8">
+                <div className="flex flex-col gap-6 pb-6 border-b border-slate-100 dark:border-slate-700 mb-6">
                   {Object.entries(
                     DEEDS.reduce((acc, deed) => {
                       if (!acc[deed.category]) acc[deed.category] = [];
@@ -742,56 +1026,45 @@ export default function AmaliyahPage() {
                       return acc;
                     }, {} as Record<string, typeof DEEDS>)
                   ).map(([category, categoryDeeds]) => (
-                    <div key={category}>
-                      <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <div key={category} className="mb-2">
+                       <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-2 mb-3 flex items-center gap-3">
                         {category}
                         <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800"></div>
                       </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="bg-white dark:bg-slate-900/60 rounded-[1.25rem] border border-slate-100 dark:border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.02)] overflow-hidden divide-y divide-slate-50 dark:divide-slate-800/50">
                         {categoryDeeds.map((deed) => {
                           const isActive = todayDeeds[deed.id];
                           const isSaving = savingId === deed.id;
                           
                           return (
-                            <motion.button
+                            <button
                               key={deed.id}
-                              whileTap={{ scale: 0.98 }}
-                              whileHover={{ scale: 1.02 }}
                               onClick={() => toggleDeed(deed.id)}
-                              className={`group flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden ${
+                              className={`group w-full flex items-center justify-between px-4 py-3 transition-colors duration-300 relative ${
                                 isActive 
-                                  ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/10 dark:border-emerald-900/30' 
-                                  : 'bg-white dark:bg-slate-900/50 border-slate-100 dark:border-slate-700 hover:border-primary-500/30 dark:hover:border-primary-500/30'
+                                  ? 'bg-emerald-50/50 dark:bg-emerald-500/5 hover:bg-emerald-50 dark:hover:bg-emerald-500/10' 
+                                  : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
                               }`}
                             >
-                              <div className="flex items-center gap-4 z-10">
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors shadow-sm ${isActive ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-500'}`}>
-                                  {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : deed.icon}
+                              <div className="flex items-center gap-3.5 z-10 w-full">
+                                <div className={`w-9 h-9 rounded-[0.6rem] flex items-center justify-center transition-all duration-300 shadow-sm ${isActive ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 scale-100' : 'bg-slate-50 dark:bg-slate-800 text-slate-500 scale-95 group-hover:scale-100 group-hover:bg-white dark:group-hover:bg-slate-700'}`}>
+                                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <div className="[&>svg]:w-4 [&>svg]:h-4">{deed.icon}</div>}
                                 </div>
-                                <div className="text-left">
-                                  <h4 className={`font-bold transition-colors ${isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-200'}`}>{deed.label}</h4>
+                                <div className="text-left flex-1">
+                                  <h4 className={`text-sm font-bold transition-colors ${isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-200'}`}>{deed.label}</h4>
                                 </div>
                               </div>
                               
-                              <div className={`transition-all duration-500 z-10 ${isActive ? 'scale-110 text-emerald-500' : 'text-slate-200 dark:text-slate-700 group-hover:text-primary-500/30 dark:group-hover:text-primary-500/30'}`}>
+                              <div className={`transition-all duration-500 z-10 pl-3 ${isActive ? 'scale-110 text-emerald-500' : 'text-slate-200 dark:text-slate-700 group-hover:text-primary-400 dark:group-hover:text-primary-500/60'}`}>
                                 {isActive ? <CheckCircle2 className="w-6 h-6 fill-emerald-50 dark:fill-emerald-900/20" /> : <Circle className="w-6 h-6" />}
                               </div>
-                              
-                              {isActive && (
-                                <motion.div 
-                                  layoutId={`active-bg-${deed.id}`}
-                                  className="absolute inset-0 bg-emerald-500/5 dark:bg-emerald-500/10 pointer-events-none"
-                                />
-                              )}
-                            </motion.button>
+                            </button>
                           );
                         })}
                       </div>
                     </div>
                   ))}
                 </div>
-
-                <Garden />
 
                 <div className="bg-blue-50 dark:bg-blue-900/10 p-5 rounded-2xl border border-blue-100 dark:border-blue-900/30 flex items-start gap-4">
                   <div className="w-10 h-10 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center flex-shrink-0 text-primary-500 shadow-sm">
@@ -1230,6 +1503,7 @@ export default function AmaliyahPage() {
                             <AnimatePresence>
                               {isExpanded && (
                                 <motion.div 
+                                  key="expanded-details"
                                   initial={{ height: 0, opacity: 0 }}
                                   animate={{ height: 'auto', opacity: 1 }}
                                   exit={{ height: 0, opacity: 0 }}
