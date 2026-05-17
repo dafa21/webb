@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapPin, Navigation, Map as MapIcon, Loader2, Search, Crosshair } from 'lucide-react';
+import { MapPin, Navigation, Map as MapIcon, Loader2, Search, Crosshair, X, Clock } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -96,6 +96,7 @@ export const MasjidLocator: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchingCity, setIsSearchingCity] = useState(false);
   const [prayerTimes, setPrayerTimes] = useState<Record<string, string> | null>(null);
+  const [selectedMosque, setSelectedMosque] = useState<Mosque | null>(null);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -190,6 +191,7 @@ export const MasjidLocator: React.FC = () => {
   const searchMosques = React.useCallback(async (lat: number, lon: number) => {
     setIsLoading(true);
     setSearchStatus('Mencari masjid... ');
+    setSelectedMosque(null);
     
     // Overpass API Query for Mosques within 5km
     const radius = 5000;
@@ -323,6 +325,81 @@ export const MasjidLocator: React.FC = () => {
       </div>
 
       <div className="flex-1 rounded-[2.5rem] overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl relative min-h-[500px]">
+        {/* Mosque Detail Overlay */}
+        <AnimatePresence>
+          {selectedMosque && (
+            <motion.div
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 30, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className="absolute bottom-4 left-4 right-4 md:left-auto md:right-6 md:bottom-6 md:w-[420px] bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-2xl p-7 rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(0,10,20,0.15)] dark:shadow-black/50 border border-slate-100 dark:border-slate-800 z-[1000] flex flex-col ring-1 ring-slate-900/5 dark:ring-white/5"
+            >
+              <button 
+                onClick={() => setSelectedMosque(null)}
+                className="absolute top-5 right-5 p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-full text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors"
+                aria-label="Tutup detail masjid"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              
+              <div className="flex flex-col mb-6">
+                <div className="w-12 h-12 bg-[#b08d57]/10 dark:bg-[#b08d57]/20 rounded-2xl flex items-center justify-center shadow-inner mb-4">
+                  <MapPin className="w-6 h-6 text-[#b08d57] dark:text-[#d4af37]" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-serif font-black text-slate-900 dark:text-white leading-tight mb-2 pr-8">
+                    {selectedMosque.name}
+                  </h3>
+                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                    {selectedMosque.address}
+                  </p>
+                </div>
+              </div>
+
+              {selectedMosque.distance !== undefined && (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/30 rounded-xl text-xs font-black uppercase tracking-wider w-fit mb-6 shadow-sm">
+                  <Navigation className="w-3.5 h-3.5" />
+                  Berjarak {selectedMosque.distance.toFixed(2)} km
+                </div>
+              )}
+
+              {prayerTimes && (
+                <div className="bg-slate-50 dark:bg-slate-800/40 rounded-2xl p-5 mb-6 border border-slate-100 dark:border-slate-700/50">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Clock className="w-4 h-4 text-[#b08d57]" />
+                    <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Estimasi Waktu Sholat</span>
+                  </div>
+                  <div className="grid grid-cols-5 gap-2">
+                    {[
+                      { name: 'Subuh', time: prayerTimes.Fajr },
+                      { name: 'Dzuhur', time: prayerTimes.Dhuhr },
+                      { name: 'Ashar', time: prayerTimes.Asr },
+                      { name: 'Maghrib', time: prayerTimes.Maghrib },
+                      { name: 'Isya', time: prayerTimes.Isha }
+                    ].map((prayer) => (
+                      <div key={prayer.name} className="flex flex-col items-center justify-center bg-white dark:bg-slate-900 rounded-xl py-2 px-1 shadow-sm border border-slate-100 dark:border-slate-800">
+                        <div className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-1">{prayer.name}</div>
+                        <div className="text-xs font-black text-slate-800 dark:text-slate-200">{prayer.time}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <a 
+                href={`https://www.google.com/maps/dir/?api=1&destination=${selectedMosque.lat},${selectedMosque.lon}`}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full flex items-center justify-center gap-2 bg-[#1799dc] hover:bg-[#1281ba] dark:bg-[#1799dc] dark:hover:bg-[#38bdf8] text-white py-4 rounded-xl font-bold transition-all shadow-[0_10px_20px_-10px_rgba(23,153,220,0.5)] active:scale-[0.98]"
+              >
+                <Navigation className="w-5 h-5" /> 
+                Mulai Navigasi
+              </a>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {userLocation && (
           <MapContainer 
             center={userLocation} 
@@ -352,40 +429,12 @@ export const MasjidLocator: React.FC = () => {
                 key={mosque.id} 
                 position={[mosque.lat, mosque.lon]} 
                 icon={mosqueIcon}
+                eventHandlers={{
+                  click: () => {
+                    setSelectedMosque(mosque);
+                  }
+                }}
               >
-                <Popup className="custom-popup">
-                  <div className="p-2 min-w-[150px]">
-                    <h3 className="font-black text-slate-900 mb-1">{mosque.name}</h3>
-                    <p className="text-[10px] text-slate-500 mb-1 leading-tight">{mosque.address}</p>
-                    {mosque.distance !== undefined && (
-                      <p className="text-[10px] font-bold text-emerald-600 mb-3 bg-emerald-50 inline-block px-1.5 py-0.5 rounded">
-                        Berjarak {(mosque.distance).toFixed(2)} km
-                      </p>
-                    )}
-                    
-                    {prayerTimes && (
-                      <div className="mb-3 bg-emerald-50 p-2 rounded-lg border border-emerald-100">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-[9px] font-bold text-emerald-800 uppercase tracking-widest">Waktu Jum'at</span>
-                        </div>
-                        <span className="text-sm font-black text-emerald-600">{prayerTimes.Dhuhr} WIB</span>
-                        <div className="flex justify-between items-center mt-2 border-t border-emerald-100 pt-1">
-                          <span className="text-[8px] font-bold text-slate-500">Ashar: {prayerTimes.Asr}</span>
-                          <span className="text-[8px] font-bold text-slate-500">Maghrib: {prayerTimes.Maghrib}</span>
-                        </div>
-                      </div>
-                    )}
-                    
-                    <a 
-                      href={`https://www.google.com/maps/dir/?api=1&destination=${mosque.lat},${mosque.lon}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-emerald-700 transition-colors"
-                    >
-                      <Navigation className="w-3 h-3" /> Navigasi
-                    </a>
-                  </div>
-                </Popup>
               </Marker>
             ))}
           </MapContainer>

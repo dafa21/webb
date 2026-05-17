@@ -118,6 +118,7 @@ import { ArtikelPage } from "./components/ArtikelPage";
 import { SedekahSubuhCard } from "./components/SedekahSubuhCard";
 
 import MindfulPage from "./components/MindfulPage";
+import TamanJariyah from "./components/TamanJariyah";
 
 // Types
 export interface Program {
@@ -1870,7 +1871,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Navigation */}
-      {!location.pathname.startsWith("/program/") && !location.pathname.startsWith("/mindful") && (
+      {!location.pathname.startsWith("/program/") && !location.pathname.startsWith("/mindful") && !location.pathname.startsWith("/taman-jariyah") && (
         <nav
           aria-label="Navigasi Utama"
           className={`fixed left-0 right-0 z-50 transition-all duration-500 ease-in-out px-4 md:px-6 ${
@@ -2646,17 +2647,31 @@ export default function App() {
                             aman, dan transparan untuk meluaskan kebermanfaatan
                             umat bersama kami.
                           </p>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => {
-                              navigate("/donasi");
-                              window.scrollTo(0, 0);
-                            }}
-                            className="bg-[#f29f05] hover:bg-[#d98f04] text-white font-bold py-3.5 md:py-4 px-8 md:px-10 rounded-full shadow-[0_8px_20px_rgba(242,159,5,0.4)] text-sm md:text-base tracking-wide transition-all uppercase relative z-20"
-                          >
-                            Donasi Sekarang
-                          </motion.button>
+                          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto relative z-20">
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => {
+                                navigate("/donasi");
+                                window.scrollTo(0, 0);
+                              }}
+                              className="bg-[#f29f05] hover:bg-[#d98f04] text-white font-bold py-3.5 md:py-4 px-8 md:px-10 rounded-full shadow-[0_8px_20px_rgba(242,159,5,0.4)] text-sm md:text-base tracking-wide transition-all uppercase whitespace-nowrap"
+                            >
+                              Donasi Sekarang
+                            </motion.button>
+                            
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => {
+                                navigate("/taman-jariyah");
+                              }}
+                              className="bg-emerald-500/20 hover:bg-emerald-500/30 backdrop-blur-md border border-emerald-400/50 text-white font-bold py-3.5 md:py-4 px-6 md:px-8 rounded-full shadow-[0_8px_20px_rgba(16,185,129,0.2)] text-sm md:text-base tracking-wide transition-all whitespace-nowrap flex items-center justify-center gap-2"
+                            >
+                              <Sparkles className="w-5 h-5 text-emerald-400" />
+                              Taman Jariyah
+                            </motion.button>
+                          </div>
                         </motion.div>
                       </AnimatePresence>
                     </div>
@@ -2885,6 +2900,13 @@ export default function App() {
                           link: "/mosques",
                         },
                         {
+                          icon: Sparkles,
+                          label: "Play: Jariyah",
+                          color:
+                            "from-emerald-400 to-teal-500 text-white shadow-emerald-500/20",
+                          link: "/taman-jariyah",
+                        },
+                        {
                           icon: Component,
                           label: "Lainnya",
                           color:
@@ -2915,6 +2937,12 @@ export default function App() {
                                 strokeWidth={2}
                               />
                             </div>
+                            {menu.label === "Play: Jariyah" && (
+                              <span className="absolute -top-1 -right-1 flex h-3 w-3 z-20">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                              </span>
+                            )}
                           </div>
                           <span className="text-[10px] md:text-[11.5px] font-extrabold text-slate-600 dark:text-slate-400 text-center leading-tight max-w-[64px] md:max-w-full px-1">
                             {menu.label}
@@ -2923,6 +2951,66 @@ export default function App() {
                       ))}
                     </div>
                   </div>
+
+                  {/* HUGE Portal Banner for Taman Jariyah */}
+                  <div className="w-full max-w-5xl mx-auto mb-16 px-4">
+                    <div 
+                      className="relative overflow-hidden rounded-[2rem] md:rounded-[3rem] p-8 md:p-12 shadow-2xl group cursor-pointer border border-[#1799dc]/20"
+                      onClick={() => {
+                        navigate("/taman-jariyah");
+                        window.scrollTo(0, 0);
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-[#0f172a] -z-10" />
+                      
+                      {/* Animated Background Elements */}
+                      <motion.div 
+                        className="absolute -top-40 -right-40 w-80 h-80 bg-emerald-500/20 rounded-full blur-[80px]"
+                        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+                        transition={{ duration: 4, repeat: Infinity }}
+                      />
+                      <motion.div 
+                        className="absolute top-20 left-20 w-4 h-4 bg-yellow-400/80 blur-[2px] rounded-full"
+                        animate={{ y: [0, -20, 0], x: [0, 10, 0], opacity: [0, 1, 0] }}
+                        transition={{ duration: 3, repeat: Infinity, delay: 1 }}
+                      />
+                      <motion.div 
+                        className="absolute bottom-10 right-40 w-3 h-3 bg-white/80 blur-[1px] rounded-full"
+                        animate={{ y: [0, -30, 0], x: [0, -15, 0], opacity: [0, 1, 0] }}
+                        transition={{ duration: 4, repeat: Infinity, delay: 0.5 }}
+                      />
+
+                      <div className="flex flex-col md:flex-row items-center justify-between z-10 relative">
+                        <div className="md:w-3/5 text-center md:text-left mb-8 md:mb-0">
+                          <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-xs font-bold uppercase tracking-widest mb-4 border border-emerald-500/30">
+                            <Sparkles className="w-4 h-4" /> Fitur Eksklusif (Gamifikasi)
+                          </div>
+                          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight mb-4 tracking-tight">
+                            Masuki <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-[#1799dc]">Taman Jariyah</span>
+                          </h2>
+                          <p className="text-slate-300 mb-8 max-w-lg mx-auto md:mx-0 leading-relaxed font-medium">
+                            Setiap donasimu adalah tetesan air yang menumbuhkan Pohon Kebaikan di Surga. Rasakan kebahagiaan merawat tanaman jariyahmu setiap hari. Yuk, sirami benih kebaikanmu sekarang!
+                          </p>
+                          <button className="bg-gradient-to-r from-emerald-500 to-[#1799dc] hover:from-emerald-400 hover:to-[#1aa8f0] text-white px-8 py-4 rounded-2xl font-bold tracking-wider transition-all shadow-[0_10px_30px_rgba(23,153,220,0.4)] group-hover:scale-105 active:scale-95 flex items-center gap-3 w-full sm:w-auto justify-center md:justify-start">
+                            Mainkan Sekarang <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                          </button>
+                        </div>
+                        <div className="md:w-2/5 flex justify-center items-center relative">
+                          <div className="w-48 h-48 md:w-64 md:h-64 rounded-full bg-white/5 border-2 border-white/10 flex items-center justify-center relative backdrop-blur-sm z-10 shadow-[0_0_50px_rgba(16,185,129,0.3)]">
+                            <motion.div 
+                              className="text-[100px] md:text-[130px] filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]"
+                              animate={{ rotate: [-2, 2, -2], scale: [1, 1.02, 1] }}
+                              transition={{ duration: 4, repeat: Infinity }}
+                            >
+                              🌳
+                            </motion.div>
+                          </div>
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(23,153,220,0.4)_0%,transparent_70%)]" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
 
@@ -4401,7 +4489,7 @@ export default function App() {
           }
         />
         <Route path="/quran" element={<QuranPage />} />
-        <Route path="/amaliyah" element={<AmaliyahPage />} />
+        <Route path="/amaliyah" element={<AmaliyahPage onAddToCart={handleAddToCart} />} />
         <Route path="/zakat" element={<ZakatPage />} />
         <Route
           path="/qurban"
@@ -4429,11 +4517,12 @@ export default function App() {
         />
         <Route path="/artikel" element={<ArtikelPage />} />
         <Route path="/mindful" element={<MindfulPage />} />
+        <Route path="/taman-jariyah" element={<TamanJariyah />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
 
       {/* Footer */}
-      {!location.pathname.startsWith("/program/") && !location.pathname.startsWith("/mindful") && !location.pathname.match(/^\/toko\/.+/) && (
+      {!location.pathname.startsWith("/program/") && !location.pathname.startsWith("/mindful") && !location.pathname.startsWith("/taman-jariyah") && !location.pathname.match(/^\/toko\/.+/) && (
       <footer className="bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 pt-20 pb-10 relative overflow-hidden border-t border-slate-200 dark:border-slate-800 transition-colors duration-300">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#1799dc] via-[#2db2f5] to-[#1799dc]"></div>
         <div className="max-w-7xl mx-auto px-4 relative z-10">
@@ -4649,7 +4738,7 @@ export default function App() {
       )}
 
       {/* Mobile Bottom Navigation Menu */}
-      {!location.pathname.startsWith("/program/") && !location.pathname.startsWith("/mindful") && !location.pathname.match(/^\/toko\/.+/) && (
+      {!location.pathname.startsWith("/program/") && !location.pathname.startsWith("/mindful") && !location.pathname.startsWith("/taman-jariyah") && !location.pathname.match(/^\/toko\/.+/) && (
         <div
           className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200/50 dark:border-slate-800/50 shadow-[0_-10px_30px_rgba(0,0,0,0.08)]"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
@@ -4712,16 +4801,22 @@ export default function App() {
               whileTap={{ scale: 0.95 }}
               whileHover={{ scale: 1.05 }}
               onClick={() => {
-                navigate("/toko");
+                navigate("/taman-jariyah");
                 window.scrollTo(0, 0);
               }}
-              className={`transition-all duration-300 flex flex-col items-center justify-center gap-1 w-12 ${location.pathname === "/toko" ? "text-primary-600 dark:text-primary-400" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"} transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}
+              className={`transition-all duration-300 flex flex-col items-center justify-center gap-1 w-12 ${location.pathname === "/taman-jariyah" ? "text-emerald-500 dark:text-emerald-400" : "text-slate-400 dark:text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400"} transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}
             >
-              <ShoppingBag
-                className="w-5 h-5"
-                strokeWidth={location.pathname === "/toko" ? 2.5 : 2}
-              />
-              <span className="text-[9px] font-bold tracking-tight">Toko</span>
+              <div className="relative">
+                <Sparkles
+                  className="w-5 h-5"
+                  strokeWidth={location.pathname === "/taman-jariyah" ? 2.5 : 2}
+                />
+                <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+              </div>
+              <span className="text-[9px] font-bold tracking-tight text-center leading-tight">Jariyah</span>
             </motion.button>
 
             <motion.button

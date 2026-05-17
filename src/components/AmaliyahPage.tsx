@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { GoogleGenAI } from "@google/genai";
+import { SedekahSubuhCard } from './SedekahSubuhCard';
 import { 
   CheckCircle2, 
   Circle, 
@@ -108,7 +109,11 @@ const getSpecificDeedsCount = (deeds: Record<string, boolean>, targetIds: string
   return count;
 };
 
-export default function AmaliyahPage() {
+interface AmaliyahPageProps {
+  onAddToCart?: (item: any) => void;
+}
+
+export default function AmaliyahPage({ onAddToCart }: AmaliyahPageProps) {
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState<'today' | 'history' | 'stats'>('today');
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -1017,6 +1022,8 @@ export default function AmaliyahPage() {
                     </div>
                   </div>
                 </div>
+
+                <SedekahSubuhCard onAddToCart={onAddToCart || (() => {})} />
 
                 <div className="flex flex-col gap-6 pb-6 border-b border-slate-100 dark:border-slate-700 mb-6">
                   {Object.entries(

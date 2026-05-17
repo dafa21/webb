@@ -376,14 +376,21 @@ export default function QuranPage() {
                 const el = document.getElementById(id);
                 if (el) {
                     if (active) {
-                        el.classList.add('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
+                        el.classList.add('!text-[#1799dc]', 'dark:!text-[#38bdf8]', '!bg-[#1799dc]/10', 'dark:!bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2', 'relative', 'z-20');
                     } else {
-                        el.classList.remove('text-[#1799dc]', 'dark:text-[#38bdf8]', 'bg-[#1799dc]/10', 'dark:bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2');
+                        el.classList.remove('!text-[#1799dc]', 'dark:!text-[#38bdf8]', '!bg-[#1799dc]/10', 'dark:!bg-[#38bdf8]/10', 'rounded-lg', 'px-2', '-mx-2', 'relative', 'z-20');
                     }
                 }
             });
         }
     };
+
+    // Keep highlight active across component re-renders
+    useEffect(() => {
+        if (activeWordRef.current && playingAudio) {
+            setWordHighlight(activeWordRef.current.ayahNumber, activeWordRef.current.startWord, activeWordRef.current.endWord, true);
+        }
+    });
 
     // Fetch Surahs
     useEffect(() => {
@@ -681,6 +688,23 @@ export default function QuranPage() {
                 if (rqAnimRef.current) {
                     cancelAnimationFrame(rqAnimRef.current);
                     rqAnimRef.current = null;
+                }
+
+                if (quranViewMode !== 'tahfidz' && finalAyahNumber !== undefined) {
+                    // Try to auto-play the next ayah
+                    const nextAyah = surahDetail?.ayat?.find((a: any) => a.nomorAyat === finalAyahNumber + 1);
+                    if (nextAyah) {
+                        if (quranViewMode === 'mushaf') {
+                             setActiveAyahAction(nextAyah.nomorAyat);
+                        } else {
+                             const el = document.getElementById(`ayah-${nextAyah.nomorAyat}`);
+                             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                        const nextAudioUrl = getAudioUrl(nextAyah);
+                        const nextSegments = nextAyah.quranComAudio ? nextAyah.quranComAudio.segments : undefined;
+                        // Avoid direct synchronous recursion to prevent stack blocking limits, set small timeout
+                        setTimeout(() => toggleAudio(nextAudioUrl, nextAyah.nomorAyat, nextSegments), 300);
+                    }
                 }
             };
             
