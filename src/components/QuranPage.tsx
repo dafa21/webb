@@ -1522,7 +1522,24 @@ export default function QuranPage() {
                 const ayah = surahDetail?.ayat.find((a: any) => a.nomorAyat === ayahNumber);
                 if (!ayah) return;
                 
-                const prompt = `Kamu adalah Talaqqi AI, guru tahsin Al-Quran yang santai, ramah, dan memotivasi. Dengarkan rekaman ini: membaca surat ${surahDetail.namaLatin} ayat ${ayahNumber}. Ayat aslinya: ${ayah.teksArab} (${ayah.teksLatin}). Evaluasi bacaannya. Berikan pujian dulu, lalu koreksi makhraj atau mad/tajwidnya jika ada dengan menggunakan ejaan bahasa Indonesia yang mudah dibaca oleh text-to-speech. Jangan gunakan simbol rumit atau tanda kurung berlebihan. Jika bacaan sempurna, puji dengan tulus. Setelah koreksi, katakan 'Mari kita dengarkan bacaan yang benarnya berikut ini.'. Singkat saja, maksimal 2 paragraf pendek.`;
+                const prompt = `Kamu adalah Talaqqi AI, seorang pakar tahsin Al-Quran bersanad yang sangat cerdas, teliti, santai, ramah, dan memotivasi. 
+Tugasmu menyimak rekaman bacaan Surat ${surahDetail.namaLatin} ayat ${ayahNumber}.
+Teks ayat asli: ${ayah.teksArab} (${ayah.teksLatin}).
+
+Lakukan analisis tingkat tinggi pada bacaannya. Fokus pada:
+1. Makharijul Huruf (ketepatan huruf, jangan sampai tertukar misal 'sin' dengan 'syin' atau 'ha' dengan 'kho').
+2. Sifatul Huruf (qalqalah, ketebalan bunyi/tafkhim tarqiq).
+3. Ahkamul Tajwid (hukum nun mati/mim mati, panjang mad 2/4/5/6 harakat, dengung/ghunnah).
+
+Format respons:
+- Buka dengan salam hangat dan apresiasi tulus.
+- Berikan evaluasi spesifik: sebutkan kata/huruf apa yang sudah benar dan apa yang masih kurang tepat.
+- Jelaskan cara memperbaikinya dengan bahasa awam yang mudah dipraktikkan (misal: "ayunkan 2 harakat", "tenggorokan bagian tengah", dll).
+- Gunakan bahasa yang natural dan ramah Text-to-Speech (hindari simbol rumit, markdown tebal/miring berlebihan).
+- Jika bacaan sempurna, puji dengan kalimat inspiratif dan beri semangat.
+- WAJIB AKHIRI responsmu dengan kalimat ini (tanpa tambahan apapun setelahnya): "Mari kita dengarkan bacaan yang benarnya berikut ini."
+
+Panjang respons: Singkat, akurat, bentuk paragraf (maksimal 3 paragraf). Berbicaralah seperti guru tahsin yang berhadapan langsung dengan muridnya.`;
                 
                 try {
                     const response = await fetch('/api/evaluate-talaqqi', {
@@ -1556,8 +1573,8 @@ export default function QuranPage() {
                     console.error("Evaluation error", e);
                     let errorMessage = e instanceof Error ? e.message : "Gagal mengevaluasi bacaan.";
                     
-                    if (errorMessage.includes("API key not valid") || errorMessage.includes("configuration")) {
-                        errorMessage = "Konfigurasi Talaqqi AI (API Key) bermasalah. Pastikan API Key Gemini sudah terpasang dengan benar di server settings.";
+                    if (errorMessage.includes("API key not valid") || errorMessage.includes("configuration") || errorMessage.includes("API_KEY_INVALID")) {
+                        errorMessage = "API Key Gemini Anda tidak valid. Silakan hapus kustom Secret API Key di tab Settings agar aplikasi kembali menggunakan AI Gratis dari Google AI Studio.";
                     }
 
                     setEvaluationResults(prev => ({

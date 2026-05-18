@@ -125,6 +125,9 @@ export default function AmaliyahPage({ onAddToCart }: AmaliyahPageProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('Semua');
   const [historyCategoryFilter, setHistoryCategoryFilter] = useState<string>('Semua');
   const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null);
+  
+  const [aiDzikirMessage, setAiDzikirMessage] = useState<{deedName: string, message: string} | null>(null);
+  const [isAiDzikirLoading, setIsAiDzikirLoading] = useState(false);
 
   const [isPhoneLoginHovered, setIsPhoneLoginHovered] = useState(false);
   const [phoneInput, setPhoneInput] = useState('');
@@ -239,6 +242,33 @@ export default function AmaliyahPage({ onAddToCart }: AmaliyahPageProps) {
       };
 
       await setDoc(docRef, data, { merge: true });
+      
+      const deedInfo = DEEDS.find(d => d.id === deedId);
+      if (isActivating && deedInfo?.category === 'Dzikir') {
+        setIsAiDzikirLoading(true);
+        setAiDzikirMessage({ deedName: deedInfo.label, message: '' });
+        
+        fetch('/api/motivate-dzikir', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ category: 'Dzikir', deedId: deedInfo.label })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.message) {
+            setAiDzikirMessage({ deedName: deedInfo.label, message: data.message });
+          } else {
+            setAiDzikirMessage(null);
+          }
+        })
+        .catch(e => {
+          console.error("Failed AI Dzikir message", e);
+          setAiDzikirMessage(null);
+        })
+        .finally(() => {
+          setIsAiDzikirLoading(false);
+        });
+      }
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'amaliyah_records/' + docId);
       // Rollback on error
@@ -1565,6 +1595,59 @@ export default function AmaliyahPage({ onAddToCart }: AmaliyahPageProps) {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Dzikir AI Message Modal */}
+      <AnimatePresence>
+        {aiDzikirMessage && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+            onClick={() => setAiDzikirMessage(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-slate-100 dark:border-slate-800 relative select-none"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="absolute top-0 right-0 p-4">
+                <button onClick={() => setAiDzikirMessage(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors">
+                  &times;
+                </button>
+              </div>
+              <div className="flex justify-center mb-6">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-[#1799dc] flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                  <Sparkles className="w-8 h-8 text-white" />
+                </div>
+              </div>
+              <h3 className="text-xl font-black text-center text-slate-800 dark:text-white mb-2">
+                Alhamdulillah!
+              </h3>
+              <p className="text-xs font-bold text-center text-emerald-500 uppercase tracking-widest mb-6">
+                {aiDzikirMessage.deedName} Selesai
+              </p>
+              
+              <div className="relative">
+                <span className="absolute -top-3 -left-2 text-4xl text-slate-200 dark:text-slate-800 font-serif">"</span>
+                <p className="text-center text-slate-600 dark:text-slate-300 font-medium italic leading-relaxed relative z-10 px-4 min-h-[3rem] flex items-center justify-center">
+                  {aiDzikirMessage.message || (isAiDzikirLoading ? "Menyusun pesan cinta dari langit..." : "")}
+                </p>
+                <span className="absolute -bottom-4 -right-2 text-4xl text-slate-200 dark:text-slate-800 font-serif">"</span>
+              </div>
+              
+              <button 
+                onClick={() => setAiDzikirMessage(null)}
+                className="w-full mt-8 py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-xl active:scale-95 transition-all"
+              >
+                Aamiin
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

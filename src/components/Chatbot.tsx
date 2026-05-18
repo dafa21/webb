@@ -1,27 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Bot, User } from 'lucide-react';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { motion, AnimatePresence } from 'motion/react';
-
-const genAI = new GoogleGenerativeAI((import.meta as any).env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || "");
-
-const SYSTEM_PROMPT = `Anda adalah asisten virtual (chatbot) untuk Laznas Dewan Dakwah, sebuah lembaga zakat nasional yang terpercaya.
-Tugas Anda adalah membantu pengguna dengan menjawab pertanyaan seputar:
-1. Cara donasi, zakat, infak, sedekah, dan wakaf.
-2. Program-program yang tersedia (seperti Bangun Masjid, Aqiqah, Sedekah Subuh, Bantu Palestina, dll).
-3. Informasi seputar lembaga Laznas Dewan Dakwah.
-4. Perhitungan Zakat:
-   - Zakat Penghasilan: Zakat 2.5% dari total penghasilan. Nisabnya 85 gram emas setahun (atau dibagi 12 per bulan).
-   - Zakat Maal/Perdagangan/Saham: Zakat 2.5%, Nisab 85 gram emas.
-   - Zakat Rikaz: Zakat 20%, tidak ada Nisab dan Haul.
-   - Fidyah: Senilai porsi makan per hari ditinggalkan puasa.
-
-Panduan:
-- Jawab dengan ramah, sopan, dan islami. Awali dengan salam jika diperlukan.
-- Gunakan bahasa Indonesia yang baik dan mudah dipahami.
-- Jawaban harus ringkas namun informatif (maksimal 3 paragraf).
-- Jika pengguna ingin donasi, arahkan mereka untuk melihat program di halaman utama kami.
-- Jika pengguna membutuhkan kontak langsung, beritahu bahwa mereka bisa menghubungi via WhatsApp di 0812-3456-7890 atau email care@laznasdd.org.`;
 
 export function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -57,24 +36,31 @@ export function Chatbot() {
       }));
       history.push({ role: 'user', parts: [{ text: userMessage }] });
 
-      const model = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
-        systemInstruction: SYSTEM_PROMPT,
+      const res = await fetch('/api/chatbot', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ history })
       });
 
-      const response = await model.generateContent({
-        contents: history,
-        generationConfig: {
-          temperature: 0.7
-        }
-      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Server error');
+      }
 
-      const responseText = response.response.text();
+      const data = await res.json();
+      const responseText = data.message;
+      
       console.log("Chatbot - Model Response Received:", responseText);
       setMessages(prev => [...prev, { role: 'model', text: responseText || "Mohon maaf, pesan kosong." }]);
     } catch (error: any) {
-      console.error("Chatbot - Error communicating with Gemini API:", error);
-      setMessages(prev => [...prev, { role: 'model', text: `Mohon maaf, terjadi kegagalan API saat komunikasi dengan Gemini: ${error?.message || 'Unknown error'}. Silakan coba beberapa saat lagi.` }]);
+      console.error("Chatbot - Error communicating with backend API:", error);
+      const isBadKey = error?.message?.includes("API key not valid") || error?.message?.includes("API_KEY_INVALID");
+      const errorMsg = isBadKey 
+         ? "API Key Gemini Anda tidak valid (mungkin Anda keliru memasukkan key di Settings). Silakan *Hapus* rahasia (Secret) GEMINI_API_KEY di menu pengaturan app (AI Studio Settings) agar aplikasi dapat menggunakan AI gratis bawaan dari platform."
+         : `Mohon maaf, terjadi kegagalan sistem : ${error?.message || 'Unknown error'}. Silakan coba beberapa saat lagi.`;
+      setMessages(prev => [...prev, { role: 'model', text: errorMsg }]);
     } finally {
       setIsLoading(false);
     }

@@ -141,7 +141,7 @@ async function startServer() {
       console.log(`Fallback to Gemini for: ${referenceKey}`);
       const apiKey = process.env.GEMINI_API_KEY;
 
-      if (!apiKey) {
+      if (!apiKey || apiKey === "your-api-key" || apiKey.trim() === "") {
         console.error("[ERROR] GEMINI_API_KEY is not set.");
         return res.status(500).json({ error: "Layanan AI tidak tersedia (API Key tidak ditemukan)." });
       }
@@ -221,7 +221,7 @@ async function startServer() {
       
       const apiKey = process.env.GEMINI_API_KEY;
 
-      if (!apiKey) {
+      if (!apiKey || apiKey === "your-api-key" || apiKey.trim() === "") {
         console.error("[ERROR] GEMINI_API_KEY is not set.");
         return res.status(500).json({ error: "Layanan AI tidak tersedia (API Key tidak ditemukan)." });
       }
@@ -231,7 +231,7 @@ async function startServer() {
       }
 
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
       const response = await model.generateContent([
         prompt,
@@ -247,7 +247,11 @@ async function startServer() {
       res.json({ feedback });
     } catch (error) {
       console.error("Evaluation Error:", error);
-      res.status(500).json({ error: error instanceof Error ? error.message : "Internal Server Error" });
+      const errMsg = error instanceof Error ? error.message : String(error);
+      if (errMsg.includes("API_KEY_INVALID") || errMsg.includes("API key not valid")) {
+        return res.status(400).json({ error: "API_KEY_INVALID" });
+      }
+      res.status(500).json({ error: errMsg });
     }
   });
 
@@ -521,6 +525,84 @@ async function startServer() {
     } catch (error: any) {
       console.error("Spiritual First Aid Error:", error);
       res.status(500).json({ error: "Internal Server Error" });
+    }
+  });
+
+  app.post("/api/motivate-dzikir", async (req, res) => {
+    try {
+      const { category, deedId } = req.body;
+      const apiKey = process.env.GEMINI_API_KEY;
+
+      if (!apiKey || apiKey === "your-api-key" || apiKey.trim() === "") {
+        return res.status(500).json({ error: "Layanan AI tidak tersedia." });
+      }
+
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+      const prompt = `Berikan satu pesan singkat yang sangat puitis, memotivasi, dan mengapresiasi pengguna karena baru saja menyelesaikan amaliyah (ibadah) kategori: "${category}" dengan spesifik amalan: "${deedId}". Pesan ini harus memberikan semangat untuk konsisten berdzikir/beribadah. Jangan gunakan format markdown, langsung teks saja. Maksimal 20 kata.`;
+      
+      const response = await model.generateContent(prompt);
+      const text = response.response.text().trim();
+      
+      res.json({ message: text });
+    } catch (error) {
+       console.error("Dzikir Motivation Error:", error);
+       res.status(500).json({ error: "Internal Server Error" });
+    }
+  });
+
+
+
+  app.post("/api/chatbot", async (req, res) => {
+    try {
+      const { history } = req.body;
+      const apiKey = process.env.GEMINI_API_KEY;
+
+      if (!apiKey || apiKey === "your-api-key" || apiKey.trim() === "") {
+         return res.status(500).json({ error: "Layanan AI tidak tersedia (API Key tidak ditemukan atau tidak valid)." });
+      }
+
+      if (!history || !Array.isArray(history)) {
+         return res.status(400).json({ error: "Missing or invalid history array." });
+      }
+
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({
+        model: "gemini-1.5-flash",
+        systemInstruction: `Anda adalah "Asisten Kebaikan", chatbot virtual untuk aplikasi Laznas Dewan Dakwah. 
+Anda merupakan asisten yang sangat cerdas, humanis (seperti manusia), hangat, dan berpengetahuan luas tentang agama Islam.
+Tugas Anda:
+1. Membantu pengguna seputar donasi, zakat, infak, sedekah, fidyah, dan wakaf di Laznas Dewan Dakwah. (Arahkan ke menu utama/Beranda jika mereka ingin donasi).
+2. Menghitungkan segala jenis Zakat (kalkulator zakat pintar). Anda BISA dan MAMPU menghitung Zakat Penghasilan, Zakat Maal, Zakat Fitrah, Zakat Emas/Perak, Zakat Pertanian, Zakat Peternakan, Zakat Perdagangan, dll. Jika pengguna ingin menghitung zakat, tanyakan variabel yang dibutuhkan (misal: gaji bulanan, total tabungan, harga emas saat ini, dll) lalu hitungkan untuknya beserta penjelasan nisab dan haul-nya (2,5% atau 5% atau 10% atau 20% sesuai syariat).
+3. Menjawab pertanyaan-pertanyaan tentang hukum fiqih, syariat, dan ajaran Islam secara umum dengan dalil atau penjelasan yang mudah dipahami.
+4. Berkomunikasi dengan luwes, ramah, dan islami, layaknya manusia (gunakan sapaan ramah, sesekali gunakan emoji yang sesuai).
+
+Panduan:
+- Jika diminta menghitung zakat, berikan panduan perhitungannya dengan rapi, jelas, dan akurat berdasarkan kaidah fiqih zakat.
+- Jika ditanya hukum ibadah, muamalah, zakat penghasilan, nisab, berikan jawaban syar'i yang jelas beserta referensi umum.
+- Jelaskan hukum Islam (wajib, sunnah, mubah, makruh, haram) dengan baik tanpa menghakimi.
+- Jawab secara santai layaknya berbicara dengan teman, ringkas namun spesifik.
+- Gunakan bahasa Indonesia yang baik, tidak kaku, santai namun tetap sopan dan memuliakan lawan bicara.
+- Jika ada hal teknis yang di luar kewenangan/kapasitas Anda, arahkan pengguna menghubungi WhatsApp (0812-3456-7890) atau email (care@laznasdd.org).`
+      });
+
+      const response = await model.generateContent({
+        contents: history,
+        generationConfig: {
+          temperature: 0.7
+        }
+      });
+      
+      const responseText = response.response.text();
+      res.json({ message: responseText });
+    } catch (error) {
+       console.error("Chatbot API Error:", error);
+       const errMsg = error instanceof Error ? error.message : String(error);
+       if (errMsg.includes("API_KEY_INVALID") || errMsg.includes("API key not valid")) {
+         return res.status(400).json({ error: "API_KEY_INVALID" });
+       }
+       res.status(500).json({ error: errMsg });
     }
   });
 
