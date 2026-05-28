@@ -1,0 +1,8 @@
+{
+  "name": "Qur'an Memorize (Sambung Ayat)",
+  "description": "A focused Al-Qur'an companion app designed to help users memorize verses through an interactive Sambung Ayat mode and high-quality Sheikh audio.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": []
+}
