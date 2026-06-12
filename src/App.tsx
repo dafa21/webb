@@ -104,6 +104,7 @@ import { ProgramMap } from "./components/ProgramMap";
 import { QurbanMap } from "./components/QurbanMap";
 import { TwibbonModal } from "./components/TwibbonModal";
 import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
+import { AffiliateDashboard } from "./components/AffiliateDashboard";
 import { ZakatPage } from "./components/ZakatPage";
 import { QurbanPage } from "./components/QurbanPage";
 import { ProgramDetailPage } from "./components/ProgramDetailPage";
@@ -1342,6 +1343,24 @@ const DonasiPage = ({
 };
 
 export default function App() {
+
+  // Affiliate Tracking Logic
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+    if (ref) {
+      localStorage.setItem("simba_affiliate_ref", ref);
+      // Optional: record click
+      try {
+        addDoc(collection(db, "affiliate_clicks"), {
+          affiliateCode: ref,
+          createdAt: serverTimestamp(),
+          userAgent: navigator.userAgent
+        });
+      } catch(e) {}
+    }
+  }, []);
+
   const handleDonationAmountChange = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -1476,6 +1495,22 @@ export default function App() {
       };
 
       try {
+                const affiliateRef = localStorage.getItem("simba_affiliate_ref");
+        if (affiliateRef) {
+          payload.affiliateCode = affiliateRef;
+          payload.affiliateCommission = payload.amount * 0.05;
+          
+          // Add to affiliate earnings
+          await addDoc(collection(db, "affiliate_earnings"), {
+             affiliateCode: affiliateRef,
+             commission: payload.affiliateCommission,
+             donorName: payload.name,
+             program: payload.program,
+             amount: payload.amount,
+             createdAt: serverTimestamp()
+          });
+        }
+        
         await addDoc(collection(db, "users", uid, "donations"), payload);
 
         // Simpan profil donatur
@@ -2188,6 +2223,23 @@ export default function App() {
                 )}
               </motion.button>
 
+              {/* Affiliate Button */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  navigate("/affiliate");
+                  window.scrollTo(0, 0);
+                }}
+                className={`hidden md:flex items-center justify-center gap-2 rounded-full font-bold text-[10px] xl:text-[12px] transition-all duration-300 ${
+                  isScrolled
+                    ? "bg-white text-primary-600 border border-primary-100 hover:bg-primary-50 px-3 xl:px-4 py-1.5 xl:py-2"
+                    : "bg-white/20 text-white hover:bg-white/30 border border-white/30 px-3 xl:px-4 py-1.5 xl:py-2"
+                }`}
+              >
+                <Award className="w-3.5 h-3.5 xl:w-4 xl:h-4" /> Affiliate
+              </motion.button>
+
               {/* Donate Button */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -2547,6 +2599,7 @@ export default function App() {
       </AnimatePresence>
 
       <Routes>
+            <Route path="/affiliate" element={<AffiliateDashboard />} />
         <Route
           path="/program/:id"
           element={
