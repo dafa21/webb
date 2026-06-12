@@ -194,9 +194,34 @@ export const AffiliateDashboard = () => {
     return `${baseUrl}#/program/${programId}?ref=${affiliateCode}`;
   };
 
-  const handleShareWA = (program: any) => {
+  const generateShareMessage = (program: any, platform: 'wa' | 'twitter' | 'telegram') => {
     const url = getShareUrl(program.id);
-    const text = `Halo! 🌟 Mari raih pahala jariyah dengan berdonasi untuk program *${program.title}* bersama LAZNAS Dewan Dakwah.\n\nYuk, klik link berikut untuk berdonasi dengan mudah dan aman:\n👉 ${url}\n\nTerima kasih, semoga Allah membalas kebaikan Anda dengan berlipat ganda! 🙏`;
+    let title = program.title.toLowerCase();
+    
+    let opening = `Assalamu'alaikum Warahmatullahi Wabarakatuh.\n\nBapak/Ibu Sahabat Dermawan yang dirahmati Allah,`;
+    let body = `Mari bersama-sama kita wujudkan harapan saudara-saudara kita melalui program *${program.title}*. Sedikit kepedulian dari kita, adalah senyuman bahagia bagi mereka.`;
+    
+    if (title.includes('gaza') || title.includes('palestina')) {
+      body = `Duka Palestina adalah duka kita bersama. Saat ini saudara kita di Gaza sangat membutuhkan uluran tangan dan bantuan darurat. Mari kirimkan pelukan terhangat kita melalui doa dan sedekah terbaik untuk program *${program.title}*.`;
+    } else if (title.includes('qurban') || title.includes('sapi')) {
+      body = `Momen Idul Adha sebentar lagi tiba. Jangan biarkan saudara kita di pelosok nusantara terlewat dari kebahagiaan menyantap hidangan istimewa. Mari tunaikan ibadah qurban Anda tahun ini melalui program *${program.title}*.`;
+    } else if (title.includes('air') || title.includes('sumur')) {
+      body = `Setetes air adalah awal dari kehidupan. Mari alirkan pahala jariyah yang tak pernah terputus dengan membantu saudara kita yang mengalami kekeringan ekstrem melalui program *${program.title}*.`;
+    } else if (title.includes('yatim') || title.includes('tahfidz') || title.includes('beasiswa') || title.includes('pendidikan')) {
+      body = `Senyum anak yatim dan para pejuang Al-Quran adalah penyejuk hati kita. Mari dukung langkah mulia mereka dalam menuntut ilmu dengan berpartisipasi di program *${program.title}*.`;
+    }
+
+    let closing = `\n\nSalurkan infak, sedekah, atau zakat terbaik Anda dengan aman, mudah, dan transparan melalui tautan resmi LAZNAS Dewan Dakwah berikut:\n👉 ${url}\n\n_"Perumpamaan orang yang menginfakkan hartanya di jalan Allah seperti sebutir biji yang menumbuhkan tujuh tangkai, pada setiap tangkai ada seratus biji."_ (QS. Al-Baqarah: 261)\n\nJazakumullah Khairan Katsiran.\nSemoga Allah senantiasa memberkahi harta dan keluarga Anda. Aamiin Ya Rabbal 'Alamin. 🤲`;
+
+    if (platform === 'twitter') {
+      return `Sahabat Dermawan, mari wujudkan kepedulian untuk program ${program.title}. Salurkan donasi terbaik Anda dengan mudah & aman melalui LAZNAS Dewan Dakwah: ${url}`;
+    }
+
+    return `${opening}\n\n${body}${closing}`;
+  };
+
+  const handleShareWA = (program: any) => {
+    const text = generateShareMessage(program, 'wa');
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -206,14 +231,13 @@ export const AffiliateDashboard = () => {
   };
 
   const handleShareTwitter = (program: any) => {
-    const url = getShareUrl(program.id);
-    const text = `Mari berdonasi untuk program ${program.title} bersama LAZNAS Dewan Dakwah. Klik link berikut untuk berdonasi: `;
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+    const text = generateShareMessage(program, 'twitter');
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const handleShareTelegram = (program: any) => {
+    const text = generateShareMessage(program, 'telegram');
     const url = getShareUrl(program.id);
-    const text = `Mari berdonasi untuk program ${program.title} bersama LAZNAS Dewan Dakwah. Klik link berikut untuk berdonasi: `;
     window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank');
   };
 

@@ -4134,27 +4134,6 @@ export default function App() {
               </span>
             </div>
 
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              whileHover={{ scale: 1.05 }}
-              onClick={() => {
-                navigate("/taman-jariyah");
-                window.scrollTo(0, 0);
-              }}
-              className={`transition-all duration-300 flex flex-col items-center justify-center gap-1 w-10 sm:w-12 ${location.pathname === "/taman-jariyah" ? "text-emerald-500 dark:text-emerald-400" : "text-slate-400 dark:text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400"} transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}
-            >
-              <div className="relative">
-                <Sparkles
-                  className="w-4 h-4 sm:w-5 sm:h-5"
-                  strokeWidth={location.pathname === "/taman-jariyah" ? 2.5 : 2}
-                />
-                <span className="absolute -top-1 -right-1 flex h-1.5 w-1.5 sm:h-2 sm:w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-emerald-500"></span>
-                </span>
-              </div>
-              <span className="text-[8px] sm:text-[9px] font-bold tracking-tight text-center leading-tight">Jariyah</span>
-            </motion.button>
 
             <motion.button
               whileTap={{ scale: 0.95 }}
