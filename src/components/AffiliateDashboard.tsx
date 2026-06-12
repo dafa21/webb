@@ -5,7 +5,8 @@ import {
   MessageCircle, MousePointerClick, Target, BarChart3, PieChart as PieChartIcon,
   Award, Gift, Facebook, Twitter, Send, Trophy, History, BookOpen, ChevronRight,
   ChevronLeft, Flame, Medal, Star, Check, Lock, ArrowDownRight, ArrowUpRight,
-  CreditCard, Building, Image as ImageIcon, QrCode, Download, Zap, BellRing, Filter
+  CreditCard, Building, Image as ImageIcon, QrCode, Download, Zap, BellRing, Filter,
+  Network, Dices, Puzzle, Code, PartyPopper, Coins
 } from "lucide-react";
 import { db } from "../firebase";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
@@ -92,7 +93,7 @@ export const AffiliateDashboard = () => {
   const [affiliateCode, setAffiliateCode] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [userPhone, setUserPhone] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'misi' | 'dompet' | 'marketing' | 'edukasi'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'misi' | 'dompet' | 'marketing' | 'edukasi' | 'qurban' | 'jaringan' | 'rewards'>('dashboard');
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -108,6 +109,12 @@ export const AffiliateDashboard = () => {
 
   // Live Notification State
   const [liveToast, setLiveToast] = useState<{message: string, type: 'withdraw' | 'donation'} | null>(null);
+
+  // Reward Points State
+  const [points] = useState(1250);
+
+  // Qurban Patungan State
+  const qurbanProgress = 5; // Fake 5 out of 7
 
   const topCampaigns = React.useMemo(() => {
     return (EXTENDED_PROGRAMS || []).slice(0, 3).map((p) => ({
@@ -143,7 +150,7 @@ export const AffiliateDashboard = () => {
             earnings += data.commission || 0;
           });
 
-          // Override with fake big numbers for the demo "push the limit" effect if it's too low
+          // Fake big numbers
           setStats({
             totalClicks: clicksSnapshot.size || 14502,
             totalDonations: donationsCount || 342,
@@ -220,6 +227,8 @@ export const AffiliateDashboard = () => {
     setWithdrawAmount("");
     setWithdrawAccount("");
   };
+
+  // Removed spin handle
 
   if (isLoading) {
     return (
@@ -368,7 +377,7 @@ export const AffiliateDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-24 pt-20 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-36 pt-20 relative overflow-hidden">
       
       {/* Crazy Live Notification Toast */}
       <AnimatePresence>
@@ -396,16 +405,19 @@ export const AffiliateDashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center gap-3 mb-3 flex-wrap">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold border border-emerald-100 dark:border-emerald-500/20">
                   <Activity className="w-3.5 h-3.5" /> Akun Aktif
                 </div>
                 <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black border ${levelColor}`}>
                   <Trophy className="w-3.5 h-3.5" /> Level Mitra: {level}
                 </div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black bg-purple-100 text-purple-700 border border-purple-300">
+                  <Coins className="w-3.5 h-3.5" /> {points} Poin Kebaikan
+                </div>
               </div>
               <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white flex items-center gap-3 mb-2">
-                Dashboard Affiliate <span className="text-primary-500">PRO</span>
+                Dashboard Affiliate <span className="text-primary-500">ULTIMATE</span>
               </h1>
               
               {/* Gamification Progress */}
@@ -440,44 +452,28 @@ export const AffiliateDashboard = () => {
         {/* Navigation Tabs (Scrollable on mobile) */}
         <div className="flex overflow-x-auto pb-4 mb-4 md:mb-8 hide-scrollbar">
           <div className="flex space-x-2 bg-slate-200/50 dark:bg-slate-800/50 p-1.5 rounded-2xl w-max">
-            <button
-              onClick={() => setActiveTab('dashboard')}
-              className={`px-4 md:px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm flex items-center gap-2 transition-all shrink-0 ${
-                activeTab === 'dashboard' ? 'bg-white dark:bg-slate-700 text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-              }`}
-            >
+            <button onClick={() => setActiveTab('dashboard')} className={`px-4 md:px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm flex items-center gap-2 transition-all shrink-0 ${activeTab === 'dashboard' ? 'bg-white dark:bg-slate-700 text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
               <BarChart3 className="w-4 h-4" /> Analitik
             </button>
-            <button
-              onClick={() => setActiveTab('dompet')}
-              className={`px-4 md:px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm flex items-center gap-2 transition-all shrink-0 ${
-                activeTab === 'dompet' ? 'bg-white dark:bg-slate-700 text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-              }`}
-            >
-              <Wallet className="w-4 h-4" /> Tarik Dana <span className="bg-emerald-500 text-white text-[8px] px-1.5 py-0.5 rounded-full ml-1">NEW</span>
+            <button onClick={() => setActiveTab('qurban')} className={`px-4 md:px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm flex items-center gap-2 transition-all shrink-0 ${activeTab === 'qurban' ? 'bg-white dark:bg-slate-700 text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
+              <Puzzle className="w-4 h-4" /> Patungan Qurban <span className="bg-rose-500 text-white text-[8px] px-1.5 py-0.5 rounded-full ml-1">HOT</span>
             </button>
-            <button
-              onClick={() => setActiveTab('misi')}
-              className={`px-4 md:px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm flex items-center gap-2 transition-all shrink-0 ${
-                activeTab === 'misi' ? 'bg-white dark:bg-slate-700 text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-              }`}
-            >
-              <Flame className="w-4 h-4" /> Misi & Peringkat <span className="bg-rose-500 text-white text-[8px] px-1.5 py-0.5 rounded-full ml-1">HOT</span>
+            <button onClick={() => setActiveTab('jaringan')} className={`px-4 md:px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm flex items-center gap-2 transition-all shrink-0 ${activeTab === 'jaringan' ? 'bg-white dark:bg-slate-700 text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
+              <Network className="w-4 h-4" /> Jaringan
             </button>
-            <button
-              onClick={() => setActiveTab('marketing')}
-              className={`px-4 md:px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm flex items-center gap-2 transition-all shrink-0 ${
-                activeTab === 'marketing' ? 'bg-white dark:bg-slate-700 text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-              }`}
-            >
-              <ImageIcon className="w-4 h-4" /> Marketing Kit <span className="bg-purple-500 text-white text-[8px] px-1.5 py-0.5 rounded-full ml-1">PRO</span>
+            <button onClick={() => setActiveTab('rewards')} className={`px-4 md:px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm flex items-center gap-2 transition-all shrink-0 ${activeTab === 'rewards' ? 'bg-white dark:bg-slate-700 text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
+              <Gift className="w-4 h-4" /> Tukar Poin <span className="bg-amber-500 text-white text-[8px] px-1.5 py-0.5 rounded-full ml-1">REWARDS</span>
             </button>
-            <button
-              onClick={() => setActiveTab('edukasi')}
-              className={`px-4 md:px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm flex items-center gap-2 transition-all shrink-0 ${
-                activeTab === 'edukasi' ? 'bg-white dark:bg-slate-700 text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-              }`}
-            >
+            <button onClick={() => setActiveTab('dompet')} className={`px-4 md:px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm flex items-center gap-2 transition-all shrink-0 ${activeTab === 'dompet' ? 'bg-white dark:bg-slate-700 text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
+              <Wallet className="w-4 h-4" /> Tarik Dana
+            </button>
+            <button onClick={() => setActiveTab('misi')} className={`px-4 md:px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm flex items-center gap-2 transition-all shrink-0 ${activeTab === 'misi' ? 'bg-white dark:bg-slate-700 text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
+              <Flame className="w-4 h-4" /> Misi & Peringkat
+            </button>
+            <button onClick={() => setActiveTab('marketing')} className={`px-4 md:px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm flex items-center gap-2 transition-all shrink-0 ${activeTab === 'marketing' ? 'bg-white dark:bg-slate-700 text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
+              <ImageIcon className="w-4 h-4" /> Marketing Kit
+            </button>
+            <button onClick={() => setActiveTab('edukasi')} className={`px-4 md:px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm flex items-center gap-2 transition-all shrink-0 ${activeTab === 'edukasi' ? 'bg-white dark:bg-slate-700 text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
               <BookOpen className="w-4 h-4" /> Panduan
             </button>
           </div>
@@ -486,7 +482,6 @@ export const AffiliateDashboard = () => {
         {/* Tab 1: DASHBOARD ANALITIK */}
         {activeTab === 'dashboard' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            
             {/* Crazy Feature: Flash Event Banner */}
             <div className="bg-gradient-to-r from-rose-500 via-rose-600 to-orange-500 rounded-3xl p-6 text-white shadow-lg shadow-rose-500/20 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-stripes.png')] opacity-10"></div>
@@ -532,43 +527,6 @@ export const AffiliateDashboard = () => {
               ))}
             </div>
 
-            {/* Crazy Feature: Marketing Funnel Analysis */}
-            <div className="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  <h2 className="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                    <Filter className="w-5 h-5 text-indigo-500" />
-                    Analisis Funnel Konversi (All Time)
-                  </h2>
-                  <p className="text-sm text-slate-500 mt-1">Lacak perjalanan pengunjung dari sekadar melihat link hingga menjadi donatur.</p>
-                </div>
-              </div>
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-0 relative">
-                {/* Connecting Line for Desktop */}
-                <div className="hidden md:block absolute top-1/2 left-0 right-0 h-1 bg-slate-100 dark:bg-slate-700 -z-10 -translate-y-1/2"></div>
-                
-                {[
-                  { title: "Total Tayangan", value: "45,200", icon: Activity, color: "text-slate-500", bg: "bg-slate-100" },
-                  { title: "Total Klik Link", value: "14,502", icon: MousePointerClick, color: "text-blue-500", bg: "bg-blue-100" },
-                  { title: "Mulai Donasi", value: "1,205", icon: Wallet, color: "text-amber-500", bg: "bg-amber-100" },
-                  { title: "Donasi Berhasil", value: "342", icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-100" },
-                ].map((step, idx) => (
-                  <div key={idx} className="flex flex-col items-center bg-white dark:bg-slate-800 p-4 rounded-2xl w-full md:w-auto relative z-10">
-                    <div className={`w-14 h-14 rounded-full ${step.bg} dark:bg-opacity-20 flex items-center justify-center mb-3 shadow-sm border-4 border-white dark:border-slate-800`}>
-                      <step.icon className={`w-6 h-6 ${step.color}`} />
-                    </div>
-                    <div className="text-2xl font-black text-slate-800 dark:text-white mb-1">{step.value}</div>
-                    <div className="text-xs font-bold text-slate-500">{step.title}</div>
-                    {idx < 3 && (
-                      <div className="mt-2 text-[10px] font-black text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full">
-                        {idx === 0 ? "32% klik" : idx === 1 ? "8% checkout" : "28% konversi"}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {/* Campaign List Grid with Pagination */}
             <div className="pt-8 border-t border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between mb-6 md:mb-8">
@@ -587,21 +545,13 @@ export const AffiliateDashboard = () => {
 
               {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2 md:gap-4 mt-8 pb-8">
-                  <button 
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 disabled:opacity-50"
-                  >
+                  <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 disabled:opacity-50">
                     <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
                   </button>
                   <div className="text-xs md:text-sm font-bold text-slate-600 dark:text-slate-300">
                     Halaman {currentPage} dari {totalPages}
                   </div>
-                  <button 
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 disabled:opacity-50"
-                  >
+                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 disabled:opacity-50">
                     <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
                   </button>
                 </div>
@@ -610,7 +560,143 @@ export const AffiliateDashboard = () => {
           </div>
         )}
 
-        {/* Tab 2: DOMPET / PENCAIRAN (Push The Limit Feature) */}
+        {/* Tab: QURBAN SQUAD (Puzzle) */}
+        {activeTab === 'qurban' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
+            <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-3xl p-8 md:p-12 text-white shadow-xl relative overflow-hidden">
+              <div className="absolute right-0 top-0 w-64 h-64 bg-white/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/4"></div>
+              
+              <div className="grid md:grid-cols-2 gap-8 items-center relative z-10">
+                <div>
+                  <div className="bg-white/20 backdrop-blur px-3 py-1 rounded-full text-xs font-bold w-max mb-4">✨ EVENT KHUSUS QURBAN ✨</div>
+                  <h2 className="text-3xl md:text-5xl font-black mb-4 leading-tight">Qurban Squad <br/>Patungan Sapi</h2>
+                  <p className="text-indigo-100 text-lg mb-8">
+                    Harga 1 Sapi = Rp 21 Juta (7 Orang). Susah cari 1 donatur? Cari 7 orang yang mau patungan! Lengkapi puzzle sapi Anda dan dapatkan <strong>BONUS KAMBING GRATIS!</strong>
+                  </p>
+                  
+                  <button className="bg-white text-indigo-700 font-black px-6 py-4 rounded-xl shadow-lg hover:scale-105 transition-transform flex items-center gap-2">
+                    <Copy className="w-5 h-5" /> Salin Link Patungan Sapi
+                  </button>
+                </div>
+
+                <div className="flex flex-col items-center justify-center">
+                  <div className="w-56 h-56 md:w-80 md:h-80 relative scale-90 md:scale-100">
+                    {/* Fake Cow Puzzle Visualization using Grid of rounded divs for simplicity */}
+                    <div className="absolute inset-0 bg-white/10 rounded-full border-4 border-dashed border-white/30 animate-[spin_60s_linear_infinite]"></div>
+                    <div className="absolute inset-4 flex flex-wrap content-center justify-center gap-1 md:gap-2">
+                      {[1,2,3,4,5,6,7].map((piece) => (
+                        <div key={piece} className={`w-14 h-14 md:w-24 md:h-24 rounded-2xl flex items-center justify-center text-2xl md:text-3xl font-black shadow-lg transition-all duration-500
+                          ${piece <= qurbanProgress ? 'bg-emerald-400 text-white scale-110 rotate-3' : 'bg-white/20 text-white/50 border border-white/20'}`}>
+                          {piece <= qurbanProgress ? '✓' : piece}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-4 md:mt-8 text-center">
+                    <div className="text-xl md:text-2xl font-black text-white mb-1">{qurbanProgress} / 7 Puzzel Terkumpul</div>
+                    <div className="text-indigo-200 text-xs md:text-sm">2 Orang lagi menuju Sapi utuh! Ayo kejar!</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab: JARINGAN (Multi-Tier) */}
+        {activeTab === 'jaringan' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
+            <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-700 text-center max-w-4xl mx-auto">
+              <Network className="w-16 h-16 text-blue-500 mx-auto mb-6" />
+              <h2 className="text-3xl font-black text-slate-800 dark:text-white mb-4">Sistem Pasukan (Downline)</h2>
+              <p className="text-slate-500 mb-8 max-w-2xl mx-auto">
+                Ajak teman Anda menjadi mitra Affiliate LAZNAS melalui link pendaftaran khusus Anda. Anda akan mendapatkan **Passive Income 1%** dari total donasi yang berhasil dikumpulkan oleh pasukan Anda seumur hidup!
+              </p>
+
+              <div className="overflow-x-auto pb-6 -mx-6 px-6 md:mx-0 md:px-0 custom-scrollbar">
+                <div className="flex flex-col items-center min-w-[500px]">
+                  {/* You */}
+                  <div className="bg-blue-500 text-white p-3 md:p-4 rounded-2xl shadow-lg w-40 md:w-48 mb-6 relative z-10 border-4 border-white dark:border-slate-800">
+                    <div className="font-black text-base md:text-lg">ANDA</div>
+                    <div className="text-[10px] md:text-xs text-blue-100">Leader</div>
+                  </div>
+                  
+                  {/* Lines */}
+                  <div className="w-px h-8 bg-slate-300 dark:bg-slate-600 -mt-6 mb-0"></div>
+                  <div className="w-full max-w-sm md:max-w-md h-px bg-slate-300 dark:bg-slate-600"></div>
+                  
+                  {/* Downlines */}
+                  <div className="flex justify-between w-full max-w-[400px] md:max-w-lg mt-0">
+                    {[
+                      { name: "Budi", val: "Rp 120k", act: "Aktif" },
+                      { name: "Aisyah", val: "Rp 85k", act: "Aktif" },
+                      { name: "Rizky", val: "Rp 0", act: "Pasif" }
+                    ].map((sub, i) => (
+                      <div key={i} className="flex flex-col items-center">
+                        <div className="w-px h-6 bg-slate-300 dark:bg-slate-600"></div>
+                        <div className={`p-3 md:p-4 rounded-2xl shadow-sm w-28 md:w-32 border ${sub.act === 'Aktif' ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800' : 'bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-slate-700'}`}>
+                          <div className="font-bold text-slate-800 dark:text-white text-xs md:text-sm">{sub.name}</div>
+                          <div className="text-[10px] md:text-xs text-emerald-600 font-bold mt-1">+{sub.val}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-12 bg-slate-50 dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-4 text-left">
+                <div>
+                  <div className="text-sm text-slate-500 font-bold">Total Pasif Income dari Pasukan</div>
+                  <div className="text-3xl font-black text-emerald-500">Rp 205.000</div>
+                </div>
+                <button className="bg-slate-800 dark:bg-white text-white dark:text-slate-900 font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                  <Copy className="w-4 h-4" /> Salin Link Rekrutmen
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab: REWARDS (Tukar Poin) */}
+        {activeTab === 'rewards' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
+            <div className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl p-6 md:p-10 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+              <div>
+                <h2 className="text-2xl md:text-3xl font-black mb-2 flex items-center gap-2"><Gift className="w-8 h-8" /> Katalog Rewards</h2>
+                <p className="text-amber-100 max-w-md text-sm md:text-base">Kumpulkan Poin Kebaikan dari setiap klik dan donasi yang masuk. Tukarkan dengan hadiah menarik!</p>
+              </div>
+              <div className="bg-white/20 backdrop-blur-md px-8 py-6 rounded-2xl border border-white/30 text-center w-full md:w-auto shrink-0">
+                <div className="text-amber-100 font-bold text-sm mb-1">Poin Anda Saat Ini</div>
+                <div className="text-4xl font-black">{points} <span className="text-xl">Pts</span></div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                { title: "Voucher Diskon Qurban", desc: "Potongan harga Rp 50.000 untuk pembelian Sapi/Kambing.", cost: 500, img: "https://images.unsplash.com/photo-1541535881962-3bb380b08458?q=80&w=400&auto=format&fit=crop" },
+                { title: "Tambahan Saldo 100k", desc: "Saldo komisi akan langsung ditambahkan ke dompet Anda.", cost: 1200, img: "https://images.unsplash.com/photo-1580519542036-ed47f3e42214?q=80&w=400&auto=format&fit=crop" },
+                { title: "Kaos Polo Relawan", desc: "Merchandise eksklusif LAZNAS Dewan Dakwah dikirim ke rumah.", cost: 2500, img: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=400&auto=format&fit=crop" },
+              ].map((r, i) => (
+                <div key={i} className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow group flex flex-col">
+                  <div className="h-40 overflow-hidden relative">
+                    <img src={r.img} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div className="absolute top-2 right-2 bg-black/60 backdrop-blur text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                      <Coins className="w-3 h-3 text-yellow-400" /> {r.cost} Pts
+                    </div>
+                  </div>
+                  <div className="p-5 flex-1 flex flex-col">
+                    <h3 className="font-bold text-slate-800 dark:text-white text-lg mb-2">{r.title}</h3>
+                    <p className="text-sm text-slate-500 flex-1 mb-4">{r.desc}</p>
+                    <button className={`w-full py-2.5 rounded-xl font-bold transition-all ${points >= r.cost ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/20' : 'bg-slate-100 dark:bg-slate-700 text-slate-400 cursor-not-allowed'}`}>
+                      {points >= r.cost ? 'Tukar Poin' : 'Poin Tidak Cukup'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Tab: DOMPET */}
         {activeTab === 'dompet' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -733,15 +819,15 @@ export const AffiliateDashboard = () => {
           </div>
         )}
 
-        {/* Tab 3: MARKETING KIT (Studio Push The Limit) */}
+        {/* Tab: MARKETING KIT (Studio Push The Limit) */}
         {activeTab === 'marketing' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white flex items-center gap-3">
                   <ImageIcon className="w-8 h-8 text-purple-500" /> Studio Marketing
                 </h2>
-                <p className="text-slate-500 mt-2">Buat poster promosi otomatis dengan wajah dan link unik Anda. Langsung siap posting di Instagram/WA Status!</p>
+                <p className="text-slate-500 mt-2">Buat poster promosi otomatis atau pasang Widget ke blog Anda!</p>
               </div>
             </div>
 
@@ -772,19 +858,15 @@ export const AffiliateDashboard = () => {
                 <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-black py-4 rounded-xl shadow-lg shadow-purple-500/30 transition-all flex items-center justify-center gap-2">
                   <Download className="w-5 h-5" /> Download Poster PNG
                 </button>
-                <p className="text-xs text-center text-slate-500 mt-3">Sistem otomatis menempelkan QR Code Refferal Anda di dalam poster.</p>
               </div>
 
               {/* Live Preview (Fake generated poster) */}
-              <div className="flex items-center justify-center bg-slate-100 dark:bg-slate-900 rounded-3xl p-6 md:p-10 border border-slate-200 dark:border-slate-800">
+              <div className="flex items-center justify-center bg-slate-100 dark:bg-slate-900 rounded-3xl p-6 md:p-10 border border-slate-200 dark:border-slate-800 relative">
                 {selectedPosterProgram && (
                   <div className="w-full max-w-sm aspect-[3/4] bg-white rounded-[2rem] shadow-2xl overflow-hidden relative group">
                     <img src={selectedPosterProgram.image} className="absolute inset-0 w-full h-[65%] object-cover" alt="Poster Image" />
-                    
-                    {/* Gradient Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent top-[30%]"></div>
                     
-                    {/* Content */}
                     <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-8">
                       <div className="bg-primary-500 text-white text-[10px] font-black uppercase px-3 py-1 rounded-full w-max mb-3">
                         {selectedPosterProgram.category}
@@ -804,7 +886,6 @@ export const AffiliateDashboard = () => {
                           </div>
                         </div>
                         
-                        {/* Fake QR Code */}
                         <div className="w-16 h-16 bg-white rounded-xl shadow-md border border-slate-100 flex items-center justify-center flex-col gap-1 p-1">
                           <QrCode className="w-full h-full text-slate-800" />
                           <div className="text-[6px] font-black text-center text-slate-400">SCAN ME</div>
@@ -820,22 +901,42 @@ export const AffiliateDashboard = () => {
                 )}
               </div>
             </div>
+
+            {/* Crazy Feature: HTML Widget Generator */}
+            <div className="bg-slate-900 rounded-3xl p-8 md:p-10 shadow-xl text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-10 opacity-10">
+                <Code className="w-48 h-48" />
+              </div>
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-2">
+                  <Code className="w-6 h-6 text-primary-400" />
+                  <h3 className="text-2xl font-black">HTML Widget Embed (Blogger/Web)</h3>
+                </div>
+                <p className="text-slate-400 mb-6 max-w-2xl">Pasang "Live Donation Counter" di website atau blog Anda. Jika ada pengunjung website Anda yang berdonasi lewat widget ini, komisi otomatis masuk ke akun Anda!</p>
+                
+                <div className="bg-slate-950 border border-slate-800 p-4 rounded-xl mb-4 font-mono text-sm text-emerald-400 overflow-x-auto">
+                  {`<iframe src="https://simba.laznas.org/widget/camp/1?ref=${affiliateCode}" width="100%" height="300" frameborder="0" style="border-radius:12px;"></iframe>`}
+                </div>
+                <button className="bg-white/10 hover:bg-white/20 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-colors">
+                  <Copy className="w-4 h-4" /> Salin Kode HTML
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Tab 4: MISI & PERINGKAT (Gamification Ultimate) */}
+        {/* Tab: MISI & PERINGKAT */}
         {activeTab === 'misi' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              
               {/* Leaderboard */}
               <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-3xl p-1 shadow-xl">
                 <div className="bg-white dark:bg-slate-800 rounded-[22px] h-full p-6 md:p-8">
                   <div className="flex items-center gap-3 mb-6">
                     <Trophy className="w-8 h-8 text-amber-500" />
                     <div>
-                      <h2 className="text-xl font-black text-slate-800 dark:text-white">Papan Peringkat (Bulan Ini)</h2>
-                      <p className="text-xs text-slate-500">Top 3 Mitra dengan penghasilan tertinggi.</p>
+                      <h2 className="text-xl font-black text-slate-800 dark:text-white">Papan Peringkat</h2>
+                      <p className="text-xs text-slate-500">Top 3 Mitra bulan ini.</p>
                     </div>
                   </div>
 
@@ -855,7 +956,6 @@ export const AffiliateDashboard = () => {
                             <div className="font-bold text-slate-800 dark:text-white text-sm md:text-base flex items-center gap-1">
                               {lb.name} <span className="text-lg">{lb.avatar}</span>
                             </div>
-                            <div className="text-[10px] md:text-xs text-slate-500">Total Komisi Didapat</div>
                           </div>
                           <div className="font-black text-emerald-500 text-sm md:text-lg">
                             {formatCurrency(lb.earnings)}
@@ -864,30 +964,16 @@ export const AffiliateDashboard = () => {
                       </div>
                     ))}
                   </div>
-                  
-                  <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-700">
-                    <div className="flex items-center gap-4 p-4 rounded-2xl border-2 border-dashed border-primary-200 bg-primary-50 dark:bg-primary-900/20 dark:border-primary-800">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-primary-500 bg-white shadow-sm">
-                        ?
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-bold text-primary-800 dark:text-primary-400 text-sm">Posisi Anda (Belum Masuk Top 3)</div>
-                        <div className="text-xs text-primary-600 dark:text-primary-500">Tingkatkan share untuk menembus papan peringkat!</div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
 
               {/* Daily Quests & Badges */}
               <div className="space-y-8">
-                {/* Quests */}
                 <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-700">
                   <div className="flex items-center gap-3 mb-6">
                     <Target className="w-6 h-6 text-rose-500" />
                     <h2 className="text-xl font-black text-slate-800 dark:text-white">Misi Harian</h2>
                   </div>
-                  
                   <div className="space-y-4">
                     <div className="flex items-center justify-between bg-rose-50 dark:bg-rose-900/20 p-4 rounded-2xl border border-rose-100 dark:border-rose-900/30">
                       <div className="flex items-start gap-3">
@@ -902,68 +988,9 @@ export const AffiliateDashboard = () => {
                           <div className="text-[10px] text-slate-500 font-bold">Progress: 1/5</div>
                         </div>
                       </div>
-                      <button className="bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 text-xs font-bold px-4 py-2 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-                        Kerjakan
-                      </button>
-                    </div>
-
-                    <div className="flex items-center justify-between bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 opacity-60">
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center shrink-0">
-                          <Check className="w-4 h-4 text-white" />
-                        </div>
-                        <div>
-                          <div className="font-bold text-slate-800 dark:text-white text-sm line-through">Dapat 1 Donatur Hari Ini</div>
-                          <div className="text-[10px] text-emerald-600 font-bold mt-1">Selesai! +Rp 50.000 Bonus</div>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>
-
-                {/* Badges Collection */}
-                <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-700">
-                  <div className="flex items-center gap-3 mb-6">
-                    <Medal className="w-6 h-6 text-purple-500" />
-                    <h2 className="text-xl font-black text-slate-800 dark:text-white">Koleksi Lencana</h2>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div className="flex flex-col items-center">
-                      <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-rose-400 to-rose-600 flex items-center justify-center shadow-lg shadow-rose-500/30 mb-2 relative">
-                        <Star className="w-6 h-6 text-white" />
-                        <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                        </div>
-                      </div>
-                      <div className="font-bold text-[10px] md:text-xs text-slate-800 dark:text-white">First Blood</div>
-                      <div className="text-[8px] md:text-[10px] text-slate-500">Donatur Pertama</div>
-                    </div>
-                    
-                    <div className="flex flex-col items-center opacity-50 grayscale">
-                      <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center mb-2 relative border border-slate-300 dark:border-slate-600">
-                        <Activity className="w-6 h-6 text-slate-400" />
-                        <div className="absolute -bottom-1 -right-1 bg-slate-100 rounded-full p-1 shadow-sm">
-                          <Lock className="w-2.5 h-2.5 text-slate-500" />
-                        </div>
-                      </div>
-                      <div className="font-bold text-[10px] md:text-xs text-slate-800 dark:text-white">Viral Maker</div>
-                      <div className="text-[8px] md:text-[10px] text-slate-500">1.000 Klik</div>
-                    </div>
-
-                    <div className="flex flex-col items-center opacity-50 grayscale">
-                      <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center mb-2 relative border border-slate-300 dark:border-slate-600">
-                        <Users className="w-6 h-6 text-slate-400" />
-                        <div className="absolute -bottom-1 -right-1 bg-slate-100 rounded-full p-1 shadow-sm">
-                          <Lock className="w-2.5 h-2.5 text-slate-500" />
-                        </div>
-                      </div>
-                      <div className="font-bold text-[10px] md:text-xs text-slate-800 dark:text-white">Sultan Referal</div>
-                      <div className="text-[8px] md:text-[10px] text-slate-500">50 Donatur</div>
-                    </div>
-                  </div>
-                </div>
-
               </div>
             </div>
           </div>
@@ -972,36 +999,10 @@ export const AffiliateDashboard = () => {
         {/* Tab 5: EDUKASI / PANDUAN */}
         {activeTab === 'edukasi' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
-            <div className="bg-gradient-to-br from-primary-600 to-primary-800 rounded-3xl p-8 md:p-12 text-white relative overflow-hidden shadow-xl">
-              <div className="absolute right-0 top-0 w-64 h-64 bg-white/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/4"></div>
-              <div className="relative z-10 max-w-2xl">
-                <h2 className="text-2xl md:text-4xl font-black mb-4">Jago Cari Donatur dalam 3 Langkah</h2>
-                <p className="text-primary-100 text-sm md:text-lg leading-relaxed mb-8">
-                  Menjadi mitra Affiliate LAZNAS itu sangat mudah. Tidak perlu pandai bicara, Anda cukup tahu cara membagikan link ke tempat yang tepat.
-                </p>
-                
-                <div className="grid sm:grid-cols-3 gap-6">
-                  {[
-                    { no: "1", title: "Pilih Campaign", desc: "Cari campaign yang paling relate dengan audiens Anda." },
-                    { no: "2", title: "Salin Teks (Copywriting)", desc: "Gunakan template di bawah ini agar terlihat natural." },
-                    { no: "3", title: "Sebar & Berdoa", desc: "Bagikan ke grup WA, status FB, atau DM Instagram." }
-                  ].map((step, i) => (
-                    <div key={i} className="bg-white/10 backdrop-blur-sm border border-white/20 p-5 rounded-2xl">
-                      <div className="w-8 h-8 rounded-full bg-white text-primary-700 font-black flex items-center justify-center mb-3 text-sm">
-                        {step.no}
-                      </div>
-                      <h4 className="font-bold mb-2 text-sm md:text-base">{step.title}</h4>
-                      <p className="text-xs md:text-sm text-primary-100">{step.desc}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
             <div>
               <h3 className="text-xl md:text-2xl font-black text-slate-800 dark:text-white mb-6 flex items-center gap-2">
                 <Copy className="w-6 h-6 text-primary-500" />
-                Template Teks Siap Pakai (Copywriting)
+                Template Teks Siap Pakai
               </h3>
               <div className="grid md:grid-cols-3 gap-6">
                 {copywritingTemplates.map((template, idx) => (

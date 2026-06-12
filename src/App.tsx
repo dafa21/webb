@@ -4088,13 +4088,13 @@ export default function App() {
                 navigate("/");
                 window.scrollTo(0, 0);
               }}
-              className={`transition-all duration-300 flex flex-col items-center justify-center gap-1 w-12 ${location.pathname === "/" ? "text-primary-600 dark:text-primary-400" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"} transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}
+              className={`transition-all duration-300 flex flex-col items-center justify-center gap-1 w-10 sm:w-12 ${location.pathname === "/" ? "text-primary-600 dark:text-primary-400" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"} transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}
             >
               <Home
-                className="w-5 h-5"
+                className="w-4 h-4 sm:w-5 sm:h-5"
                 strokeWidth={location.pathname === "/" ? 2.5 : 2}
               />
-              <span className="text-[9px] font-bold tracking-tight">
+              <span className="text-[8px] sm:text-[9px] font-bold tracking-tight">
                 Beranda
               </span>
             </motion.button>
@@ -4106,13 +4106,13 @@ export default function App() {
                 navigate("/amaliyah");
                 window.scrollTo(0, 0);
               }}
-              className={`transition-all duration-300 flex flex-col items-center justify-center gap-1 w-12 ${location.pathname === "/amaliyah" ? "text-primary-600 dark:text-primary-400" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"} transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}
+              className={`transition-all duration-300 flex flex-col items-center justify-center gap-1 w-10 sm:w-12 ${location.pathname === "/amaliyah" ? "text-primary-600 dark:text-primary-400" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"} transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}
             >
               <LayoutDashboard
-                className="w-5 h-5"
+                className="w-4 h-4 sm:w-5 sm:h-5"
                 strokeWidth={location.pathname === "/amaliyah" ? 2.5 : 2}
               />
-              <span className="text-[9px] font-bold tracking-tight">
+              <span className="text-[8px] sm:text-[9px] font-bold tracking-tight">
                 Amaliyah
               </span>
             </motion.button>
@@ -4141,19 +4141,35 @@ export default function App() {
                 navigate("/taman-jariyah");
                 window.scrollTo(0, 0);
               }}
-              className={`transition-all duration-300 flex flex-col items-center justify-center gap-1 w-12 ${location.pathname === "/taman-jariyah" ? "text-emerald-500 dark:text-emerald-400" : "text-slate-400 dark:text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400"} transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}
+              className={`transition-all duration-300 flex flex-col items-center justify-center gap-1 w-10 sm:w-12 ${location.pathname === "/taman-jariyah" ? "text-emerald-500 dark:text-emerald-400" : "text-slate-400 dark:text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400"} transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}
             >
               <div className="relative">
                 <Sparkles
-                  className="w-5 h-5"
+                  className="w-4 h-4 sm:w-5 sm:h-5"
                   strokeWidth={location.pathname === "/taman-jariyah" ? 2.5 : 2}
                 />
-                <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                <span className="absolute -top-1 -right-1 flex h-1.5 w-1.5 sm:h-2 sm:w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-emerald-500"></span>
                 </span>
               </div>
-              <span className="text-[9px] font-bold tracking-tight text-center leading-tight">Jariyah</span>
+              <span className="text-[8px] sm:text-[9px] font-bold tracking-tight text-center leading-tight">Jariyah</span>
+            </motion.button>
+
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.05 }}
+              onClick={() => {
+                navigate("/affiliate");
+                window.scrollTo(0, 0);
+              }}
+              className={`transition-all duration-300 flex flex-col items-center justify-center gap-1 w-10 sm:w-12 ${location.pathname === "/affiliate" ? "text-primary-600 dark:text-primary-400" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"} transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}
+            >
+              <Share2
+                className="w-4 h-4 sm:w-5 sm:h-5"
+                strokeWidth={location.pathname === "/affiliate" ? 2.5 : 2}
+              />
+              <span className="text-[8px] sm:text-[9px] font-bold tracking-tight">Mitra</span>
             </motion.button>
 
             <motion.button
@@ -4163,13 +4179,13 @@ export default function App() {
                 navigate("/history");
                 window.scrollTo(0, 0);
               }}
-              className={`transition-all duration-300 flex flex-col items-center justify-center gap-1 w-12 ${location.pathname === "/history" ? "text-primary-600 dark:text-primary-400" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"} transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}
+              className={`transition-all duration-300 flex flex-col items-center justify-center gap-1 w-10 sm:w-12 ${location.pathname === "/history" ? "text-primary-600 dark:text-primary-400" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"} transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}
             >
               <UserCircle
-                className="w-5 h-5"
+                className="w-4 h-4 sm:w-5 sm:h-5"
                 strokeWidth={location.pathname === "/history" ? 2.5 : 2}
               />
-              <span className="text-[9px] font-bold tracking-tight">Akun</span>
+              <span className="text-[8px] sm:text-[9px] font-bold tracking-tight">Akun</span>
             </motion.button>
           </div>
         </div>
