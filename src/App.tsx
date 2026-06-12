@@ -1902,7 +1902,13 @@ export default function App() {
         <nav
           aria-label="Navigasi Utama"
           className={`fixed left-0 right-0 z-50 transition-all duration-500 ease-in-out px-4 md:px-6 ${
-            isScrolled ? "top-2 md:top-4" : "top-4 md:top-6"
+            location.pathname === "/" && !isScrolled
+              ? "opacity-0 -translate-y-full pointer-events-none"
+              : "opacity-100 translate-y-0"
+          } ${
+            isScrolled 
+              ? "top-2 md:top-4" 
+              : "top-4 md:top-6"
           }`}
         >
           <div
@@ -2638,157 +2644,101 @@ export default function App() {
           path="/"
           element={
             <>
-              {/* Hero Section */}
-              <div
-                id="beranda"
-                className="relative flex flex-col pt-24 md:pt-32 pb-8 bg-[#eaf4fc]/40 dark:bg-slate-950 transition-colors duration-300"
-              >
-                {/* Dark Top Background / Banner Area */}
-                <div className="absolute top-0 left-0 right-0 h-[600px] md:h-[650px] lg:h-[70vh] max-h-[800px] rounded-b-[40px] md:rounded-b-[60px] overflow-hidden shadow-sm bg-slate-900">
-                  <AnimatePresence>
-                    <motion.img
-                      key={`bg-${currentSlideIndex}`}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 0.15 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 1.5, ease: "easeInOut" }}
-                      src={HERO_SLIDES[currentSlideIndex].image}
-                      style={{ y: heroImageY }}
-                      className="absolute w-full h-[150%] -top-[25%] object-cover mix-blend-screen blur-[2px]"
-                      alt=""
-                    />
-                  </AnimatePresence>
-                  <div className="absolute inset-0 bg-gradient-to-b from-[#1070a2]/95 via-[#1588c4]/90 to-[#1799dc] dark:from-slate-900/95 dark:via-slate-800/95 dark:to-slate-800/95"></div>
-                  {/* Decorative patterns */}
-                  <div
-                    className="absolute inset-0 opacity-[0.05] dark:opacity-[0.02]"
-                    style={{
-                      backgroundImage:
-                        "radial-gradient(circle, #fff 2px, transparent 2px)",
-                      backgroundSize: "24px 24px",
-                    }}
-                  ></div>
-                  <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-white/10 rounded-full blur-[80px] translate-x-1/3 -translate-y-1/3"></div>
-                  <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-white/5 rounded-full blur-[60px] -translate-x-1/3 translate-y-1/3"></div>
-                </div>
-
-                {/* Main Content Wrapper */}
-                <div className="relative z-10 w-full max-w-7xl mx-auto px-4 flex flex-col items-center flex-1">
-                  {/* Headline and Slider Top Section */}
-                  <div className="flex flex-col lg:flex-row items-center justify-between w-full gap-8 lg:gap-12 mb-10 md:mb-12 mt-2">
-                    {/* Left Text */}
-                    <div className="text-center lg:text-left flex-1 lg:pr-4 w-full flex flex-col items-center lg:items-start max-w-2xl lg:max-w-none mx-auto min-h-[300px] justify-center lg:justify-start">
-                      <span className="inline-block px-3 py-1 bg-white/10 dark:bg-black/20 text-white backdrop-blur-md rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider mb-4 border border-white/10 shadow-sm">
-                        Laznas Dewan Dakwah
-                      </span>
-                      <AnimatePresence mode="wait">
-                        <motion.div
-                          key={currentSlideIndex}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ duration: 0.6, ease: "easeOut" }}
-                          className="flex flex-col items-center lg:items-start"
-                        >
-                          <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-white mb-4 tracking-tight drop-shadow-md leading-[1.15]">
-                            <span className="text-[#f29f05] block">
-                              {HERO_SLIDES[currentSlideIndex].topText}
-                            </span>
-                            {HERO_SLIDES[currentSlideIndex].bottomText}
-                          </h1>
-                          <p className="text-[#eaf4fc] dark:text-slate-300 text-sm md:text-base max-w-xl font-medium mb-8 drop-shadow-sm leading-relaxed">
-                            Tunaikan Zakat, Infak, dan Sedekah dengan mudah,
-                            aman, dan transparan untuk meluaskan kebermanfaatan
-                            umat bersama kami.
-                          </p>
-                          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto relative z-20">
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => {
-                                navigate("/donasi");
-                                window.scrollTo(0, 0);
-                              }}
-                              className="bg-[#f29f05] hover:bg-[#d98f04] text-white font-bold py-3.5 md:py-4 px-8 md:px-10 rounded-full shadow-[0_8px_20px_rgba(242,159,5,0.4)] text-sm md:text-base tracking-wide transition-all uppercase whitespace-nowrap"
-                            >
-                              Donasi Sekarang
-                            </motion.button>
-                            
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => {
-                                navigate("/taman-jariyah");
-                              }}
-                              className="bg-emerald-500/20 hover:bg-emerald-500/30 backdrop-blur-md border border-emerald-400/50 text-white font-bold py-3.5 md:py-4 px-6 md:px-8 rounded-full shadow-[0_8px_20px_rgba(16,185,129,0.2)] text-sm md:text-base tracking-wide transition-all whitespace-nowrap flex items-center justify-center gap-2"
-                            >
-                              <Sparkles className="w-5 h-5 text-emerald-400" />
-                              Taman Jariyah
-                            </motion.button>
-                          </div>
-                        </motion.div>
-                      </AnimatePresence>
+              {/* Hero Section Redesign (ImpactGuru Style) */}
+              <div id="beranda" className="relative flex flex-col bg-white dark:bg-slate-900 transition-colors duration-300">
+                
+                {/* Orange Ribbon at VERY TOP - scrolls naturally */}
+                <div className="absolute top-0 left-0 right-0 z-[60] bg-gradient-to-r from-[#e08d00] via-[#f29f05] to-[#fbb034] w-full px-4 py-2.5 flex items-center justify-between shadow-lg">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <div className="w-8 h-8 md:w-10 md:h-10 bg-white/20 backdrop-blur-sm rounded-full overflow-hidden shadow-inner flex-shrink-0 border border-white/30">
+                      <img src="https://images.unsplash.com/photo-1599058917212-d750089bc07e?q=80&w=200&auto=format&fit=crop" alt="Mustahik" className="w-full h-full object-cover" />
                     </div>
-
-                    {/* Right Slider */}
-                    <div className="w-full max-w-[340px] sm:max-w-[400px] md:max-w-[440px] lg:max-w-[500px]">
-                      <div className="relative aspect-[4/3] w-full rounded-[32px] md:rounded-[40px] overflow-hidden shadow-2xl border-4 md:border-8 border-white/20 dark:border-white/10 group">
-                        <AnimatePresence>
-                          <motion.img
-                            key={`img-${currentSlideIndex}`}
-                            initial={{ opacity: 0, scale: 1.05 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 1.2, ease: "easeInOut" }}
-                            src={HERO_SLIDES[currentSlideIndex].image}
-                            className="absolute inset-0 w-full h-full object-cover"
-                            alt="Berbagi Kebaikan"
-                          />
-                        </AnimatePresence>
-
-                        {/* Decorative Gradient */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
-
-                        {/* Slider Controls Inside */}
-                        <div className="absolute bottom-5 left-0 right-0 flex justify-center gap-2 z-20">
-                          {HERO_SLIDES.map((_, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => setCurrentSlideIndex(idx)}
-                              className={`h-1.5 rounded-full transition-all duration-300 ${currentSlideIndex === idx ? "w-8 bg-white" : "w-2 bg-white/50 hover:bg-white/80"}`}
-                            />
-                          ))}
-                        </div>
-
-                        {/* Prev/Next arrows */}
-                        <button
-                          onClick={() =>
-                            setCurrentSlideIndex(
-                              (prev) =>
-                                (prev - 1 + HERO_SLIDES.length) %
-                                HERO_SLIDES.length,
-                            )
-                          }
-                          className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 hover:bg-[#f29f05] backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all z-20 shadow-lg"
-                        >
-                          <ArrowRight
-                            className="w-5 h-5 rotate-180"
-                            strokeWidth={2.5}
-                          />
-                        </button>
-                        <button
-                          onClick={() =>
-                            setCurrentSlideIndex(
-                              (prev) => (prev + 1) % HERO_SLIDES.length,
-                            )
-                          }
-                          className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 hover:bg-[#f29f05] backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all z-20 shadow-lg"
-                        >
-                          <ArrowRight className="w-5 h-5" strokeWidth={2.5} />
-                        </button>
-                      </div>
+                    <div>
+                      <h3 className="text-white font-black text-[11px] md:text-sm leading-tight drop-shadow-sm">Sedekah Rutin Tiap Bulan</h3>
+                      <p className="text-white/80 font-medium text-[9px] md:text-xs">Bantu selamatkan jutaan nyawa.</p>
                     </div>
                   </div>
+                  <button onClick={() => navigate('/donasi')} className="bg-white text-[#f29f05] font-black text-[10px] md:text-sm px-3 md:px-4 py-1.5 md:py-2 rounded-full shadow-md flex items-center gap-1.5 shrink-0" style={{ animation: 'glow-pulse 2s ease-in-out infinite' }}>
+                    <Heart className="w-3.5 h-3.5 fill-[#f29f05] animate-pulse" /> Donasi Rutin
+                  </button>
+                </div>
+
+                {/* Full Width Hero Image */}
+                <div className="w-full h-[400px] md:h-[500px] lg:h-[600px] relative overflow-hidden bg-slate-100 mt-[52px] md:mt-[64px]">
+                  <AnimatePresence>
+                    <motion.img 
+                      key={`hero-${currentSlideIndex}`}
+                      initial={{ opacity: 0.5, scale: 1.05 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0.5 }}
+                      transition={{ duration: 0.8 }}
+                      src={HERO_SLIDES[currentSlideIndex]?.image} 
+                      className="absolute inset-0 w-full h-full object-cover" 
+                      alt="Penyaluran Donasi" 
+                    />
+                  </AnimatePresence>
+                  {/* Smooth gradient fading to white */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-white via-white/40 to-transparent dark:from-slate-900 dark:via-slate-900/40"></div>
+                  
+                  {/* Slider Indicators */}
+                  <div className="absolute bottom-32 left-0 right-0 flex justify-center gap-2 z-20">
+                    {HERO_SLIDES.map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentSlideIndex(idx)}
+                        className={`h-1.5 rounded-full transition-all duration-300 ${currentSlideIndex === idx ? "w-6 bg-[#1799dc] shadow-md" : "w-2 bg-white/70 hover:bg-white"}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Glassmorphism Content Area with Dynamic Text */}
+                <div className="w-full max-w-2xl mx-auto px-4 sm:px-6 pt-4 pb-10 text-center relative z-10 -mt-20 md:-mt-28">
+                  <div className="bg-white/10 dark:bg-slate-900/10 backdrop-blur-md rounded-[32px] p-6 md:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.2)] border border-white/20 dark:border-slate-700/30" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 50%, rgba(234,244,252,0.05) 100%)' }}>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={`text-${currentSlideIndex}`}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.4 }}
+                      >
+                        <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-slate-800 dark:text-white mb-3 leading-tight tracking-tight">
+                          <span className="text-[#f29f05] block mb-1 text-lg md:text-xl font-extrabold" style={{ backgroundImage: 'linear-gradient(90deg, #f29f05, #fbb034, #f29f05)', backgroundSize: '200% auto', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', animation: 'text-shimmer 3s linear infinite' }}>{HERO_SLIDES[currentSlideIndex]?.topText}</span>
+                          {HERO_SLIDES[currentSlideIndex]?.bottomText}
+                        </h1>
+                        <p className="text-slate-600 dark:text-slate-300 text-sm md:text-base font-medium mb-6 px-2">
+                          Salurkan zakat, infak, dan sedekah Anda melalui platform resmi terpercaya untuk membersamai umat.
+                        </p>
+                      </motion.div>
+                    </AnimatePresence>
+                    
+                    <div className="flex items-center justify-center gap-2 mb-8 text-[10px] md:text-sm text-slate-600 font-bold bg-white/60 dark:bg-slate-800/50 backdrop-blur-sm py-2.5 px-4 rounded-full w-fit mx-auto border border-white/60 dark:border-slate-700">
+                      <div className="w-4 h-4 md:w-5 md:h-5 rounded-full bg-[#1799dc]/15 text-[#1799dc] flex items-center justify-center font-black leading-none pb-0.5">✓</div>
+                      <span>Tersalurkan <strong className="text-[#1799dc] dark:text-[#2db2f5]">100%</strong> tanpa potongan operasional*</span>
+                    </div>
+
+                    <button 
+                      onClick={() => {
+                        navigate('/donasi');
+                        window.scrollTo(0, 0);
+                      }}
+                      className="w-fit mx-auto px-8 md:px-12 bg-gradient-to-r from-[#1799dc] to-[#2db2f5] hover:from-[#127bb0] hover:to-[#1799dc] text-white font-black text-lg md:text-xl py-4 md:py-5 rounded-full shadow-[0_15px_30px_rgba(23,153,220,0.35)] hover:shadow-[0_8px_20px_rgba(23,153,220,0.5)] transition-all transform hover:-translate-y-1 active:translate-y-0"
+                    >
+                      Mulai Donasi Sekarang
+                    </button>
+                    
+                    <button 
+                      onClick={() => navigate('/taman-jariyah')}
+                      className="mt-5 w-full bg-transparent text-[#f29f05] dark:text-[#febb22] font-black text-sm hover:underline flex items-center justify-center gap-1.5 transition-colors"
+                      style={{ animation: 'text-shimmer 2s linear infinite' }}
+                    >
+                      <Sparkles className="w-4 h-4" /> Buka Taman Jariyah
+                    </button>
+                  </div>
+                </div>
+
+                <div className="relative z-10 w-full max-w-7xl mx-auto px-4 flex flex-col items-center flex-1">
 
                   {/* Enhanced Mobile-Friendly Impact Card */}
                   <div className="bg-white dark:bg-slate-800 rounded-[28px] shadow-2xl shadow-[#1799dc]/10 dark:shadow-slate-900/50 w-full max-w-[850px] mx-auto mt-8 mb-4 relative border border-[#1799dc]/10 dark:border-slate-700 overflow-hidden flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-slate-700/50 group">
@@ -4122,18 +4072,34 @@ export default function App() {
                 whileTap={{ scale: 0.95 }}
                 whileHover={{ scale: 1.05 }}
                 onClick={() => {
-                  navigate("/donasi");
+                  navigate("/zakat");
                   window.scrollTo(0, 0);
                 }}
                 className="absolute -top-6 w-[56px] h-[56px] rounded-full bg-gradient-to-tr from-[#1799dc] to-[#2db2f5] hover:bg-gradient-to-br text-white shadow-[0_8px_20px_rgba(23,153,220,0.4)] flex items-center justify-center transform transition-all border-[4px] border-white dark:border-slate-900 z-10 duration-300"
               >
-                <HandHeart className="w-[26px] h-[26px] stroke-white" strokeWidth={2} />
+                <HandCoins className="w-[26px] h-[26px] stroke-white" strokeWidth={2} />
               </motion.button>
               <span className="text-[9px] font-bold tracking-tight text-slate-500 dark:text-slate-400 mt-auto">
-                Donasi
+                Zakat
               </span>
             </div>
 
+
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.05 }}
+              onClick={() => {
+                navigate("/donasi");
+                window.scrollTo(0, 0);
+              }}
+              className={`transition-all duration-300 flex flex-col items-center justify-center gap-1 w-10 sm:w-12 ${location.pathname === "/donasi" ? "text-primary-600 dark:text-primary-400" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"} transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}
+            >
+              <HandHeart
+                className="w-4 h-4 sm:w-5 sm:h-5"
+                strokeWidth={location.pathname === "/donasi" ? 2.5 : 2}
+              />
+              <span className="text-[8px] sm:text-[9px] font-bold tracking-tight">Donasi</span>
+            </motion.button>
 
             <motion.button
               whileTap={{ scale: 0.95 }}
@@ -4149,22 +4115,6 @@ export default function App() {
                 strokeWidth={location.pathname === "/affiliate" ? 2.5 : 2}
               />
               <span className="text-[8px] sm:text-[9px] font-bold tracking-tight">Mitra</span>
-            </motion.button>
-
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              whileHover={{ scale: 1.05 }}
-              onClick={() => {
-                navigate("/history");
-                window.scrollTo(0, 0);
-              }}
-              className={`transition-all duration-300 flex flex-col items-center justify-center gap-1 w-10 sm:w-12 ${location.pathname === "/history" ? "text-primary-600 dark:text-primary-400" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"} transition-all duration-300 hover:scale-105 hover:shadow-lg hover:brightness-110 active:scale-95`}
-            >
-              <UserCircle
-                className="w-4 h-4 sm:w-5 sm:h-5"
-                strokeWidth={location.pathname === "/history" ? 2.5 : 2}
-              />
-              <span className="text-[8px] sm:text-[9px] font-bold tracking-tight">Akun</span>
             </motion.button>
           </div>
         </div>
@@ -5099,7 +5049,7 @@ export default function App() {
                       whileTap={{ scale: 0.98 }}
                       type="submit"
                       disabled={isSubmitting}
-                      className="transition-all duration-300 w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-extrabold py-4 rounded-2xl transition-all shadow-xl shadow-primary-500/30 text-[15px] md:text-lg flex items-center justify-center gap-2 mt-2 group focus:outline-none disabled:opacity-75 disabled:cursor-not-allowed transition-all duration-300 hover:shadow-lg"
+                      className="transition-all duration-300 w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-extrabold py-4 rounded-2xl shadow-xl shadow-pink-500/30 text-[15px] md:text-lg flex items-center justify-center gap-2 mt-2 group focus:outline-none disabled:opacity-75 disabled:cursor-not-allowed hover:shadow-2xl"
                     >
                       {isSubmitting ? (
                         <span className="flex items-center gap-2">
@@ -5927,7 +5877,7 @@ export default function App() {
                       window.scrollTo(0, 0);
                     }, 300);
                   }}
-                  className={`w-full py-4 rounded-xl font-extrabold flex items-center justify-center gap-2 transition-all text-sm md:text-base ${isEligibleZakat ? "bg-gradient-to-r from-primary-500 to-[#1799dc] hover:from-primary-600 hover:to-[#1380b8] text-white shadow-lg shadow-primary-500/30 hover:shadow-xl hover:-translate-y-0.5" : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed border border-slate-200 dark:border-slate-700/50"} duration-300`}
+                  className={`w-full py-4 rounded-xl font-extrabold flex items-center justify-center gap-2 transition-all text-sm md:text-base ${isEligibleZakat ? "bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-lg shadow-pink-500/30 hover:shadow-xl hover:-translate-y-0.5" : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed border border-slate-200 dark:border-slate-700/50"} duration-300`}
                 >
                   {isEligibleZakat
                     ? "Bismillah, Tunaikan Zakat"

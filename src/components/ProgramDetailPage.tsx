@@ -143,7 +143,7 @@ export const ProgramDetailPage = ({
       </div>
 
       {/* Header Image Section */}
-      <div className="relative h-[40vh] md:h-[50vh] w-full bg-slate-200 shrink-0">
+      <div className="relative h-[45vh] md:h-[55vh] w-full bg-slate-200 shrink-0">
 
         {program.video ? (
           <video 
@@ -159,9 +159,9 @@ export const ProgramDetailPage = ({
           <img src={program.image} className="w-full h-full object-cover" alt={program.title} />
         )}
         
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90"></div>
         
-        <div className="absolute bottom-6 left-4 right-4 md:left-8 md:right-8 z-10">
+        <div className="absolute bottom-24 left-4 right-4 md:left-8 md:right-8 z-10">
           <div className="flex gap-2 mb-3">
              <div className="bg-[#1799dc] text-white text-[10px] font-bold px-2.5 py-1 rounded-sm uppercase tracking-wider">
                {program.category.toUpperCase()}
@@ -181,56 +181,137 @@ export const ProgramDetailPage = ({
       {/* Floating Donatur Transaction Animation (Removed) */}
 
       <div className="w-full min-w-0 max-w-full mx-auto px-4 mt-6">
-        {/* Progress Bar & Stats */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 md:p-6 shadow-sm border border-slate-100 dark:border-slate-700/50 mb-6 relative z-30 -mt-10">
-           <div className="flex justify-between items-center mb-3">
-             <span className="text-sm font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-               <Info className="w-4 h-4 text-[#1799dc]" /> Kebaikan Terkumpul
-             </span>
-             <span className="text-[#1799dc] font-black text-lg">{Math.round(progressPercentage)}% Terisi</span>
-           </div>
-           
-           <div className="w-full bg-slate-100 dark:bg-slate-700/50 rounded-full h-3 mb-4 overflow-hidden shadow-inner">
-             <div 
-               className="bg-[#1799dc] h-full rounded-full relative overflow-hidden" 
-               style={{ width: `${progressPercentage}%` }}
-             >
-               <div className="absolute top-0 bottom-0 left-0 right-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.15)_50%,rgba(255,255,255,0.15)_75%,transparent_75%,transparent)] bg-[length:1rem_1rem] animate-[progress_1s_linear_infinite]"></div>
-             </div>
-           </div>
-           
-           <div className="flex justify-between items-center text-sm gap-2 mt-1">
-             <div className="min-w-0">
-               <span className="text-slate-500 dark:text-slate-400 block text-xs truncate">Terkumpul</span>
-               <span className="font-bold text-slate-800 dark:text-white text-sm md:text-base truncate block">Rp {new Intl.NumberFormat('id-ID').format(program.collected)}</span>
-             </div>
-             <div className="text-right min-w-0">
-               <span className="text-slate-500 dark:text-slate-400 block text-xs truncate">Target</span>
-               <span className="font-bold text-slate-800 dark:text-white text-sm md:text-base truncate block">Rp {new Intl.NumberFormat('id-ID').format(program.target)}</span>
-             </div>
-           </div>
-           
-           <div className="border-t border-slate-100 dark:border-slate-700 mt-4 pt-4 flex flex-wrap gap-4">
-              <div className="flex items-center gap-2 min-w-[120px]">
-                <div className="w-8 h-8 rounded-full bg-blue-50 text-[#1799dc] flex items-center justify-center shrink-0">
-                  <Users className="w-4 h-4" />
+        {/* Premium Animated Progress & Stats Box */}
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+          className="relative z-30 -mt-12 mb-6 px-4"
+        >
+          <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-3xl p-4 md:p-5 shadow-[0_15px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_15px_40px_rgba(0,0,0,0.4)] border border-white dark:border-slate-700/50 overflow-hidden relative">
+            {/* Background glowing decorations */}
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#1799dc]/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-[#f29f05]/10 rounded-full blur-3xl pointer-events-none"></div>
+            
+            {/* Header info */}
+            <div className="flex justify-between items-center mb-4 relative z-10 border-b border-slate-100 dark:border-slate-800/50 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-full bg-blue-50 dark:bg-slate-800 flex items-center justify-center">
+                  <Heart className="w-4 h-4 text-[#1799dc]" style={{ animation: 'glow-pulse 2s ease-in-out infinite' }} />
                 </div>
-                <div className="min-w-0">
-                  <span className="block text-xs text-slate-500 font-medium truncate">Donatur</span>
-                  <span className="font-bold text-sm text-slate-800 dark:text-white truncate block">{program.donors} Orang</span>
+                <div className="flex flex-col">
+                  <span className="text-[13px] md:text-sm font-extrabold text-slate-800 dark:text-slate-200 tracking-tight leading-tight">Jejak Kebaikan</span>
+                  <span className="text-[9px] md:text-[10px] font-medium text-[#1799dc] dark:text-blue-400">Setiap rupiah menjadi saksi amal Anda</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 min-w-[120px]">
-                <div className="w-8 h-8 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
-                  <Clock className="w-4 h-4" />
-                </div>
-                <div className="min-w-0">
-                  <span className="block text-xs text-slate-500 font-medium truncate">Sisa Waktu</span>
-                  <span className="font-bold text-sm text-slate-800 dark:text-white truncate block">90 Hari</span>
-                </div>
+              <div className="bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-md border border-emerald-100 dark:border-emerald-800/50 flex items-center gap-1 shadow-sm">
+                 <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></div>
+                 <span className="text-[8px] md:text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Amanah</span>
               </div>
-           </div>
-        </div>
+            </div>
+            
+            {/* Main amounts with animated text and Infographic */}
+            <div className="flex justify-between items-center mb-5 relative z-10 px-1">
+              <div className="flex flex-col">
+                <motion.div 
+                  initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2, duration: 0.5 }}
+                  className="flex items-start gap-1 mb-1"
+                >
+                  <span className="text-sm md:text-base text-[#1799dc] font-black mt-1">Rp</span>
+                  <span className="text-3xl md:text-4xl font-black text-slate-800 dark:text-white tracking-tighter" style={{ backgroundImage: 'linear-gradient(90deg, #1799dc, #2db2f5, #1799dc)', backgroundSize: '200% auto', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', animation: 'text-shimmer 3s linear infinite' }}>
+                    {new Intl.NumberFormat('id-ID').format(program.collected)}
+                  </span>
+                </motion.div>
+                <motion.span 
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
+                  className="text-[10px] md:text-[11px] font-medium text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 px-2 py-0.5 rounded-md inline-block w-fit mt-0.5"
+                >
+                  Ikhtiar Bersama: <strong className="text-slate-700 dark:text-slate-300 font-bold">Rp {new Intl.NumberFormat('id-ID').format(program.target)}</strong>
+                </motion.span>
+              </div>
+
+              {/* Circular Progress Infographic Diagram */}
+              <motion.div 
+                initial={{ scale: 0, y: 15 }}
+                animate={{ scale: 1, y: [0, -4, 0] }}
+                transition={{ 
+                  scale: { duration: 0.8, type: "spring", delay: 0.3 },
+                  y: { repeat: Infinity, duration: 4, ease: "easeInOut", delay: 1 }
+                }}
+                className="relative w-[60px] h-[60px] md:w-[70px] md:h-[70px] shrink-0"
+              >
+                {/* Breathing Glowing Aura */}
+                <motion.div 
+                  className="absolute inset-0 rounded-full bg-[#1799dc]/30 blur-md"
+                  animate={{ scale: [1, 1.25, 1], opacity: [0.4, 0.8, 0.4] }}
+                  transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                />
+                <svg className="w-full h-full -rotate-90 relative z-10" viewBox="0 0 36 36">
+                  {/* Background Track */}
+                  <path
+                    className="text-white dark:text-slate-800"
+                    strokeWidth="3"
+                    stroke="currentColor"
+                    fill="none"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  {/* Animated Progress Ring */}
+                  <motion.path
+                    className="text-[#1799dc]"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                    stroke="currentColor"
+                    fill="none"
+                    initial={{ strokeDasharray: "0, 100" }}
+                    animate={{ strokeDasharray: `${progressPercentage}, 100` }}
+                    transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    style={{ filter: 'drop-shadow(0px 0px 3px rgba(23,153,220,0.6))' }}
+                  />
+                </svg>
+                {/* Center Percentage */}
+                <div className="absolute inset-0 flex items-center justify-center flex-col rotate-0 z-20">
+                  <span className="text-xs md:text-sm font-black text-[#1799dc] drop-shadow-sm">{Math.round(progressPercentage)}%</span>
+                </div>
+              </motion.div>
+            </div>
+            
+            {/* Grid Stats (Compact Horizontal Layout) */}
+            <div className="grid grid-cols-2 gap-3 relative z-10">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-2.5 md:p-3 border border-slate-100 dark:border-slate-700/50 shadow-sm flex items-center gap-2.5 transition-all cursor-default"
+              >
+                <div className="w-8 h-8 rounded-full bg-blue-100/50 dark:bg-slate-700 flex items-center justify-center shrink-0">
+                  <Users className="w-3.5 h-3.5 text-[#1799dc]" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="block text-[8px] md:text-[9px] text-[#1799dc] font-bold uppercase tracking-wider mb-0.5">Pahlawan Kebaikan</span>
+                  <span className="font-black text-xs md:text-sm text-slate-800 dark:text-white leading-none truncate block">
+                    {program.donors} <span className="text-[8px] font-medium text-slate-400 lowercase">orang</span>
+                  </span>
+                </div>
+              </motion.div>
+              
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-2.5 md:p-3 border border-slate-100 dark:border-slate-700/50 shadow-sm flex items-center gap-2.5 transition-all cursor-default"
+              >
+                <div className="w-8 h-8 rounded-full bg-orange-100/50 dark:bg-slate-700 flex items-center justify-center shrink-0">
+                  <Clock className="w-3.5 h-3.5 text-[#f29f05]" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="block text-[8px] md:text-[9px] text-[#f29f05] font-bold uppercase tracking-wider mb-0.5">Peluang Beramal</span>
+                  <span className="font-black text-xs md:text-sm text-slate-800 dark:text-white leading-none truncate block">
+                    90 <span className="text-[8px] font-medium text-slate-400 lowercase">hari</span>
+                  </span>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Content Tabs */}
         <div className="flex w-full gap-4 md:gap-6 border-b border-slate-200 dark:border-slate-700 mb-6 overflow-x-auto hide-scrollbar">
